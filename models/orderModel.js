@@ -2,12 +2,23 @@ const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema(
     {
-        name:{
+        title:{
             type :String,
            
         },
-
-       
+        caption :{
+            type : String
+        },
+        materialName : {
+            type : String
+        },
+        type :{
+            type : String
+        },
+        State :{
+            type : String
+        },
+        image : String
     },
     { timestamps: true }
 )

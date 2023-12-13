@@ -6,16 +6,20 @@ const {
     getsUser,
     deleteUser
 } = require('../serves/userServer');
+// eslint-disable-next-line no-unused-vars
+const {
+    createUserValidator,deleteUserValidator,getUserValidator
+} = require('../utils/validators/userValidat');
 
 const router = express.Router();
 
-router.route('/').post(createUser);
+router.route('/').post(createUserValidator,createUser,);
 
 router.route('/:id')
 .get(getUser)
-.delete(deleteUser)
+.delete(deleteUserValidator,deleteUser)
 
-router.route('/').get(getsUser)
+router.route('/').get(getUserValidator,getsUser)
 
 
 

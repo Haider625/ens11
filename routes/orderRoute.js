@@ -4,18 +4,28 @@ const {
     createOrder,
     getOrder,
     getsOrder,
-    deleteOrder
+    deleteOrder,
+    updateOrder
 } = require('../serves/orderServes');
+
+const {
+    createOrderValidator,
+    getOrderValidator,
+    deleteOrderValidator,
+    updateOrderValidator
+} = require('../utils/validators/orderValidat');
 
 const router = express.Router();
 
-router.route('/').post(createOrder);
+router.route('/')
+.get(getOrderValidator,getsOrder)
+.post(createOrderValidator,createOrder)
 
 router.route('/:id')
-.get(getOrder)
-.delete(deleteOrder)
+.get(getOrderValidator,getOrder)
+.delete(deleteOrderValidator,deleteOrder)
+.put(updateOrderValidator,updateOrder)
 
-router.route('/').get(getsOrder)
 
 
 

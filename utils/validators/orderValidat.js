@@ -25,7 +25,7 @@ exports.createOrderValidator = [
 exports.updateOrderValidator = [
   check('id')
   .isMongoId()
-  .withMessage('Invalid category id format'),
+  .withMessage('Invalid Order id format'),
   body('name')
   .optional(),
   validatorMiddleware,
