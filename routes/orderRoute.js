@@ -15,10 +15,15 @@ const {
 //     updateOrderValidator
 // } = require('../utils/validators/orderValidat');
 
+const auth = require('../serves/auth')
+
 const router = express.Router();
 
 router.route('/')
-.get(getsOrder)
+.get(
+    auth.protect
+    ,auth.allowedTo('admin')
+    ,getsOrder)
 .post(createOrder)
 
 router.route('/:id')

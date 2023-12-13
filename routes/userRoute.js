@@ -1,5 +1,6 @@
 const express = require('express');
 
+
 const {
     createUser,
     getUser,
@@ -11,7 +12,11 @@ const {
     createUserValidator,deleteUserValidator,getUserValidator
 } = require('../utils/validators/userValidat');
 
+const auth = require('../serves/auth')
+
 const router = express.Router();
+
+router.use(auth.protect);
 
 router.route('/').post(createUserValidator,createUser,);
 

@@ -16,7 +16,8 @@ const orderSchema = new mongoose.Schema(
             type : String
         },
         State :{
-            type : String
+            type : Boolean ,
+            default : false
         },
         image : String
     },
