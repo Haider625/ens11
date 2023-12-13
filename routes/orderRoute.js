@@ -8,23 +8,23 @@ const {
     updateOrder
 } = require('../serves/orderServes');
 
-const {
-    createOrderValidator,
-    getOrderValidator,
-    deleteOrderValidator,
-    updateOrderValidator
-} = require('../utils/validators/orderValidat');
+// const {
+//     createOrderValidator,
+//     getOrderValidator,
+//     deleteOrderValidator,
+//     updateOrderValidator
+// } = require('../utils/validators/orderValidat');
 
 const router = express.Router();
 
 router.route('/')
-.get(getOrderValidator,getsOrder)
-.post(createOrderValidator,createOrder)
+.get(getsOrder)
+.post(createOrder)
 
 router.route('/:id')
-.get(getOrderValidator,getOrder)
-.delete(deleteOrderValidator,deleteOrder)
-.put(updateOrderValidator,updateOrder)
+.get(getOrder)
+.delete(deleteOrder)
+.put(updateOrder)
 
 
 
