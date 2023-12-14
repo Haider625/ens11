@@ -11,7 +11,7 @@ const {
 
 const router = express.Router();
 
-router.post('/signup', signupValidator, signup);
+router.post('/singup', signupValidator, signup);
 router.post('/login', loginValidator, login);
 
 module.exports = router;
