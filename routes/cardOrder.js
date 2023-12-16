@@ -1,11 +1,10 @@
 const express = require('express');
 
 const {
-    createcardOrder,
-    getcardOrder,
-    getscardOrder,
-    deletecardOrder,
-    updatecardOrder
+    acceptOrder,
+    rejuctOrder,
+    forwordOrder,
+    waitOrder
 } = require('../serves/caedOrder');
 
 // const {
@@ -22,15 +21,15 @@ const router = express.Router();
 router.use(auth.protect);
 
 router.route('/')
-.get(
-    auth.allowedTo('admin'),
-    getscardOrder)
- .post(createcardOrder)
+// .get(
+//     auth.allowedTo('admin'),
+//     getscardOrder)
+ .post(acceptOrder)
 
-router.route('/:id')
-.get(getcardOrder)
-.delete(deletecardOrder)
-.put(updatecardOrder)
+// router.route('/:id')
+// .get(getcardOrder)
+// .delete(deletecardOrder)
+// .put(updatecardOrder)
 
 
 module.exports = router;
