@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema(
       userId: {
         type: String,
         required: [true, 'userId required'],
+        minlength: [4,'Too short userId'],
         unique: true,
         lowercase: true,
       },

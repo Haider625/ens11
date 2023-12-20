@@ -16,8 +16,9 @@ const orderSchema = new mongoose.Schema(
             type : String
         },
         State :{
-            type : Boolean ,
-            default : false
+            type : String,
+            enum : ['accept', 'reject', 'onprase'],
+            default : 'onprase'
         },
         image : String
     },

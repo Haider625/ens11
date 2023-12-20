@@ -5,19 +5,22 @@ const cardOrderSchema = new mongoose.Schema(
         order: {
             type: mongoose.Schema.ObjectId,
             ref: 'order',
-            //  required: [true, 'cardOrder must be belong to order'],
+            required: [true, 'cardOrder must be belong to order'],
           },
         user:{
             type : mongoose.Schema.ObjectId,
             ref:'User',
+            required: [true, 'cardOrder must be belong to user'],
             
         },
         accept:{
-            type :Boolean,
-            default : true
+            type : String,
+            enum : ['accept'],
+            
         },
         rejuct :{
-            type : String
+            type : String,
+            enum : ['rejuct']
         },
         forword : {
             type : String
@@ -30,10 +33,11 @@ const cardOrderSchema = new mongoose.Schema(
 cardOrderSchema.pre(/^find/, function (next) {
     this.populate({
       path: 'order',
-      select: 'title -_id - State - type -',
+      select: 'title -_id - State - type ',
     });
     next();
   });
 
-  
+
+
 module.exports = mongoose.model('cardOrder',cardOrderSchema);

@@ -26,9 +26,23 @@ exports.updateOrderValidator = [
   check('id')
   .isMongoId()
   .withMessage('Invalid Order id format'),
-  body('name')
-  .optional(),
+  check('title')
+  .notEmpty()
+  .withMessage('titly required')
+  ,
+  check('State')
+  .optional()
+  .default('accept')
+  .custom((val, { req }) => {
+    req.body.State = "accept";
+    if (val !== req.body.State ){
+      throw new Error('State most be equil accept');
+    }
+    return true;
+  })
+,
   validatorMiddleware,
+
 ];
 
 exports.deleteOrderValidator = [

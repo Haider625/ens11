@@ -5,15 +5,17 @@ const {
     getOrder,
     getsOrder,
     deleteOrder,
-    updateOrder
+    updateOrder,
+    acceptOrder,
+    rejectOrder
 } = require('../serves/orderServes');
 
-// const {
-//     createOrderValidator,
-//     getOrderValidator,
-//     deleteOrderValidator,
-//     updateOrderValidator
-// } = require('../utils/validators/orderValidat');
+const {
+    createOrderValidator,
+    getOrderValidator,
+    deleteOrderValidator,
+    updateOrderValidator
+} = require('../utils/validators/orderValidat');
 
 const auth = require('../serves/auth')
 
@@ -36,16 +38,7 @@ router.route('/:id')
 .delete(
     auth.allowedTo('admin'),
     deleteOrder)
-.put(
-    auth.allowedTo('admin'),
-    updateOrder)
-
-
-
-
-
-
-
-
+router.put(('/accept/:id'),acceptOrder);
+router.put(('/reject/:id'),rejectOrder);
 
 module.exports = router;

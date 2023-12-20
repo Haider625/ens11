@@ -1,8 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const express = require("express");
-const dotenv = require("dotenv")
+const dotenv = require("dotenv");
 
-const morgan = require('morgan')
+const morgan = require('morgan');
 
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
