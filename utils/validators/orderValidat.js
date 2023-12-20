@@ -51,3 +51,8 @@ exports.deleteOrderValidator = [
   .withMessage('Invalid category id format'),
   validatorMiddleware,
 ];
+
+// exports.getacceptOrder =[
+//   check('State')
+
+// ]

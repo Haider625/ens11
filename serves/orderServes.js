@@ -10,7 +10,7 @@ exports.getOrder = factory.getOne(order)
 
 exports.getsOrder = factory.getAll(order);
 
-exports.deleteOrder = factory.deleteOne(order)
+exports.deleteOrder = factory.deleteOne(order);
 
 exports.updateOrder = factory.updateOne(order);
 
@@ -18,7 +18,7 @@ exports.acceptOrder = asyncHandler(async(req,res,next) =>{
   
     const useraccept = await order.findByIdAndUpdate(
         req.params.id,
-        req.body,
+        // req.body,
     
         {
             new: true,
@@ -34,7 +34,7 @@ exports.acceptOrder = asyncHandler(async(req,res,next) =>{
   
       const userReject = await order.findByIdAndUpdate(
           req.params.id,
-          req.body,
+          // req.body,
       
           {
               new: true,
@@ -45,3 +45,15 @@ exports.acceptOrder = asyncHandler(async(req,res,next) =>{
         }
         res.status(200).json({ data: userReject });
       });
+      
+      exports.getState =  asyncHandler(async(req,res,next) =>{
+        const {State} = req.query
+        const useraccept = await order.find({State});
+      if (!useraccept) {
+          return next(new ApiError(`No accept for this id`, 404));
+        }
+        res.status(200).json({ State,data: useraccept });
+      });
+
+
+    

@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable import/no-extraneous-dependencies */
 const express = require("express");
 const dotenv = require("dotenv");
