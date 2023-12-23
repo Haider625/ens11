@@ -25,7 +25,7 @@ const router = express.Router();
 router.use(auth.protect);
 
 router.route('/')
-.get(auth.allowedTo('admin'),getsOrder)
+.get(auth.allowedTo('admin'),getsOrders)
 .post( auth.allowedTo('admin','manger'),createOrder)
 
 router.route('/:id')

@@ -61,12 +61,18 @@ class ApiFeatures {
       const limit = this.queryString.limit * 1 || 20;
       const skip = (page - 1) * limit;
       const endIndex = page * limit;
+      const accept = 5 ;
+      const reject = 10 ; 
+      const panding = 13 ;
   
       // Pagination result
       const pagination = {};
       pagination.currentPage = page;
       pagination.limit = limit;
       pagination.numberOfPages = Math.ceil(countDocuments / limit);
+      pagination.accept = accept;
+      pagination.reject = reject ;
+      pagination.panding = panding;
       
       // next page
       if (endIndex < countDocuments) {
