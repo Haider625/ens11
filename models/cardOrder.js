@@ -33,7 +33,7 @@ const cardOrderSchema = new mongoose.Schema(
 cardOrderSchema.pre(/^find/, function (next) {
     this.populate({
       path: 'order',
-      select: 'title -_id - State - type ',
+      select: 'title State type -_id ',
     });
     next();
   });

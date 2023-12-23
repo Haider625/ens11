@@ -4,14 +4,10 @@
 const express = require('express');
 
 const {
-    createOrder,
-    getOrder,
-    getsOrder,
-    deleteOrder,
-    updateOrder,
-    acceptOrder,
-    rejectOrder,
-    getState,
+    createOrder,getOrder,getsOrder,deleteOrder,updateOrder,
+    acceptOrder,rejectOrder,forwordOrder,
+    getsOrders,getDataUserOrder
+
 
 } = require('../serves/orderServes');
 
@@ -28,17 +24,17 @@ const router = express.Router();
 
 router.use(auth.protect);
 
-router.route('/State')
-.get(auth.allowedTo('admin'),getState)
 router.route('/')
 .get(auth.allowedTo('admin'),getsOrder)
-.post( auth.allowedTo('admin'),createOrder)
+.post( auth.allowedTo('admin','manger'),createOrder)
 
 router.route('/:id')
 .get(auth.allowedTo('admin'),getOrder)
+.put(updateOrder)
 .delete(auth.allowedTo('admin'),deleteOrder)
 
-router.put(('/accept/:id'),acceptOrder);
-router.put(('/reject/:id'),rejectOrder);
-
+router.put(('/accept/:id'),auth.allowedTo('admin','manger'),acceptOrder);
+router.put(('/reject/:id'),auth.allowedTo('admin','manger'),rejectOrder);
+router.put(('/forword/:id'),forwordOrder)
+router.get(('/userData/:id'),getDataUserOrder)
 module.exports = router;

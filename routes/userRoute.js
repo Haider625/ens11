@@ -21,10 +21,10 @@ router.use(auth.protect);
 router.route('/').post(createUserValidator,createUser,);
 
 router.route('/:id')
-.get(getUser)
+.get(getUserValidator,getUser)
 .delete(deleteUserValidator,deleteUser)
 
-router.route('/').get(getUserValidator,getsUser)
+router.route('/').get(getsUser)
 
 
 

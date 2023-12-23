@@ -44,7 +44,8 @@ class ApiFeatures {
         if (modelName === 'order') {
           query.$or = [
             { title: { $regex: this.queryString.keyword, $options: 'i' } },
-            { description: { $regex: this.queryString.keyword, $options: 'i' } },
+            { caption: { $regex: this.queryString.keyword, $options: 'i' } },
+            { State :{ $regex: this.queryString.accept, $options: 'i' }},
           ];
         } else  {
           query = { name: { $regex: this.queryString.keyword, $options: 'i' } };
@@ -66,7 +67,7 @@ class ApiFeatures {
       pagination.currentPage = page;
       pagination.limit = limit;
       pagination.numberOfPages = Math.ceil(countDocuments / limit);
-  
+      
       // next page
       if (endIndex < countDocuments) {
         pagination.next = page + 1;
@@ -75,7 +76,6 @@ class ApiFeatures {
         pagination.prev = page - 1;
       }
       this.mongooseQuery = this.mongooseQuery.skip(skip).limit(limit);
-  
       this.paginationResult = pagination;
       return this;
     }
