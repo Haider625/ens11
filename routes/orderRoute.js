@@ -35,6 +35,6 @@ router.route('/:id')
 
 router.put(('/accept/:id'),auth.allowedTo('admin','manger'),acceptOrder);
 router.put(('/reject/:id'),auth.allowedTo('admin','manger'),rejectOrder);
-router.put(('/forword/:id'),forwordOrder)
+router.put(('/forword/:id'),auth.allowedTo('admin'),forwordOrder)
 router.get(('/userData/:id'),getDataUserOrder)
 module.exports = router;

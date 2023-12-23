@@ -48,7 +48,7 @@ class ApiFeatures {
             { State :{ $regex: this.queryString.accept, $options: 'i' }},
           ];
         } else  {
-          query = { name: { $regex: this.queryString.keyword, $options: 'i' } };
+          query = { State: { $regex: this.queryString.keyword, $options: 'i' } };
         }
   
         this.mongooseQuery = this.mongooseQuery.find(query);
@@ -56,12 +56,13 @@ class ApiFeatures {
       return this;
     }
   
-    paginate(countDocuments) {
+    paginate (countDocuments) {
       const page = this.queryString.page * 1 || 1;
       const limit = this.queryString.limit * 1 || 20;
       const skip = (page - 1) * limit;
       const endIndex = page * limit;
-      const accept = 5 ;
+      // eslint-disable-next-line no-undef
+      const accept =   7
       const reject = 10 ; 
       const panding = 13 ;
   

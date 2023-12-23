@@ -17,7 +17,7 @@ exports.getDataUserOrder =   asyncHandler(async (req, res, next) => {
   res.status(200).json({ data: document });
 });
 exports.getOrder = factory.getOne(order)
-exports.getsOrder = factory.getAll(order , 'user');
+// exports.getsOrder = factory.getAll(order , 'user');
 
 exports.deleteOrder = factory.deleteOne(order);
 
@@ -93,11 +93,11 @@ exports.getsOrders =  asyncHandler(async (req, res) => {
     .sort();
 
   // Execute query
-  const { mongooseQuery, paginationResult } = apiFeatures;
+  const { mongooseQuery, paginationResult } = await apiFeatures;
   const documents = await mongooseQuery;
   
   res
     .status(200)
-    .json({ results: documents.length, paginationResult, data: documents });
+    .json({ results: documents.length, paginationResult, orders: documents });
 });
     
