@@ -13,7 +13,7 @@ const globalError = require('./middlewares/errmiddlware')
 const orderRout = require('./routes/orderRoute')
 const UserRout = require('./routes/userRoute')
 const authRout = require('./routes/auth');
-const cardOrder = require("./routes/cardOrder");
+
 
 const app = express();
 app.use(express.json());
@@ -33,7 +33,7 @@ if(process.env.NODE_ENV === 'devlopment') {
 app.use('/api/order',orderRout)
 app.use('/api/user',UserRout)
 app.use('/api/auth',authRout)
-app.use('/api/cardOrder',cardOrder)
+
 
 app.get('/',(req,res)=>{
     res.send('sdjf');

@@ -2,11 +2,26 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { check, body } = require('express-validator');
 const validatorMiddleware = require('../../middlewares/validatorMiddlewares');
+const Order = require('../../models/orderModel')
 
 exports.getOrderValidator = [
   check('id')
   .isMongoId()
-  .withMessage('Invalid category id format'),
+  .withMessage('Invalid Review id format')
+  .custom((val, { req }) =>
+    // Check review ownership before update
+    Order.findById(val).then((order) => {
+      if (!order) {
+        return Promise.reject(new Error(`There is no Order with id ${val}`));
+      }
+
+      if (order.user._id.toString() !== req.user._id.toString()) {
+        return Promise.reject(
+          new Error(`Your are not allowed to perform this action`)
+        );
+      }
+    })
+  ),
   validatorMiddleware,
 ];
 
@@ -52,7 +67,3 @@ exports.deleteOrderValidator = [
   validatorMiddleware,
 ];
 
-// exports.getacceptOrder =[
-//   check('State')
-
-// ]

@@ -16,7 +16,10 @@ exports.signup = asyncHandler(async (req, res, next) => {
   const user = await User.create({
     name: req.body.name,
     userId: req.body.userId,
-    password: req.body.password
+    password: req.body.password,
+    jobTitle: req.body.jobTitle,
+    school: req.body.school,
+    phone: req.body.phone,
   });
 
   // 2- Generate token

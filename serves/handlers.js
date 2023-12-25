@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 const asyncHandler = require('express-async-handler');
 
 
@@ -27,7 +28,7 @@ exports.updateOne = (Model) =>
         new ApiError(`No document for this id ${req.params.id}`, 404)
       );
     }
-    res.status(200).json({ data: document });
+    res.status(200).json({ order: document });
   });
 
 
@@ -36,12 +37,11 @@ exports.createOne = (Model) =>
   asyncHandler(async (req, res) => {
     const newDoc = await Model.create(req.body);
     if (!newDoc) {
-        // eslint-disable-next-line no-undef
         return next(
           new ApiError(`No document for this id ${req.body}`, 404)
         );
       }
-      res.status(200).json({ data: newDoc });
+      res.status(201).json({ order: newDoc });
     });
 
 
@@ -52,7 +52,7 @@ exports.createOne = (Model) =>
     if (!document) {
        return next(new ApiError(`No document for this id ${id}`, 404));
     }
-    res.status(200).json({ data: document });
+    res.status(200).json({ order: document });
   });
 
 
@@ -77,5 +77,5 @@ exports.createOne = (Model) =>
 
     res
       .status(200)
-      .json({ results: documents.length, paginationResult, data: documents });
+      .json({ results: documents.length, paginationResult, order: documents });
   });

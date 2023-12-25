@@ -29,7 +29,7 @@ router.route('/')
 .post( auth.allowedTo('admin','manger'),createOrder)
 
 router.route('/:id')
-.get(auth.allowedTo('admin'),getOrder)
+.get(auth.allowedTo('admin'),getOrderValidator,getOrder)
 .put(updateOrder)
 .delete(auth.allowedTo('admin'),deleteOrder)
 

@@ -6,6 +6,8 @@ const userSchema = new mongoose.Schema(
       name: {
         type: String,
         trim: true,
+        minlength: [3,'Too short name'],
+        maxlength : [32,'Too long name'],
         required: [true, 'name required'],
       },
      
@@ -13,6 +15,7 @@ const userSchema = new mongoose.Schema(
         type: String,
         required: [true, 'userId required'],
         minlength: [4,'Too short userId'],
+        maxlength : [16,'Too long userId'],
         unique: true,
         lowercase: true,
       },
@@ -20,15 +23,18 @@ const userSchema = new mongoose.Schema(
         type: String,
         required: [true, 'password required'],
         minlength: [6, 'Too short password'],
+        maxlength: [16, 'Too long password'],
       },     
       jobTitle : {
         type: String,
         // required: [true, 'jobTitle required'],
-        minlength: [4,'Too short job title']
+        minlength: [4,'Too short job title'],
+        maxlength: [32,'Too long job title']
       },
       school : {
         type: String,
-        minlength: [4,'Too short job title']
+        minlength: [4,'Too short school'],
+        maxlength: [32,'Too long school']
       },
       phone: String,
       profileImg: String,

@@ -7,13 +7,19 @@ const User = require('../../models/userModel');
 exports.createUserValidator = [
   check('name')
     .notEmpty()
-    .withMessage('User required')
+    .withMessage('name required')
     .isLength({ min: 3 })
-    .withMessage('Too short User name'),
+    .withMessage('Too short name')
+    .isLength({ max: 32 })
+    .withMessage('Too long name'),
 
   check('userId')
     .notEmpty()
     .withMessage('userId required')
+    .isLength({ min: 3 })
+    .withMessage('Too short userId')
+    .isLength({ max: 16 })
+    .withMessage('Too long userId')
     .custom((val) =>
       User.findOne({ userId : val }).then((user) => {
         if (user) {
@@ -26,8 +32,25 @@ exports.createUserValidator = [
     .notEmpty()
     .withMessage('Password required')
     .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters'),
+    .withMessage('Password must be at least 6 characters')
+    .isLength({ max: 16 })
+    .withMessage('Too long Password'),
 
+    check('jobTitle')
+    .notEmpty()
+    .withMessage('jobTitle required')
+    .isLength({ min: 6 })
+    .withMessage('jobTitle must be at least 6 characters')
+    .isLength({ max: 32 })
+    .withMessage('Too long jobTitle'),
+
+    check('school')
+    .notEmpty()
+    .withMessage('school required')
+    .isLength({ min: 6 })
+    .withMessage('school must be at least 6 characters')
+    .isLength({ max: 32 })
+    .withMessage('Too long school'),
 
   check('phone')
     .optional()
@@ -52,15 +75,9 @@ exports.updateUserValidator = [
 
   check('userId')
     .notEmpty()
-    .withMessage('userId required')
+    .withMessage('userId required'),
+
     
-    .custom((val) =>
-      User.findOne({ userId: val }).then((user) => {
-        if (user) {
-          return Promise.reject(new Error('userId already in user'));
-        }
-      })
-    ),
   check('phone')
     .optional()
     .isMobilePhone(['ar-IQ'])
@@ -76,28 +93,3 @@ exports.deleteUserValidator = [
   check('id').isMongoId().withMessage('Invalid User id format'),
   validatorMiddleware,
 ];
-
-// exports.updateLoggedUserValidator = [
-//   body('name')
-//     .optional()
-//     .custom((val, { req }) => {
-//       req.body.slug = slugify(val);
-//       return true;
-//     }),
-//   check('userId')
-//     .notEmpty()
-//     .withMessage('userId required')
-//     .custom((val) =>
-//       User.findOne({ email: val }).then((user) => {
-//         if (user) {
-//           return Promise.reject(new Error('userId already in user'));
-//         }
-//       })
-//     ),
-//   check('phone')
-//     .optional()
-//     .isMobilePhone(['ar-IQ'])
-//     .withMessage('Invalid phone number only accepted Egy and SA Phone numbers'),
-
-//   validatorMiddleware,
-// ];

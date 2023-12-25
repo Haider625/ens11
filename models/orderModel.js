@@ -13,7 +13,9 @@ const orderSchema = new mongoose.Schema(
             type : String
         },
         type :{
-            type : String
+            type : ['Service','Material'],
+            State : String ,
+            number :String
         },
         State :{
             type : String,
