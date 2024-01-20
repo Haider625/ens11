@@ -1,9 +1,7 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable import/no-extraneous-dependencies */
+const path = require('path')
+
 const express = require("express");
 const dotenv = require("dotenv");
-
 const morgan = require('morgan');
 
 const dbconnection = require('./config/database');
@@ -13,10 +11,17 @@ const globalError = require('./middlewares/errmiddlware')
 const orderRout = require('./routes/orderRoute')
 const UserRout = require('./routes/userRoute')
 const authRout = require('./routes/auth');
-
+const groupUser = require('./routes/groupUserRoute')
+const accept = require('./routes/acceptRout')
+const wordText = require('./routes/wordTextRout')
+const viewGroup = require('./routes/viewGroupRout')
+const Archive = require('./routes/archiveRout')
+const reject = require('./routes/rejectRoute')
+const forword = require('./routes/forwordRout')
 
 const app = express();
 app.use(express.json());
+app.use(express.static(path.join(__dirname,'uploads')));
 
 dotenv.config({path: 'config.env'})
 
@@ -28,12 +33,16 @@ if(process.env.NODE_ENV === 'devlopment') {
     console.log(`node : ${process.env.NODE_ENV}`)
 }
 
-
-
-app.use('/api/order',orderRout)
-app.use('/api/user',UserRout)
-app.use('/api/auth',authRout)
-
+app.use('/api/v1/order',orderRout) 
+app.use('/api/v1/user',UserRout) 
+app.use('/api/v1/auth',authRout) 
+app.use('/api/v1/group',groupUser) 
+app.use('/api/v1/accept',accept) 
+app.use('/api/v1/word',wordText) 
+app.use('/api/v1/viewGroup',viewGroup) 
+app.use('/api/v1/Archive',Archive) 
+app.use('/api/v1/reject',reject) 
+app.use('/api/v1/forword',forword)
 
 app.get('/',(req,res)=>{
     res.send('sdjf');

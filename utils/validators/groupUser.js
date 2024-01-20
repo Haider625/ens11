@@ -2,43 +2,43 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 const { check } = require('express-validator');
 const validatorMiddleware = require('../../middlewares/validatorMiddlewares');
-const Order = require('../../models/orderModel')
 
-exports.getOrderValidator = [
+
+exports.getGroupValidator = [
   check('id')
   .isMongoId()
   .withMessage('Invalid Review id format'),
   validatorMiddleware,
 ];
 
-exports.createOrderValidator = [
-  check('title')
-   .optional(),
+exports.createGroupValidator = [
+  check('name')
+  .notEmpty()
+  .withMessage('name required')
+  .isLength({ min: 3 })
+  .withMessage('Too short name')
+  .isLength({ max: 32 })
+  .withMessage('Too long name'),
 
-  check('caption')
+  check('level')
     .optional(),
+ 
 
-  check('materialName')
-   .optional(),
-
-    check('type')
-    .optional()
-,
   validatorMiddleware,
 ];
 
-exports.updateOrderValidator = [
+exports.updateGroupValidator = [
   check('id')
   .isMongoId()
-  .withMessage('Invalid Order id format')
-,
+  .withMessage('Invalid Group id format'),
   validatorMiddleware,
 
 ];
 
-exports.deleteOrderValidator = [
+exports.deleteGroupValidator = [
   check('id')
   .isMongoId()
-  .withMessage('Invalid category id format'),
+  .withMessage('Invalid Group id format'),
   validatorMiddleware,
 ];
+

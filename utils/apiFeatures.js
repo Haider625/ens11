@@ -1,3 +1,4 @@
+
 class ApiFeatures {
     constructor(mongooseQuery, queryString) {
       this.mongooseQuery = mongooseQuery;
@@ -62,19 +63,14 @@ class ApiFeatures {
       const skip = (page - 1) * limit;
       const endIndex = page * limit;
       // eslint-disable-next-line no-undef
-      const accept =   7
-      const reject = 10 ; 
-      const panding = 13 ;
+   
   
       // Pagination result
       const pagination = {};
       pagination.currentPage = page;
       pagination.limit = limit;
       pagination.numberOfPages = Math.ceil(countDocuments / limit);
-      pagination.accept = accept;
-      pagination.reject = reject ;
-      pagination.panding = panding;
-      
+
       // next page
       if (endIndex < countDocuments) {
         pagination.next = page + 1;
@@ -86,6 +82,42 @@ class ApiFeatures {
       this.paginationResult = pagination;
       return this;
     }
+    // async paginate(countDocuments) {
+    //   const page = this.queryString.page * 1 || 1;
+    //   const limit = this.queryString.limit * 1 || 20;
+    //   const skip = (page - 1) * limit;
+    //   const endIndex = page * limit;
+    
+    //   // Pagination result
+    //   const pagination = {
+    //     currentPage: page,
+    //     limit,
+    //     numberOfPages: Math.ceil(countDocuments / limit),
+    //   };
+    
+    //   const aggregationPipeline = [
+    //     {
+    //       $group: {
+    //         _id: '$State',
+    //         count: { $sum: 1 },
+    //       },
+    //     },
+    //   ];
+    
+    //   const stateCounts = await order.aggregate(aggregationPipeline);
+    
+    //   const stateMap = new Map();
+    //   stateCounts.forEach((state) => {
+    //     stateMap.set(state._id, state.count);
+    //   });
+    
+    //   pagination.stateCounts = stateMap;
+    
+    //   // ... (الكود السابق للتحكم بالـ pagination)
+    
+    //   return this;
+    // }
+    
   }
   
   module.exports = ApiFeatures;

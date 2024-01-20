@@ -1,4 +1,4 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+
 const multer = require('multer');
 const ApiError = require('../utils/apiError');
 
@@ -14,12 +14,36 @@ function multerOptions() {
     }
   };
 
-  const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
-
+  const upload = multer({ storage: multerStorage, fileFilter: multerFilter }); 
   return upload;
 }
 
-exports.uploadSingleImage = (fieldName) => multerOptions().single(fieldName);
+exports.uploadSingleImage = (fieldName) => {
+  const upload = multerOptions().single(fieldName);
 
-exports.uploadMixOfImages = (arrayOfFields) =>
-  multerOptions().fields(arrayOfFields);
+  // استخدم Multer داخل وسيط رفع الصور
+  return (req, res, next) => {
+    upload(req, res, (err) => {
+      if (err) {
+        console.error('Multer Error:', err);
+        return res.status(500).json({ error: 'Error uploading image' });
+      }
+      next();
+    });
+  };
+};
+
+exports.uploadMixOfImages = (arrayOfFields) => {
+  const upload = multerOptions().fields(arrayOfFields);
+
+  // استخدم Multer داخل وسيط رفع الصور
+  return (req, res, next) => {
+    upload(req, res, (err) => {
+      if (err) {
+        console.error('Multer Error:', err);
+        return res.status(500).json({ error: 'Error uploading images' });
+      }
+      next();
+    });
+  };
+};

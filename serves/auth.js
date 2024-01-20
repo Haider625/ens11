@@ -1,36 +1,32 @@
+/* eslint-disable no-sequences */
+/* eslint-disable no-unused-expressions */
 
 const bcrypt = require('bcryptjs');
 const asyncHandler = require('express-async-handler');
-
+const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const ApiError = require('../utils/apiError');
 const createToken = require('../utils/creatToken');
 
 const User = require('../models/userModel');
 
+
 // @desc    Signup
 // @route   GET /api/v1/auth/signup
 // @access  Public
-exports.signup = asyncHandler(async (req, res, next) => {
+exports.singup = asyncHandler(async (req, res, next) => {
   // 1- Create user
-  const user = await User.create({
-    name: req.body.name,
-    userId: req.body.userId,
-    password: req.body.password,
-    jobTitle: req.body.jobTitle,
-    school: req.body.school,
-    phone: req.body.phone,
-  });
+  const user = await User.create(req.body);
 
   // 2- Generate token
   const token = createToken(user._id);
  
+  if(!user){
+    return next(new ApiError('Incorrect userId or password', 401));
+  }
+
     res.status(201).json({ data: user , token});
-    if(!user){
-        return next(new ApiError('Incorrect userId or password', 401));
-      }
-  
-  
+    
 });
 
 // @desc    Login
@@ -38,18 +34,25 @@ exports.signup = asyncHandler(async (req, res, next) => {
 // @access  Public
 exports.login = asyncHandler(async (req, res, next) => {
   // 1) check if password and email in the body (validation)
-  // 2) check if user exist & check if password is correct
+  // 2) check if user exists & check if the password is correct
   const user = await User.findOne({ userId: req.body.userId });
 
   if (!user || !(await bcrypt.compare(req.body.password, user.password))) {
     return next(new ApiError('Incorrect userId or password', 401));
   }
-  // 3) generate token
+
+  // 3) Check if the user is active
+  if (!user.active) {
+    return next(new ApiError('User is not active', 403));
+  }
+
+  // 4) generate token
   const token = createToken(user._id);
 
-  // Delete password from response
+  // Delete password from the response
   delete user._doc.password;
-  // 4) send response to client side
+
+  // 5) send response to the client side
   res.status(200).json({ data: user, token });
 });
 

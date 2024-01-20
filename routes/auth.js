@@ -1,17 +1,17 @@
 const express = require('express');
 const {
-  signupValidator,
+  singupValidator,
   loginValidator,
 } = require('../utils/validators/auth');
 
 const {
-  signup,
+  singup,
   login
 } = require('../serves/auth');
 
 const router = express.Router();
 
-router.post('/singup', signupValidator, signup);
+router.post('/singup', singupValidator, singup);
 router.post('/login', loginValidator, login);
 
 module.exports = router;

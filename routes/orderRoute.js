@@ -1,14 +1,13 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-restricted-syntax */
-/* eslint-disable guard-for-in */
+
 const express = require('express');
 
 const {
-    createOrder,getOrder,getsOrder,deleteOrder,updateOrder,
-    acceptOrder,rejectOrder,forwordOrder,
-    getsOrders,getDataUserOrder
-
-
+    createOrder,
+    getOrder,
+    deleteOrder,
+    updateOrder,
+    getsOrders,
+    createOrderSend,
 } = require('../serves/orderServes');
 
 const {
@@ -25,16 +24,15 @@ const router = express.Router();
 router.use(auth.protect);
 
 router.route('/')
-.get(auth.allowedTo('admin'),getsOrders)
-.post( auth.allowedTo('admin','manger'),createOrder)
+.get(getsOrders)
+.post(createOrderValidator,createOrderSend);
 
 router.route('/:id')
-.get(auth.allowedTo('admin'),getOrderValidator,getOrder)
-.put(updateOrder)
-.delete(auth.allowedTo('admin'),deleteOrder)
+.get(getOrderValidator,getOrder)
+.put(updateOrderValidator,updateOrder)
+.delete(deleteOrderValidator,deleteOrder)
 
-router.put(('/accept/:id'),auth.allowedTo('admin','manger'),acceptOrder);
-router.put(('/reject/:id'),auth.allowedTo('admin','manger'),rejectOrder);
-router.put(('/forword/:id'),auth.allowedTo('admin'),forwordOrder)
-router.get(('/userData/:id'),getDataUserOrder)
+router.post('/createOrderSend',createOrderValidator,createOrderSend)
+
+
 module.exports = router;

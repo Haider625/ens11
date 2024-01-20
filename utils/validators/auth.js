@@ -1,9 +1,8 @@
-const slugify = require('slugify');
 const { check } = require('express-validator');
 const validatorMiddleware = require('../../middlewares/validatorMiddlewares');
 const User = require('../../models/userModel');
 
-exports.signupValidator  = [
+exports.singupValidator  = [
   check('name')
     .notEmpty()
     .withMessage('name required')
@@ -27,15 +26,25 @@ exports.signupValidator  = [
       })
     ),
 
-  check('password')
+    check('password')
     .notEmpty()
     .withMessage('Password required')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters')
     .isLength({ max: 16 })
-    .withMessage('Too long Password'),
+    .withMessage('Too long password')
+    .custom((password, { req }) => {
+      if (password !== req.body.passwordConfirm) {
+        throw new Error('Password Confirmation incorrect');
+      }
+      return true;
+    }),
 
-    check('jobTitle')
+  check('passwordConfirm')
+    .notEmpty()
+    .withMessage('Password confirmation required'),
+
+  check('jobTitle')
     .notEmpty()
     .withMessage('jobTitle required')
     .isLength({ min: 6 })
@@ -43,7 +52,7 @@ exports.signupValidator  = [
     .isLength({ max: 32 })
     .withMessage('Too long jobTitle'),
 
-    check('school')
+  check('school')
     .notEmpty()
     .withMessage('school required')
     .isLength({ min: 6 })
@@ -56,8 +65,20 @@ exports.signupValidator  = [
     .isMobilePhone(["ar-IQ"])
     .withMessage('Invalid phone number only accepted IQ Phone numbers'),
 
-  check('profileImg').optional(),
-  check('role').optional(),
+  check('image')
+  .optional(),
+
+  check('levelSend')
+  .optional(),
+
+  check('levelsReceive')
+  .optional(),
+
+  check('forwordLevels')
+  .optional(),
+
+  check('role')
+  .optional(),
 
   validatorMiddleware,
 ];

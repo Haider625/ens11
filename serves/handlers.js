@@ -8,7 +8,9 @@ const ApiFeatures = require('../utils/apiFeatures')
 
 exports.deleteOne = (Model) =>
   asyncHandler(async (req, res, next) => {
+    
     const { id } = req.params;
+
     const document = await Model.findByIdAndDelete(id);
 
     if (!document) {
@@ -19,6 +21,9 @@ exports.deleteOne = (Model) =>
 
 exports.updateOne = (Model) =>
   asyncHandler(async (req, res, next) => {
+
+
+
     const document = await Model.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
@@ -28,25 +33,28 @@ exports.updateOne = (Model) =>
         new ApiError(`No document for this id ${req.params.id}`, 404)
       );
     }
+
     res.status(200).json({ order: document });
   });
 
-
-
 exports.createOne = (Model) =>
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res,next) => {
+
+
+
     const newDoc = await Model.create(req.body);
     if (!newDoc) {
         return next(
           new ApiError(`No document for this id ${req.body}`, 404)
         );
       }
+  
       res.status(201).json({ order: newDoc });
     });
 
-
   exports.getOne = (Model) =>
   asyncHandler(async (req, res, next) => {
+
     const { id } = req.params;
     const document = await Model.findById(id);
     if (!document) {
@@ -55,9 +63,10 @@ exports.createOne = (Model) =>
     res.status(200).json({ order: document });
   });
 
-
   exports.getAll = (Model, modelName = '') =>
-  asyncHandler(async (req, res) => {
+  asyncHandler(async (req, res,next) => {
+
+
     let filter = {};
     if (req.filterObj) {
       filter = req.filterObj;
