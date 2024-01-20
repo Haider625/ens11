@@ -17,7 +17,7 @@ const wordText = require('./routes/wordTextRout')
 const viewGroup = require('./routes/viewGroupRout')
 const Archive = require('./routes/archiveRout')
 const reject = require('./routes/rejectRoute')
-const forword = require('./routes/forwordRout')
+// const forword = require('./routes/forwordRout')
 
 const app = express();
 app.use(express.json());
@@ -42,7 +42,7 @@ app.use('/api/v1/word',wordText)
 app.use('/api/v1/viewGroup',viewGroup) 
 app.use('/api/v1/Archive',Archive) 
 app.use('/api/v1/reject',reject) 
-app.use('/api/v1/forword',forword)
+// app.use('/api/v1/forword',forword)
 
 app.get('/',(req,res)=>{
     res.send('sdjf');

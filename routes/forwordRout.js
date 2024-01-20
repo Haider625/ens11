@@ -1,15 +1,15 @@
-const express = require('express');
+// const express = require('express');
 
-const {
+// const {
 
-} = require('../serves/forword');
+// } = require('../serves/forword');
 
-const auth = require('../serves/auth');
+// const auth = require('../serves/auth');
 
-const router = express.Router();
+// const router = express.Router();
 
-router.use(auth.protect);
+// router.use(auth.protect);
 
 
 
-module.exports = router;
+// module.exports = router;
