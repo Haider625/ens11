@@ -7,6 +7,7 @@ const {
     deleteUser,
     updateUser,  
     uploadUserImage,
+    resizeImage
 } = require('../serves/userServer');
 
 const {
@@ -29,7 +30,7 @@ router.route('/')
 router.route('/:id')
 .get(auth.allowedTo('admin'),getUserValidator,getUser)
 .delete(auth.allowedTo('admin'),deleteUserValidator,deleteUser)
-.put(auth.allowedTo('admin'),uploadUserImage,updateUserValidator,updateUser)
+.put(auth.allowedTo('admin'),uploadUserImage,resizeImage,updateUserValidator,updateUser)
 
 
 module.exports = router;

@@ -3,14 +3,44 @@
 
 const bcrypt = require('bcryptjs');
 const asyncHandler = require('express-async-handler');
-const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+const sharp = require('sharp');
 const jwt = require('jsonwebtoken');
 const ApiError = require('../utils/apiError');
 const createToken = require('../utils/creatToken');
 
 const User = require('../models/userModel');
 
+const { uploadSingleImage } = require('../middlewares/uploadImage');
 
+exports.uploadUserImage = uploadSingleImage('image');
+
+exports.resizeImage = asyncHandler(async (req, res, next) => {
+
+  if (!req.file) {
+    return next(new ApiError({ message: 'No file uploaded', statusCode: 400 }));
+  }
+
+  const filename = `user-${uuidv4()}-${Date.now()}.jpeg`;
+
+  // استخدم Promise لضمان اكتمال عملية toFile قبل استدعاء next()
+  await new Promise((resolve, reject) => {
+    sharp(req.file.buffer)
+      .resize(600, 600)
+      .toFormat('jpeg')
+      .jpeg({ quality: 90 })
+      .toFile(`uploads/users/${filename}`, (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+  });
+
+  req.body.image = filename;
+  next();
+});
 // @desc    Signup
 // @route   GET /api/v1/auth/signup
 // @access  Public
@@ -20,14 +50,14 @@ exports.singup = asyncHandler(async (req, res, next) => {
 
   // 2- Generate token
   const token = createToken(user._id);
- 
-  if(!user){
-    return next(new ApiError('Incorrect userId or password', 401));
+
+  if (!user) {
+    return next(new ApiError('Failed to create user', 500));
   }
 
-    res.status(201).json({ user: user , token});
-    
+  res.status(201).json({ user : user, token });
 });
+
 
 // @desc    Login
 // @route   GET /api/v1/auth/login

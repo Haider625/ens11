@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
         type: String,
         required: [true, 'password required'],
         minlength: [6, 'Too short password'],
-        maxlength: [16, 'Too long password'],
+        maxlength: [32, 'Too long password'],
       },     
       jobTitle : {
         type: String,

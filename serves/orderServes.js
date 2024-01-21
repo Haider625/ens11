@@ -94,8 +94,6 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, order: newOrder });
 });
 
-
-
 exports.createOrder = asyncHandler(async (req, res, next) => {
 
   // التأكد من أن لديه الصلاحية المطلوبة لإنشاء الطلب
