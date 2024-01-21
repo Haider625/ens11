@@ -252,12 +252,11 @@ const userSchema = new mongoose.Schema(
           type: Boolean,
           default: false,
         },
-        GroupscanViw : [{
-          type : mongoose.Schema.ObjectId,
-          ref:'group',
-        }],
-        
       },
+      GroupscanViw : [{
+        type : mongoose.Schema.ObjectId,
+        ref:'group',
+      }],
       levelSend : [{
         type : mongoose.Schema.ObjectId,
         ref:'group',
@@ -297,7 +296,7 @@ const userSchema = new mongoose.Schema(
       select: 'name level inlevel',
     })
       .populate({
-        path: 'Permission.GroupscanViw',
+        path: 'GroupscanViw',
         select: 'name level inlevel',
       });
     next();
