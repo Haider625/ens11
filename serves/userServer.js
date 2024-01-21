@@ -22,9 +22,8 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
   // استخدم Promise لضمان اكتمال عملية toFile قبل استدعاء next()
   await new Promise((resolve, reject) => {
     sharp(req.file.buffer)
-      .resize(600, 600)
       .toFormat('jpeg')
-      .jpeg({ quality: 90 })
+      .jpeg({ quality: 100 })
       .toFile(`uploads/users/${filename}`, (err) => {
         if (err) {
           reject(err);

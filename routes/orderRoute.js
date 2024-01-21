@@ -2,12 +2,14 @@
 const express = require('express');
 
 const {
-    createOrder,
+    getsOrders,
     getOrder,
     deleteOrder,
     updateOrder,
-    getsOrders,
+    getOrders,
     createOrderSend,
+    uploadOrderImage,
+    resizeImage
 } = require('../serves/orderServes');
 
 const {
@@ -25,11 +27,11 @@ router.use(auth.protect);
 
 router.route('/')
 .get(getsOrders)
-.post(createOrderValidator,createOrder);
+.post(uploadOrderImage,resizeImage,createOrderValidator,createOrderSend);
 
 router.route('/:id')
 .get(getOrderValidator,getOrder)
-.put(updateOrderValidator,updateOrder)
+.put(uploadOrderImage,resizeImage,updateOrderValidator,updateOrder)
 .delete(deleteOrderValidator,deleteOrder)
 
 router.post('/createOrderSend',createOrderValidator,createOrderSend)

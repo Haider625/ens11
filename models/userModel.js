@@ -22,7 +22,7 @@ const userSchema = new mongoose.Schema(
         type: String,
         required: [true, 'password required'],
         minlength: [6, 'Too short password'],
-        maxlength: [32, 'Too long password'],
+        maxlength: [16, 'Too long password'],
       },     
       jobTitle : {
         type: String,
@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema(
       group : {
         type : mongoose.Schema.ObjectId,
         ref:'group',
-      // required: [true, 'user must be belong to grop']
+        required: [true, 'user must be belong to grop']
       },
       Permission: {
         canViwOneOrder :{
@@ -260,12 +260,12 @@ const userSchema = new mongoose.Schema(
       levelSend : [{
         type : mongoose.Schema.ObjectId,
         ref:'group',
-        // required: [true, 'levelSend required'],
+        required: [true, 'levelSend required'],
       }],
       levelsReceive : [{
         type : mongoose.Schema.ObjectId,
         ref:'group',
-        // required: [true, 'levelsReceive required'],
+      required: [true, 'levelsReceive required'],
       }],
       forwordLevels : [{
         type : mongoose.Schema.ObjectId,
@@ -295,10 +295,22 @@ const userSchema = new mongoose.Schema(
       path: 'group',
       select: 'name level inlevel',
     })
+    .populate({
+      path: 'GroupscanViw',
+      select: 'name level inlevel',
+    })
+    .populate({
+      path: 'levelSend',
+      select: 'name level inlevel',
+    })
+    .populate({
+      path: 'levelsReceive',
+      select: 'name level inlevel',
+      })
       .populate({
-        path: 'GroupscanViw',
+        path: 'forwordLevels',
         select: 'name level inlevel',
-      });
+        })
     next();
   });
   const setImageURL = (doc) => {
