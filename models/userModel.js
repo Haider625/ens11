@@ -301,6 +301,21 @@ const userSchema = new mongoose.Schema(
       });
     next();
   });
+  const setImageURL = (doc) => {
+    if (doc.image) {
+      const imageUrl = `${process.env.BASE_URL}/users/${doc.image}`;
+      doc.image = imageUrl;
+    }
+  };
+  // findOne, findAll and update
+  userSchema.post('init', (doc) => {
+    setImageURL(doc);
+  });
+  
+  // create
+  userSchema.post('save', (doc) => {
+    setImageURL(doc);
+  });
   userSchema.methods.getGroupscanViwData = async function () {
     // تأكيد وجود GroupscanViw في Permission
     if (this.Permission && this.Permission.GroupscanViw && this.Permission.GroupscanViw.length > 0) {
