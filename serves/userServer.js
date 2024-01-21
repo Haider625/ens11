@@ -51,7 +51,7 @@ exports.createUser =  asyncHandler(async (req, res,next) => {
       );
     }
 
-    res.status(201).json({ order: newDoc });
+    res.status(201).json({ user: newDoc });
   });
 
 exports.getUser =asyncHandler(async (req, res, next) => {
@@ -65,7 +65,7 @@ exports.getUser =asyncHandler(async (req, res, next) => {
   if (!document) {
      return next(new ApiError(`No document for this id ${id}`, 404));
   }
-  res.status(200).json({ order: document });
+  res.status(200).json({ user: document });
 });
 
 exports.getsUser = asyncHandler(async (req, res,next) => {
@@ -93,7 +93,7 @@ exports.getsUser = asyncHandler(async (req, res,next) => {
 
   res
     .status(200)
-    .json({ results: documents.length, paginationResult, order: documents });
+    .json({ results: documents.length, paginationResult, user: documents });
 });
 
 exports.deleteUser =  asyncHandler(async (req, res, next) => {
@@ -128,7 +128,7 @@ exports.updateUser =  asyncHandler(async (req, res, next) => {
     );
   }
 
-  res.status(200).json({ order: document });
+  res.status(200).json({ user: document });
 });
 
 

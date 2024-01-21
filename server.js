@@ -17,7 +17,10 @@ const wordText = require('./routes/wordTextRout')
 const viewGroup = require('./routes/viewGroupRout')
 const Archive = require('./routes/archiveRout')
 const reject = require('./routes/rejectRoute')
-// const forword = require('./routes/forwordRout')
+const forword = require('./routes/forwordRout')
+const typeText1 = require('./routes/typeText1Rout')
+const typeText2 = require('./routes/typeText2Rout')
+const typeText3 = require('./routes/typeText3Rout')
 
 const app = express();
 app.use(express.json());
@@ -42,7 +45,10 @@ app.use('/api/v1/word',wordText)
 app.use('/api/v1/viewGroup',viewGroup) 
 app.use('/api/v1/Archive',Archive) 
 app.use('/api/v1/reject',reject) 
-// app.use('/api/v1/forword',forword)
+app.use('/api/v1/forword',forword)
+app.use('/api/v1/typeText1',typeText1)
+app.use('/api/v1/typeText2',typeText2)
+app.use('/api/v1/typeText3',typeText3)
 
 app.get('/',(req,res)=>{
     res.send('sdjf');

@@ -127,6 +127,69 @@ const userSchema = new mongoose.Schema(
           default: false,
         },
 
+        canViwOnetypeText1 :{
+          type: Boolean,
+          default: false,
+        },
+        canViwstypeText1 :  {
+          type: Boolean,
+          default: false,
+        },
+        canCreattypeText1 : {
+          type: Boolean,
+          default: false,
+        },
+        canDelettypeText1 : {
+          type: Boolean,
+          default: false,
+        },
+        canEdittypeText1 :  {
+          type: Boolean,
+          default: false,
+        },
+
+        canViwOnetypeText2 :{
+          type: Boolean,
+          default: false,
+        },
+        canViwstypeText2 :  {
+          type: Boolean,
+          default: false,
+        },
+        canCreattypeText2: {
+          type: Boolean,
+          default: false,
+        },
+        canDelettypeText2 : {
+          type: Boolean,
+          default: false,
+        },
+        canEdittypeText2 :  {
+          type: Boolean,
+          default: false,
+        },
+
+        canViwOnetypeText3 :{
+          type: Boolean,
+          default: false,
+        },
+        canViwstypeText3 :  {
+          type: Boolean,
+          default: false,
+        },
+        canCreattypeText3 : {
+          type: Boolean,
+          default: false,
+        },
+        canDelettypeText3 : {
+          type: Boolean,
+          default: false,
+        },
+        canEdittypeText3 :  {
+          type: Boolean,
+          default: false,
+        },
+
         canViwOneArchive :{
           type: Boolean,
           default: false,

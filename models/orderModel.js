@@ -4,11 +4,18 @@ const mongoosePaginate = require('mongoose-paginate-v2');
 
 const orderSchema = new mongoose.Schema(
   {
-    title: {
-      type: String,
-      minlength: [4, 'Too short title'],
-      maxlength: [150, 'Too long title'],
+    type: {
+      type1: {
+        type: String,
+      },
+      type2: {
+        type: String,
+      },
+      type3: {
+        type: String,
+      },
     },
+    number : Number ,
     caption: {
       type: String,
       minlength: [4, 'Too short caption'],
@@ -16,14 +23,6 @@ const orderSchema = new mongoose.Schema(
     },
     materialName: {
       type: String,
-    },
-    type: {
-      type: {
-        type:String,
-        enum:['Service', 'Material']
-      },
-      State: String,
-      number: String,
     },
     orderimg : String,
     donImgs : [String],
@@ -38,17 +37,21 @@ const orderSchema = new mongoose.Schema(
     },
     StateWork: {
       type :String,
-      enum: ['acceptwork','startwork','endwork','reject','onprase','done'],
+      enum: ['acceptwork','startwork','endwork','reject','onprase'],
       default: 'onprase',
       reason: {
         type : String,
         default : "تم رفظ الطلب"
       }
     },
+    StateDone : {
+      type : String ,
+      enum : ['onprase','accept']
+    },
     group: [{
       type: mongoose.Schema.ObjectId,
       ref: 'group',
-      
+      default: 'onprase',
     }],
     users : [{
       type: mongoose.Schema.ObjectId,

@@ -7,7 +7,7 @@ const wordText = require('../models/wordText')
 exports.createWordText =   asyncHandler(async (req, res,next) => {
 
     if (!req.user.Permission.canCreatWordtext) {
-      return next(new ApiError('You do not have permission to create an order', 403));
+      return next(new ApiError('You do not have permission to create an wordText', 403));
     }
 
     const newDoc = await wordText.create(req.body);
@@ -17,13 +17,13 @@ exports.createWordText =   asyncHandler(async (req, res,next) => {
         );
       }
   
-      res.status(201).json({ order: newDoc });
+      res.status(201).json({ wordText: newDoc });
     });
 
 exports.getWordText =   asyncHandler(async (req, res, next) => {
 
     if (!req.user.Permission.canViwOneWordtext) {
-      return next(new ApiError('You do not have permission to viw this text', 403));
+      return next(new ApiError('You do not have permission to viw this wordText', 403));
     }
 
     const { id } = req.params;
@@ -31,13 +31,13 @@ exports.getWordText =   asyncHandler(async (req, res, next) => {
     if (!document) {
        return next(new ApiError(`No document for this id ${id}`, 404));
     }
-    res.status(200).json({ order: document });
+    res.status(200).json({ wordText: document });
   });
 
 exports.getsWordText = asyncHandler(async (req, res,next) => {
 
     if (!req.user.Permission.canViwsWordtext) {
-      return next(new ApiError('You do not have permission to viws this order', 403));
+      return next(new ApiError('You do not have permission to viws this wordText', 403));
     }
 
     let filter = {};
@@ -59,7 +59,7 @@ exports.getsWordText = asyncHandler(async (req, res,next) => {
 
     res
       .status(200)
-      .json({ results: documents.length, paginationResult, order: documents });
+      .json({ results: documents.length, paginationResult, wordText: documents });
   });
 
 exports.deleteWordText =  asyncHandler(async (req, res, next) => {
@@ -67,7 +67,7 @@ exports.deleteWordText =  asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
     if (!req.user.Permission.canDeletWordtext) {
-      return next(new ApiError('You do not have permission to delete this text', 403));
+      return next(new ApiError('You do not have permission to delete this wordText', 403));
     }
 
     const document = await wordText.findByIdAndDelete(id);
@@ -81,7 +81,7 @@ exports.deleteWordText =  asyncHandler(async (req, res, next) => {
 exports.updateWordText =   asyncHandler(async (req, res, next) => {
 
     if (!req.user.Permission.canEditWordtext) {
-      return next(new ApiError('You do not have permission to edit this text', 403));
+      return next(new ApiError('You do not have permission to edit this wordText', 403));
     }
 
     const document = await wordText.findByIdAndUpdate(req.params.id, req.body, {
@@ -94,5 +94,5 @@ exports.updateWordText =   asyncHandler(async (req, res, next) => {
       );
     }
 
-    res.status(200).json({ order: document });
+    res.status(200).json({ wordText: document });
   });

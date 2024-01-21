@@ -25,7 +25,7 @@ router.use(auth.protect);
 
 router.route('/')
 .get(getsOrders)
-.post(createOrderValidator,createOrderSend);
+.post(createOrderValidator,createOrder);
 
 router.route('/:id')
 .get(getOrderValidator,getOrder)

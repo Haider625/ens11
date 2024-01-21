@@ -21,12 +21,12 @@ const router = express.Router();
 router.use(auth.protect);
 
 router.route('/')
-.get(auth.allowedTo('admin'),getsWordText)
-.post(auth.allowedTo('admin'),createWordTextValidator,createWordText);
+.get(getsWordText)
+.post(createWordTextValidator,createWordText);
 
 router.route('/:id')
-.get(auth.allowedTo('admin'),getWordTextValidator,getWordText)
-.delete(auth.allowedTo('admin'),deleteWordTextValidator,deleteWordText)
-.put(auth.allowedTo('admin'),updateWordTextValidator,updateWordText)
+.get(getWordTextValidator,getWordText)
+.delete(deleteWordTextValidator,deleteWordText)
+.put(updateWordTextValidator,updateWordText)
 
 module.exports = router;
