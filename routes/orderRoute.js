@@ -26,7 +26,7 @@ const router = express.Router();
 router.use(auth.protect);
 
 router.route('/')
-.get(getsOrders)
+.get(getOrders)
 .post(uploadOrderImage,resizeImage,createOrderValidator,createOrderSend);
 
 router.route('/:id')
