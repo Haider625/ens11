@@ -10,32 +10,59 @@ const groups = require('../models/groupUser')
 const user = require('../models/userModel')
 const ApiFeatures = require('../utils/apiFeatures')
 const ApiError = require('../utils/apiError');
-const { uploadSingleImage } = require('../middlewares/uploadImage');
 
-exports.uploadOrderImage = uploadSingleImage('orderimg');
+const { uploadMixOfImages } = require('../middlewares/uploadImage');
+
+exports.uploadOrderImage = uploadMixOfImages([
+  {
+    name: 'orderimg',
+    maxCount: 1,
+  },
+  {
+    name: 'donimgs',
+    maxCount: 5,
+  },
+]);
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
+  // Image processing for orderimg
+  if (req.files && req.files.orderimg) {
+    const orderimgFileName = `order-${uuidv4()}-${Date.now()}.jpeg`;
 
-  if (!req.file) {
-    return next(new ApiError({ message: 'No file uploaded', statusCode: 400 }));
+    await sharp(req.files.orderimg[0].buffer)
+      .resize(2000, 1333)
+      .toFormat('jpeg')
+      .jpeg({ quality: 95 })
+      .toFile(`uploads/orders/${orderimgFileName}`);
+
+    // Save image into our db
+    req.body.orderimg = orderimgFileName;
   }
 
-  const filename = `user-${uuidv4()}-${Date.now()}.jpeg`;
+  // Image processing for donimgs
+  if (req.files && req.files.donimgs) {
+    req.body.donimgs = [];
+    await Promise.all(
+      req.files.donimgs.map(async (img, index) => {
+        const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
+  
+        await sharp(img.buffer)
+          .resize(2000, 1333)
+          .toFormat('jpeg')
+          .jpeg({ quality: 95 })
+          .toFile(`uploads/orders/${imageName}`, (err) => {
+            if (err) {
+              console.error('Error saving image:', err);
+            } else {
+              console.log('Image saved successfully:', imageName);
+              req.body.donimgs.push(imageName);
+            }
+          });
+      })
+    );
+  }
+  
 
-  // استخدم Promise لضمان اكتمال عملية toFile قبل استدعاء next()
-  await new Promise((resolve, reject) => {
-    sharp(req.file.buffer)
-      .toFormat('jpeg')
-      .jpeg({ quality: 100 })
-      .toFile(`uploads/orders/${filename}`, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-  });
-  req.body.orderimg = filename;
   next();
 });
 exports.createOrderSend = asyncHandler(async (req, res) => {
@@ -61,7 +88,8 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     group: lowerLevelGroup._id,
     createdBy: req.user._id,
     user : req.body.user,
-    orderimg : req.body.orderimg
+    orderimg : req.body.orderimg,
+    donimgs :req.body.donimgs
   };
 
   const newOrder = await order.create(orderData);
@@ -70,7 +98,7 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     editedBy: loggedInUserId,
     action: `تم انشاء الطلب من قيل : ${loggedInUserId}`
   });
-  await newOrder.save();
+  newOrder.save();
   res.status(201).json({ success: true, order: newOrder });
 });
 
@@ -155,29 +183,31 @@ exports.deleteOrder = asyncHandler(async (req, res, next) => {
 });
 
 exports.updateOrder = asyncHandler(async (req, res, next) => {
+  const loggedInUserId = req.user._id;
 
+  // التحقق من صلاحيات التحرير
   if (!req.user.Permission.canEidtOrder) {
     return next(new ApiError('You do not have permission to edit this order', 403));
   }
 
-  const document = await order.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
+  // تحديث الطلب باستخدام findByIdAndUpdate
+  const updatedOrder = await order
+  .findByIdAndUpdate(req.params.id, req.body, { new: true })
+  .populate('donimgs');
 
-  if (!document) {
-    return next(
-      new ApiError(`No document for this id ${req.params.id}`, 404)
-    );
-  }
- 
-  document.history.push({
+// ...
+
+// عند إضافة إدخال إلى سجل التاريخ
+updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
-  action: `تم انشاء الطلب من قيل : ${loggedInUserId}`
+  action: `تم تعديل الطلب من قبل: ${loggedInUserId}`
 });
-await document.save();
 
-  res.status(200).json({ order: document });
+// حفظ التغييرات
+await updatedOrder.save();
+
+res.status(200).json({ order: updatedOrder });
 });
 
 exports.getOrders = asyncHandler(async (req, res, next) => {
@@ -234,10 +264,6 @@ exports.getsOrders = asyncHandler(async (req, res, next) => {
   if (req.filter) {
     filter = req.filter;
   }
-
-  
-
-  
   const documentsCounts = await order.countDocuments();
   
   const apiFeatures = new ApiFeatures(order.find({ ...filter }), req.query)

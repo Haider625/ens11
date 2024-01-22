@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema(
 
     orderimg : String,
 
-    donImgs : [String],
+    donimgs : [String],
 
     State: {
       type: String,
@@ -117,36 +117,51 @@ orderSchema.pre(/^find/, function (next) {
   })
   this.populate({
     path: 'createdBy',
-    select: 'name userId school ',
+    select: 'name userId school group ',
     })
   this.populate({
    path: 'users',
-   select: 'name userId school level inlevel',
+   select: 'name userId school group ',
     });
   this.populate({
     path: 'history.editedBy',
-    select: 'name userId school level inlevel',
+    select: 'name userId school group ',
      });
   next();
 });
 
-
 const setImageURL = (doc) => {
+  if (doc.orderimg && !doc.orderimg.startsWith(process.env.BASE_URL)) {
+    const imageUrl = `${process.env.BASE_URL}/orders/${doc.orderimg}`;
+    doc.orderimg = imageUrl;
+  }
+  if (doc.donimgs && doc.donimgs.length > 0) {
+    const imagesList = doc.donimgs.map((image) => image.startsWith(process.env.BASE_URL) ? image : `${process.env.BASE_URL}/orders/${image}`);
+    doc.donimgs = imagesList;
+  }
+};
 
-    if (doc.orderimg) {
-      const imageUrl = `${process.env.BASE_URL}/users/${doc.orderimg}`;
-      doc.orderimg = imageUrl;
-    }
-  };
+// findOne, findAll, and update
+orderSchema.pre('findOne', function (next) {
+  setImageURL(this);
+  next();
+});
 
-// findOne, findAll and update
-orderSchema.post('init', (doc) => {
-  setImageURL(doc);
+orderSchema.pre('find', function (next) {
+  this._conditions = this._conditions || {};
+  setImageURL(this._conditions);
+  next();
+});
+
+orderSchema.pre('update', function (next) {
+  setImageURL(this._update);
+  next();
 });
 
 // create
-orderSchema.post('save', (doc) => {
-  setImageURL(doc);
+orderSchema.pre('save', function (next) {
+  setImageURL(this);
+  next();
 });
 const Order = mongoose.model('Order', orderSchema);
 module.exports = Order; // Export the Order model

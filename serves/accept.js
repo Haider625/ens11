@@ -130,7 +130,7 @@ exports.endWork = asyncHandler(async(req,res,next) => {
   const orderId = req.params.id;
   // تحديث حالة الطلب إلى "accept" وسجل معرف المستخدم الذي قام بالتحديث
   const updatedOrder = await orders.findByIdAndUpdate(
-    orderId,
+    orderId,req.body,
     { StateWork: 'endwork'},
     { new: true }
   );
