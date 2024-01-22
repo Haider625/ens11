@@ -14,7 +14,7 @@ exports.uploadUserImage = uploadSingleImage('image');
 exports.resizeImage = asyncHandler(async (req, res, next) => {
 
   if (!req.file) {
-    return next(new ApiError({ message: 'No file uploaded', statusCode: 400 }));
+    return next(new ApiError('No file uploaded', 400 ));
   }
 
   const filename = `user-${uuidv4()}-${Date.now()}.jpeg`;
