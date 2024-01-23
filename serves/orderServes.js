@@ -54,15 +54,13 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
             if (err) {
               console.error('Error saving image:', err);
             } else {
-              console.log('Image saved successfully:', imageName);
-              req.body.donimgs.push(imageName);
+              console.log(`Image ${imageName} saved successfully`);
+              req.body.donimgs.push(imageName) ;
             }
           });
       })
     );
   }
-  
-
   next();
 });
 exports.createOrderSend = asyncHandler(async (req, res) => {

@@ -6,37 +6,32 @@ const sharp = require('sharp');
 const ApiError = require('../utils/apiError')
 const ApiFeatures = require('../utils/apiFeatures')
 const User = require('../models/userModel')
-const { uploadSingleImage } = require('../middlewares/uploadImage');
 
-exports.uploadUserImage = uploadSingleImage('image');
+const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
+exports.uploadUserImage = uploadMixOfImages([
+  {
+    name: 'image',
+    maxCount: 1,
+  },
+]);
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
+  // Image processing for orderimg
+  if (req.files && req.files.image) {
+    const orderimgFileName = `user-${uuidv4()}-${Date.now()}.jpeg`;
 
-  if (!req.file) {
-    return next(new ApiError('No file uploaded', 400 ));
-  }
-
-  const filename = `user-${uuidv4()}-${Date.now()}.jpeg`;
-
-  // استخدم Promise لضمان اكتمال عملية toFile قبل استدعاء next()
-  await new Promise((resolve, reject) => {
-    sharp(req.file.buffer)
+    await sharp(req.files.image[0].buffer)
+      .resize(2000, 1333)
       .toFormat('jpeg')
-      .jpeg({ quality: 100 })
-      .toFile(`uploads/users/${filename}`, (err) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
-  });
+      .jpeg({ quality: 95 })
+      .toFile(`uploads/users/${orderimgFileName}`);
 
-  req.body.image = filename;
-  next();
-});
-
+    // Save image into our db
+    req.body.image = orderimgFileName;
+  }
+  await next();
+})
 exports.createUser =  asyncHandler(async (req, res,next) => {
 
   if (!req.user.Permission.canCreatUser) {

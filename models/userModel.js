@@ -313,13 +313,29 @@ const userSchema = new mongoose.Schema(
         })
     next();
   });
+  // const setImageURL = (doc) => {
+  //   if (doc.image) {
+  //     const imageUrl = `${process.env.BASE_URL}/users/${doc.image}`;
+  //     doc.image = imageUrl;
+  //   }
+  // };
+  // // findOne, findAll and update
+  // userSchema.post('init', (doc) => {
+  //   setImageURL(doc);
+  // });
+  
+  // // create
+  // userSchema.post('save', (doc) => {
+  //   setImageURL(doc);
+  // });
+
   const setImageURL = (doc) => {
-    if (doc.image) {
+    if (doc.image && !doc.image.startsWith(process.env.BASE_URL)) {
       const imageUrl = `${process.env.BASE_URL}/users/${doc.image}`;
       doc.image = imageUrl;
     }
   };
-  // findOne, findAll and update
+  
   userSchema.post('init', (doc) => {
     setImageURL(doc);
   });
