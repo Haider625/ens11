@@ -29,7 +29,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
     // Save image into our db
     req.body.image = orderimgFileName;
   }
-  await next();
+  next()
 })
 exports.createUser =  asyncHandler(async (req, res,next) => {
 
