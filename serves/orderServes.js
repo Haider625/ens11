@@ -54,7 +54,6 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
             if (err) {
               console.error('Error saving image:', err);
             } else {
-              console.log(`Image ${imageName} saved successfully`);
               req.body.donimgs.push(imageName) ;
             }
           });
@@ -67,28 +66,35 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   const loggedInUserId = req.user._id;
 
   // جلب بيانات المستخدم بما في ذلك levelSend
-  const users = await user.findOne({ _id: loggedInUserId }).populate('levelSend');
+  const users = await user.findOne({ _id: loggedInUserId });
 
   if (!users) {
     return res.status(404).json({ success: false, error: 'User not found' });
   }
   // احصل على الكروب الذي يحتوي على مستوى أقل برقم واحد
   const lowerLevelGroup = users.levelSend;
+  console.log(lowerLevelGroup)
   // تحقق من وجود الكروب
   if (!lowerLevelGroup) {
     return res.status(400).json({ success: false, error: 'No lower level group found' });
+  }
+
+  if (lowerLevelGroup && lowerLevelGroup._id) {
+    console.log(lowerLevelGroup._id);
   }
   const orderData = {
     type1: req.body.type1,
     type2: req.body.type2,
     type3: req.body.type3,
     caption: req.body.caption,
-    group: lowerLevelGroup._id,
+    group: lowerLevelGroup ,
     createdBy: req.user._id,
     user : req.body.user,
     orderimg : req.body.orderimg,
     donimgs :req.body.donimgs
   };
+  // تحقق من وجود lowerLevelGroup._id قبل الطباعة
+
 
   const newOrder = await order.create(orderData);
     newOrder.history.push({
@@ -96,7 +102,7 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     editedBy: loggedInUserId,
     action: `تم انشاء الطلب من قيل : ${loggedInUserId}`
   });
-  newOrder.save();
+  newOrder.save()
   res.status(201).json({ success: true, order: newOrder });
 });
 
@@ -188,24 +194,32 @@ exports.updateOrder = asyncHandler(async (req, res, next) => {
     return next(new ApiError('You do not have permission to edit this order', 403));
   }
 
+  // جلب الطلب الحالي قبل التعديل
+  const currentOrder = await order.findById(req.params.id);
+
+  if (!currentOrder) {
+    return next(new ApiError('Order not found', 404));
+  }
+
+  // إعداد قيمة group الجديدة بتوصيف الطلب الحالي والقيمة الجديدة
+  const updatedGroup = [...currentOrder.group, ...req.body.group];
+
   // تحديث الطلب باستخدام findByIdAndUpdate
   const updatedOrder = await order
-  .findByIdAndUpdate(req.params.id, req.body, { new: true })
-  .populate('donimgs');
+    .findByIdAndUpdate(req.params.id, { ...req.body, group: updatedGroup }, { new: true })
+    .populate('donimgs');
 
-// ...
+  // إضافة إدخال إلى سجل التاريخ
+  updatedOrder.history.push({
+    editedAt: Date.now(),
+    editedBy: loggedInUserId,
+    action: `تم تعديل الطلب من قبل: ${loggedInUserId}`
+  });
 
-// عند إضافة إدخال إلى سجل التاريخ
-updatedOrder.history.push({
-  editedAt: Date.now(),
-  editedBy: loggedInUserId,
-  action: `تم تعديل الطلب من قبل: ${loggedInUserId}`
-});
+  // حفظ التغييرات
+  await updatedOrder.save();
 
-// حفظ التغييرات
-await updatedOrder.save();
-
-res.status(200).json({ order: updatedOrder });
+  res.status(200).json({ order: updatedOrder });
 });
 
 exports.getOrders = asyncHandler(async (req, res, next) => {
@@ -254,7 +268,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   res
     .status(200)
     .json({ results: documents.length, paginationResult, orderStats, stateWorksStats,StateDoneStats, order: documents });
-});
+})
 
 
 // وظيفة مساعدة للحصول على إحصائيات الطلبات

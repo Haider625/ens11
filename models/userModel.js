@@ -344,6 +344,7 @@ const userSchema = new mongoose.Schema(
   userSchema.post('save', (doc) => {
     setImageURL(doc);
   });
+
   userSchema.methods.getGroupscanViwData = async function () {
     // تأكيد وجود GroupscanViw في Permission
     if (this.Permission && this.Permission.GroupscanViw && this.Permission.GroupscanViw.length > 0) {
@@ -355,4 +356,5 @@ const userSchema = new mongoose.Schema(
     
   };
   const User = mongoose.model('User', userSchema);
+  
   module.exports = User;
