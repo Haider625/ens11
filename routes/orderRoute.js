@@ -2,7 +2,6 @@
 const express = require('express');
 
 const {
-    getsOrders,
     getOrder,
     deleteOrder,
     updateOrder,

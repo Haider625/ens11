@@ -8,8 +8,18 @@ const typeText2Schema = new mongoose.Schema(
             maxlength: [100, 'Too long name'],
             required: [true, 'name required'],
         },
+        typeText3 :[{
+            type : mongoose.Schema.ObjectId,
+            ref : 'typeText3',
+        }],
     },
     { timestamps: true }
 );   
-
+typeText2Schema.pre(/^find/, function (next) {
+    this.populate({
+      path: 'typeText3',
+      select: 'name ',
+    })
+    next();
+});
 module.exports = mongoose.model('typeText2', typeText2Schema);

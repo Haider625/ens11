@@ -8,7 +8,6 @@ const {
     getRejectedWorks,
     getOrdersWithRejectState,
     archiveOrder,
-    forwordReject,
 } = require('../serves/reject');
 
 // const {

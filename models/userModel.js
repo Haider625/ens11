@@ -293,23 +293,23 @@ const userSchema = new mongoose.Schema(
   userSchema.pre(/^find/, function (next) {
     this.populate({
       path: 'group',
-      select: 'name level inlevel',
+      select: 'name level inlevel services',
     })
     .populate({
       path: 'GroupscanViw',
-      select: 'name level inlevel',
+      select: 'name level inlevel services',
     })
     .populate({
       path: 'levelSend',
-      select: 'name level inlevel',
+      select: 'name level inlevel services',
     })
     .populate({
       path: 'levelsReceive',
-      select: 'name level inlevel',
+      select: 'name level inlevel services',
       })
       .populate({
         path: 'forwordLevels',
-        select: 'name level inlevel',
+        select:'name level inlevel services',
         })
     next();
   });

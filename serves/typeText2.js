@@ -56,7 +56,9 @@ exports.getstypeText2 = asyncHandler(async (req, res,next) => {
     // Execute query
     const { mongooseQuery, paginationResult } = apiFeatures;
     const documents = await mongooseQuery;
-
+    if (!documents) {
+        return next(new ApiError('You do not have permission to viws this typeText2', 403));
+      }
     res
       .status(200)
       .json({ results: documents.length, paginationResult, typeText2: documents });

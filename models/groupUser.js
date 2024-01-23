@@ -16,8 +16,20 @@ const groupUserSchema = new mongoose.Schema(
         },
         inlevel : {
             type : Number,
-        }
+        },
+        services : [{
+           type :mongoose.Schema.ObjectId,
+           ref : 'typeText2'
+        }]
     },
     { timestamps: true }
 );   
+groupUserSchema.pre(/^find/, function (next) {
+    this.populate({
+      path: 'services',
+      select: 'name typeText3',
+    })
+
+    next();
+});
 module.exports = mongoose.model('group', groupUserSchema);

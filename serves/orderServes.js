@@ -256,28 +256,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     .json({ results: documents.length, paginationResult, orderStats, stateWorksStats,StateDoneStats, order: documents });
 });
 
-exports.getsOrders = asyncHandler(async (req, res, next) => {
 
-  let filter = {};
-  if (req.filter) {
-    filter = req.filter;
-  }
-  const documentsCounts = await order.countDocuments();
-  
-  const apiFeatures = new ApiFeatures(order.find({ ...filter }), req.query)
-    .paginate(documentsCounts)
-    .filter()
-    .search(order)
-    .limitFields()
-    .sort();
-  
-  const { mongooseQuery, paginationResult } = await apiFeatures;
-  const documents = await mongooseQuery;
-  
-  res
-    .status(200)
-    .json({ results: documents.length, paginationResult, order: documents });
-});
 // وظيفة مساعدة للحصول على إحصائيات الطلبات
 async function getAggregateStats(model, groupIds, filter, field) {
   const stats = await model.aggregate([
