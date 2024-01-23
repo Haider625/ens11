@@ -26,7 +26,7 @@ exports.uploadSingleImage = (fieldName) => {
     upload(req, res, (err) => {
       if (err) {
         console.error('Multer Error:', err);
-        return res.status(500).json({ error: 'Error uploading image' });
+        return res(new ApiError('Only Images allowed', 400), false);
       }
       next();
     });
