@@ -27,12 +27,12 @@ const userSchema = new mongoose.Schema(
       jobTitle : {
         type: String,
         // required: [true, 'jobTitle required'],
-        minlength: [1,'Too short job title'],
+        minlength: [4,'Too short job title'],
         maxlength: [32,'Too long job title']
       },
       school : {
         type: String,
-        minlength: [1,'Too short school'],
+        minlength: [4,'Too short school'],
         maxlength: [32,'Too long school']
       },
       phone: String,
@@ -267,15 +267,7 @@ const userSchema = new mongoose.Schema(
         ref:'group',
       required: [true, 'levelsReceive required'],
       }],
-      forwordOrders : [{
-        type : mongoose.Schema.ObjectId,
-        ref:'group',
-      }],
-      forwordAccepts : [{
-        type : mongoose.Schema.ObjectId,
-        ref:'group',
-      }],
-      forwordRejects : [{
+      forwordLevels : [{
         type : mongoose.Schema.ObjectId,
         ref:'group',
       }],
@@ -315,6 +307,10 @@ const userSchema = new mongoose.Schema(
       path: 'levelsReceive',
       select: 'name level inlevel services',
       })
+      .populate({
+        path: 'forwordLevels',
+        select:'name level inlevel services',
+        })
     next();
   });
   // const setImageURL = (doc) => {
@@ -360,5 +356,5 @@ const userSchema = new mongoose.Schema(
     
   };
   const User = mongoose.model('User', userSchema);
-
+  
   module.exports = User;
