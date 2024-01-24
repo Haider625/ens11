@@ -63,6 +63,17 @@ exports.login = asyncHandler(async (req, res, next) => {
   res.status(200).json({ user: user, token });
 });
 
+// @desc    Logout
+// @route   GET /api/v1/auth/logout
+// @access  Private (since you're logging out a logged-in user)
+exports.logout = asyncHandler(async (req, res, next) => {
+  // إلغاء صلاحية رمز JWT
+  res.clearCookie('jwt'); // افتراضياً، يتم تخزين رمز JWT في ملف تعريف الارتباط
+
+  res.status(200).json({ message: 'تم تسجيل الخروج بنجاح' });
+});
+
+
 
 // @desc   make sure the user is logged in
 exports.protect = asyncHandler(async (req, res, next) => {
@@ -73,7 +84,11 @@ exports.protect = asyncHandler(async (req, res, next) => {
     req.headers.authorization.startsWith('Bearer')
   ) {
     token = req.headers.authorization.split(' ')[1];
+  } else if (req.cookies.jwt) {
+    // تحقق من وجود رمز JWT في ملف تعريف الارتباط
+    token = req.cookies.jwt;
   }
+  
   if (!token) {
     return next(
       new ApiError(

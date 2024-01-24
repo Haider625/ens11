@@ -87,6 +87,7 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     type2: req.body.type2,
     type3: req.body.type3,
     caption: req.body.caption,
+    number : req.body.number,
     group: lowerLevelGroup ,
     createdBy: req.user._id,
     user : req.body.user,

@@ -49,7 +49,7 @@ exports.createUserValidator = [
   check('jobTitle')
     .notEmpty()
     .withMessage('jobTitle required')
-    .isLength({ min: 6 })
+    .isLength({ min: 1 })
     .withMessage('jobTitle must be at least 6 characters')
     .isLength({ max: 32 })
     .withMessage('Too long jobTitle'),
@@ -57,7 +57,7 @@ exports.createUserValidator = [
   check('school')
     .notEmpty()
     .withMessage('school required')
-    .isLength({ min: 6 })
+    .isLength({ min: 1 })
     .withMessage('school must be at least 6 characters')
     .isLength({ max: 32 })
     .withMessage('Too long school'),

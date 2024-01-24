@@ -31,6 +31,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
   }
   next()
 })
+
 exports.createUser =  asyncHandler(async (req, res,next) => {
 
   if (!req.user.Permission.canCreatUser) {
@@ -123,5 +124,3 @@ exports.updateUser =  asyncHandler(async (req, res, next) => {
 
   res.status(200).json({ user: document });
 });
-
-
