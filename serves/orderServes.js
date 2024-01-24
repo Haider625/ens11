@@ -30,7 +30,6 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
     const orderimgFileName = `order-${uuidv4()}-${Date.now()}.jpeg`;
 
     await sharp(req.files.orderimg[0].buffer)
-      .resize(2000, 1333)
       .toFormat('jpeg')
       .jpeg({ quality: 95 })
       .toFile(`uploads/orders/${orderimgFileName}`);
@@ -46,15 +45,14 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
       req.files.donimgs.map(async (img, index) => {
         const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
   
-        await sharp(img.buffer)
-          .resize(2000, 1333)
+        sharp(img.buffer)
           .toFormat('jpeg')
           .jpeg({ quality: 95 })
           .toFile(`uploads/orders/${imageName}`, (err) => {
             if (err) {
               console.error('Error saving image:', err);
             } else {
-              req.body.donimgs.push(imageName) ;
+              req.body.donimgs.push(imageName);
             }
           });
       })
