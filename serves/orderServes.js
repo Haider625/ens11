@@ -50,7 +50,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
           .jpeg({ quality: 95 })
           .toFile(`uploads/orders/${imageName}`, (err) => {
             if (err) {
-              console.error('Error saving image:', err);
+              console.error('Error saving image:', err)
             } else {
               req.body.donimgs.push(imageName);
             }
@@ -71,15 +71,11 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   }
   // احصل على الكروب الذي يحتوي على مستوى أقل برقم واحد
   const lowerLevelGroup = users.levelSend;
-  console.log(lowerLevelGroup)
   // تحقق من وجود الكروب
   if (!lowerLevelGroup) {
     return res.status(400).json({ success: false, error: 'No lower level group found' });
   }
 
-  if (lowerLevelGroup && lowerLevelGroup._id) {
-    console.log(lowerLevelGroup._id);
-  }
   const orderData = {
     type1: req.body.type1,
     type2: req.body.type2,
