@@ -98,3 +98,28 @@ exports.updatetypeText2 =   asyncHandler(async (req, res, next) => {
 
     res.status(200).json({ typeText2: document });
   });
+
+exports.updateText2 =   asyncHandler(async (req, res, next) => {
+
+    if (!req.user.Permission.canEdittypeText2) {
+      return next(new ApiError('You do not have permission to edit this typeText2', 403));
+    }
+
+    const document = await typeText2.findByIdAndUpdate(
+      req.params.id,
+      {
+      name: req.body.name,
+      $addToSet: { typeText3: req.body.typeText3 } 
+      },
+      {
+      new: true,
+    });
+
+    if (!document) {
+      return next(
+        new ApiError(`No document for this id ${req.params.id}`, 404)
+      );
+    }
+
+    res.status(200).json({ typeText2: document });
+  });

@@ -7,14 +7,18 @@ const {
     deleteUser,
     updateUser,  
     uploadUserImage,
-    resizeImage
+    resizeImage,
+    updateLoggedUserPassword,
+    changeUserPassword,
 } = require('../serves/userServer');
 
 const {
     createUserValidator,
     deleteUserValidator,
     getUserValidator,
-    updateUserValidator
+    updateUserValidator,
+    changeUserPasswordValidator,
+    changeUserLoggedPasswordValidator
 } = require('../utils/validators/userValidat');
 
 const auth = require('../serves/auth');
@@ -26,6 +30,13 @@ router.use(auth.protect);
 router.route('/')
 .get(getsUser)
 .post(uploadUserImage,resizeImage,createUserValidator,createUser);
+
+router.put('/changePassword',changeUserLoggedPasswordValidator,updateLoggedUserPassword)
+router.put(
+    '/changePassword/:id',
+    changeUserPasswordValidator,
+    changeUserPassword
+  );
 
 router.route('/:id')
 .get(getUserValidator,getUser)

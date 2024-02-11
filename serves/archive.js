@@ -11,7 +11,13 @@ exports.createArchive = asyncHandler(async (req, res,next) => {
     return next(new ApiError('You do not have permission to create an archives', 403));
   }
 
-  const newDoc = await archives.create(req.body);
+  const newDoc = await archives.create(
+    
+    {
+      orderId : req.body.orderId,
+      completedBy:req.user._id
+    }
+    );
   if (!newDoc) {
       return next(
         new ApiError(`No document for this id ${req.body}`, 404)
@@ -104,14 +110,15 @@ exports.getArchivesAccept = asyncHandler(async (req, res, next) => {
       const acceptedOrders = await archives.find({
         $or: [
           { 'State': 'accept' },
-          { 'StateWork': 'acceptwork' }
+          { 'StateWork': 'acceptwork' },
+          { 'stateDone' : 'accept'}
         ]
       });
   
       // قم بإرجاع النتائج
-      res.status(200).json({ success: true, data: acceptedOrders });
+      res.status(200).json({archives : acceptedOrders });
     } catch (error) {
-      console.error('Error in getAcceptedOrdersFromArchive:', error);
+
       return next(new ApiError(500, 'Internal Server Error'));
     }
 });
@@ -122,14 +129,14 @@ exports.getArchivesReject =  asyncHandler(async (req, res, next) => {
       const rejectedOrders = await archives.find({
         $or: [
           { 'State': 'reject' },
-          { 'StateWork': 'reject' }
+          { 'StateWork': 'reject' },
+          { 'stateDone' : 'reject'}
         ]
       });
   
       // قم بإرجاع النتائج
-      res.status(200).json({ success: true, data: rejectedOrders });
+      res.status(200).json({ archives : rejectedOrders });
     } catch (error) {
-      console.error('Error in getRejectedOrdersFromArchive:', error);
       return next(new ApiError(500, 'Internal Server Error'));
     }
 });

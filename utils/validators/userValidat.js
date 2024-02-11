@@ -114,3 +114,41 @@ exports.deleteUserValidator = [
   check('id').isMongoId().withMessage('Invalid User id format'),
   validatorMiddleware,
 ];
+
+
+exports.changeUserPasswordValidator = [
+  check('id').isMongoId().withMessage('Invalid User id format'),
+  body('passwordConfirm')
+    .notEmpty()
+    .withMessage('You must enter the password confirm'),
+  body('password')
+    .notEmpty()
+    .withMessage('You must enter new password')
+    .custom(async (val, { req }) => {
+
+      // 2) Verify password confirm
+      if (val !== req.body.passwordConfirm) {
+        throw new Error('Password Confirmation incorrect');
+      }
+      return true;
+    }),
+  validatorMiddleware,
+];
+
+exports.changeUserLoggedPasswordValidator = [
+  body('passwordConfirm')
+    .notEmpty()
+    .withMessage('You must enter the password confirm'),
+  body('password')
+    .notEmpty()
+    .withMessage('You must enter new password')
+    .custom(async (val, { req }) => {
+
+      // 2) Verify password confirm
+      if (val !== req.body.passwordConfirm) {
+        throw new Error('Password Confirmation incorrect');
+      }
+      return true;
+    }),
+  validatorMiddleware,
+];

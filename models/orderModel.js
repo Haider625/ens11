@@ -32,45 +32,58 @@ const orderSchema = new mongoose.Schema(
       type: String,
       enum: ['accept','reject','onprase'],
       default: 'onprase',
-      reasonAccept: {
-        type : String,
-        default : "تم قبول الطلب"
-      },
-      reasonReject: {
-        type : String,
-        default : "تم رفظ الطلب"
-      }
+
+    },
+
+    StateReasonAccept: {
+      type : String,
+      default : "تم قبول الطلب"
+    },
+    StateReasonReject: {
+      type : String,
+      default : "تم رفظ الطلب"
+    },
+    StateReasonOnprase: {
+      type : String,
+      default : "تم تحويل الطلب"
     },
 
     StateWork: {
       type :String,
       enum: ['acceptwork','startwork','endwork','reject','onprase'],
       default: 'onprase',
-      reasonAccept: {
-        type : String,
-        default : "تم قبول الطلب"
-      },
-      reasonReject: {
-        type : String,
-        default : "تم رفظ الطلب"
-      }
+
+    },
+    StateWorkReasonAccept: {
+      type : String,
+      default : "تم قبول الطلب"
+    },
+    StateWorkReasonReject: {
+      type : String,
+      default : "تم رفظ الطلب"
     },
 
     StateDone : {
       type : String ,
       enum : ['onprase','reject','accept'],
       default: 'onprase',
-      reasonAccept: {
-        type : String,
-        default : "تم قبول الطلب"
-      },
-      reasonReject: {
-        type : String,
-        default : "تم رفظ الطلب"
-      }
+
     },
 
-    group: [{
+    StateDoneReasonAccept: {
+      type : String,
+      default : "تم قبول الطلب"
+    },
+    StateDoneReasonReject: {
+      type : String,
+      default : "تم رفظ الطلب"
+    },
+    group : {
+      type: mongoose.Schema.ObjectId,
+      ref: 'group',
+    },
+
+    groups: [{
       type: mongoose.Schema.ObjectId,
       ref: 'group',
      
@@ -102,6 +115,9 @@ const orderSchema = new mongoose.Schema(
          }, // استبدل 'User' باسم السكيما الخاصة بالمستخدمين
       action:   { 
         type:String
+      },
+      reason :{ 
+        type:String
       }
   }]
 
@@ -111,22 +127,84 @@ const orderSchema = new mongoose.Schema(
 
 orderSchema.plugin(mongoosePaginate);
 orderSchema.pre(/^find/, function (next) {
-  this.populate({
-    path: 'group',
-    select: 'name level inlevel', // Adjust the fields you want to populate
-  })
-  this.populate({
-    path: 'createdBy',
-    select: 'name userId school group ',
-    })
-  this.populate({
-   path: 'users',
-   select: 'name userId school group ',
-    });
-  this.populate({
-    path: 'history.editedBy',
-    select: 'name userId school group ',
-     });
+  this.populate([
+    { 
+      path: 'group',
+        select: {
+        '_id' : 1,
+        'name':1,
+        'level':1,
+        'inlevel':1,
+        'levelSend':1,
+        'services' : 1
+      },
+      options: { depth: 1 }
+    },
+    { 
+      path: 'groups',
+        select: {
+        '_id' : 1,
+        'name':1,
+        'level':1,
+        'inlevel':1,
+        'levelSend':1,
+        'services' : 0
+      },
+      options: { depth: 1 }
+    },
+    { 
+      path: 'createdBy',
+        select: {
+          '_id' :1,
+          'name':1,
+          'userId':1,
+          'group':1,
+      },
+      options: { depth: 1 }
+    },
+    { 
+      path: 'users',
+        select: {
+          '_id' :1,
+          'name':1,
+          'userId':1,
+          'group':1,
+      },
+      options: { depth: 1 }
+    },
+    { 
+      path: 'users',
+        select: {
+          '_id' :1,
+          'name':1,
+          'userId':1,
+      },
+      options: { depth: 1 }
+    },
+    {
+      path : 'history.editedBy',
+        select :{
+          '_id' :0,
+          'name' :1,
+          'userId' :1,
+          'image' : 1
+        },
+        options:{depth :1}
+    }
+
+  ])
+  // this.populate({
+  //   path: 'createdBy',
+  //   select: 'name userId',
+  //   })
+  // this.populate({
+  //  path: 'users',
+  //  select: 'name userId school group ',
+  //   });
+//   this.populate({
+//     path: 'history.editedBy',
+//     select: 'name userId',
+//      });
   next();
 });
 

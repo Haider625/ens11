@@ -92,7 +92,7 @@ exports.updateGroupUser = asyncHandler(async (req, res, next) => {
     );
   }
 
-  res.status(200).json({ order: document });
+  res.status(200).json({ group: document });
 });
 
 exports.addGroupBetweenLevels = asyncHandler(async (req, res) => {

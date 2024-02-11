@@ -1,13 +1,15 @@
 const express = require('express');
 
 const {
-    acceptOrder,
+    getUserOrders,
     getUsersInGroup,
+    acceptOrder,
+    acceptwork,
     startWork,
     endWork,
     confirmWorkCompletion,
     AcceptArchive,
-    getUserOrders
+ 
 } = require('../serves/accept');
 
 const auth = require('../serves/auth');
@@ -19,6 +21,9 @@ router.use(auth.protect);
 router.get(('/getuser'),getUsersInGroup)
 
 router.get(('/OrdersUser'),getUserOrders)
+
+
+router.put(('/acceptwork/:id'),acceptwork)
 
 router.put(('/acceptorder/:id'),acceptOrder)
 

@@ -2,12 +2,14 @@ const express = require('express');
 
 const {
     rejectOrder,
-    getGroupscanViwGroups,
     rejectWork,
+    rejectConfirm,
     getRejectedOrders,
     getRejectedWorks,
     getOrdersWithRejectState,
-    archiveOrder,
+    getRejectedDone,
+    getUserOrders,
+    archiveReject,
 } = require('../serves/reject');
 
 // const {
@@ -21,11 +23,23 @@ const router = express.Router();
 router.use(auth.protect);
 
 router.get('/order',getRejectedOrders)
+
 router.get('/work',getRejectedWorks)
-router.get('/reject',getOrdersWithRejectState)
-router.get('/:group',getGroupscanViwGroups)
+
+router.get('/rejected',getOrdersWithRejectState)
+
+router.get('/done',getRejectedDone)
+
+router.get('/getUserOrders',getUserOrders)
+
+
 router.put('/order/:id',rejectOrder)
+
 router.put('/work/:id',rejectWork)
-router.post('/archive',archiveOrder)
+
+router.put('/rejectConfirm/:id',rejectConfirm)
+
+
+router.post('/archive/:id',archiveReject)
 
 module.exports = router;

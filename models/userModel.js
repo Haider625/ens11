@@ -37,6 +37,11 @@ const userSchema = new mongoose.Schema(
       },
       phone: String,
       image: String,
+      passwordChangedAt :Date,
+      UserChangerPassword : {
+        type : mongoose.Schema.ObjectId,
+        ref:'User',
+      },
       group : {
         type : mongoose.Schema.ObjectId,
         ref:'group',
@@ -81,6 +86,14 @@ const userSchema = new mongoose.Schema(
           default: false,
         },
         canDeletUser : {
+          type: Boolean,
+          default: false,
+        },
+        updateLoggedUserPassword : {
+          type: Boolean,
+          default: false,
+        },
+        changeUserPassword : {
           type: Boolean,
           default: false,
         },
@@ -257,17 +270,11 @@ const userSchema = new mongoose.Schema(
         type : mongoose.Schema.ObjectId,
         ref:'group',
       }],
-      levelSend : [{
+      forwordOrdersUp : [{
         type : mongoose.Schema.ObjectId,
         ref:'group',
-        required: [true, 'levelSend required'],
       }],
-      levelsReceive : [{
-        type : mongoose.Schema.ObjectId,
-        ref:'group',
-      required: [true, 'levelsReceive required'],
-      }],
-      forwordLevels : [{
+      forwordWorkDown : [{
         type : mongoose.Schema.ObjectId,
         ref:'group',
       }],
@@ -291,43 +298,36 @@ const userSchema = new mongoose.Schema(
     next();
   });
   userSchema.pre(/^find/, function (next) {
-    this.populate({
-      path: 'group',
-      select: 'name level inlevel services',
-    })
-    .populate({
-      path: 'GroupscanViw',
-      select: 'name level inlevel services',
-    })
-    .populate({
-      path: 'levelSend',
-      select: 'name level inlevel services',
-    })
-    .populate({
-      path: 'levelsReceive',
-      select: 'name level inlevel services',
-      })
-      .populate({
-        path: 'forwordLevels',
-        select:'name level inlevel services',
-        })
+    this.populate([
+      {
+        path: 'group',
+        select: {
+        '_id' : 1,
+        'name':1,
+        'level':1,
+        'inlevel':1,
+        'levelSend':1,
+        'levelsReceive' :1,
+        'services' : 1
+      },
+      options: { depth: 1 }
+      },
+      {
+        path: 'GroupscanViw',
+        select: {
+        '_id' : 1,
+        'name':1,
+        'level':1,
+        'inlevel':1,
+        'levelSend':1,
+        'levelsReceive' :1,
+      
+      },
+      options: { depth: 1 }
+      },
+    ])
     next();
   });
-  // const setImageURL = (doc) => {
-  //   if (doc.image) {
-  //     const imageUrl = `${process.env.BASE_URL}/users/${doc.image}`;
-  //     doc.image = imageUrl;
-  //   }
-  // };
-  // // findOne, findAll and update
-  // userSchema.post('init', (doc) => {
-  //   setImageURL(doc);
-  // });
-  
-  // // create
-  // userSchema.post('save', (doc) => {
-  //   setImageURL(doc);
-  // });
 
   const setImageURL = (doc) => {
     if (doc.image && !doc.image.startsWith(process.env.BASE_URL)) {
@@ -345,16 +345,6 @@ const userSchema = new mongoose.Schema(
     setImageURL(doc);
   });
 
-  userSchema.methods.getGroupscanViwData = async function () {
-    // تأكيد وجود GroupscanViw في Permission
-    if (this.Permission && this.Permission.GroupscanViw && this.Permission.GroupscanViw.length > 0) {
-      // جلب بيانات المجموعات المفصلة
-      const groupscanViwData = await mongoose.model('group').find({ '_id': { $in: this.Permission.GroupscanViw } }, 'name level inlevel');
-      return groupscanViwData;
-    } 
-      return [];
-    
-  };
   const User = mongoose.model('User', userSchema);
   
   module.exports = User;

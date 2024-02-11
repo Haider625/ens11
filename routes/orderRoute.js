@@ -7,6 +7,8 @@ const {
     updateOrder,
     getOrders,
     createOrderSend,
+    getAllText,
+    getOnpraseOrders,
     uploadOrderImage,
     resizeImage
 } = require('../serves/orderServes');
@@ -28,12 +30,16 @@ router.route('/')
 .get(getOrders)
 .post(uploadOrderImage,resizeImage,createOrderValidator,createOrderSend);
 
+router.get('/getAllText',getAllText)
+
+router.get('/getOnpraseOrders',getOnpraseOrders)
+
 router.route('/:id')
 .get(getOrderValidator,getOrder)
 .put(uploadOrderImage,resizeImage,updateOrderValidator,updateOrder)
 .delete(deleteOrderValidator,deleteOrder)
 
-router.post('/createOrderSend',createOrderValidator,createOrderSend)
+
 
 
 module.exports = router;

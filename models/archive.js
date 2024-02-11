@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const CompletedRequestSchema = new mongoose.Schema({
+const archiveSchema = new mongoose.Schema({
 
   orderId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -16,6 +16,6 @@ const CompletedRequestSchema = new mongoose.Schema({
   },
 });
 
-const CompletedRequest = mongoose.model('CompletedRequest', CompletedRequestSchema);
+const CompletedRequest = mongoose.model('archive', archiveSchema);
 
 module.exports = CompletedRequest;

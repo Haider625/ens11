@@ -12,18 +12,10 @@ exports.getOrderValidator = [
 ];
 
 exports.createOrderValidator = [
-  check('title')
-   .optional(),
 
   check('caption')
     .optional(),
 
-  check('materialName')
-   .optional(),
-
-    check('type')
-    .optional()
-,
   validatorMiddleware,
 ];
 
@@ -41,4 +33,4 @@ exports.deleteOrderValidator = [
   .isMongoId()
   .withMessage('Invalid category id format'),
   validatorMiddleware,
-];
+]

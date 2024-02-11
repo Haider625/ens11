@@ -3,9 +3,6 @@
 
 const bcrypt = require('bcryptjs');
 const asyncHandler = require('express-async-handler');
-const { v4: uuidv4 } = require('uuid');
-const sharp = require('sharp');
-const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const ApiError = require('../utils/apiError');
 const createToken = require('../utils/creatToken');
@@ -66,18 +63,30 @@ exports.login = asyncHandler(async (req, res, next) => {
 // @desc    Logout
 // @route   GET /api/v1/auth/logout
 // @access  Private (since you're logging out a logged-in user)
-exports.logout = asyncHandler(async (req, res, next) => {
-  // إلغاء صلاحية رمز JWT
-  res.clearCookie('jwt'); // افتراضياً، يتم تخزين رمز JWT في ملف تعريف الارتباط
+exports.logout = asyncHandler(async(req, res) => {
+  try {
+    // إلغاء صلاحية رمز JWT عن طريق إعادة توقيعه بقيمة فارغة ووقت انتهاء صلاحيته فوراً
+    const invalidatedToken = createToken('');
 
-  res.status(200).json({ message: 'تم تسجيل الخروج بنجاح' });
-});
+    res.cookie('jwt', invalidatedToken, {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+
+    res.status(200).json({ message: 'تم تسجيل الخروج بنجاح' });
+  } catch (error) {
+    // تعامل مع الأخطاء هنا
+    console.error('Error during logout:', error);
+    res.status(500).json({ error: 'حدثت مشكلة أثناء تسجيل الخروج' });
+  }
+}
+)
 
 
 
 // @desc   make sure the user is logged in
 exports.protect = asyncHandler(async (req, res, next) => {
-  // 1) Check if token exist, if exist get
+  // 1) Check if token exists
   let token;
   if (
     req.headers.authorization &&
@@ -88,49 +97,40 @@ exports.protect = asyncHandler(async (req, res, next) => {
     // تحقق من وجود رمز JWT في ملف تعريف الارتباط
     token = req.cookies.jwt;
   }
-  
+
   if (!token) {
     return next(
       new ApiError(
-        'You are not login, Please login to get access this route',
+        'You are not logged in, Please log in to get access to this route',
         401
       )
     );
   }
 
   // 2) Verify token (no change happens, expired token)
-  const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-  // 3) Check if user exists
-  const currentUser = await User.findById(decoded.userId);
-  if (!currentUser) {
+    // 3) Check if user exists
+    const currentUser = await User.findById(decoded.userId);
+    if (!currentUser) {
+      return next(
+        new ApiError(
+          'The user that belongs to this token no longer exists',
+          401
+        )
+      );
+    }
+
+    // 4) Set user information on the request object
+    req.user = currentUser;
+    next();
+  } catch (err) {
+    // Handle token verification failure (expired or invalid token)
     return next(
-      new ApiError(
-        'The user that belong to this token does no longer exist',
-        401
-      )
+      new ApiError('Invalid token or token has expired, please log in', 401)
     );
   }
-
-  // // 4) Check if user change his password after token created
-  // if (currentUser.passwordChangedAt) {
-  //   const passChangedTimestamp = parseInt(
-  //     currentUser.passwordChangedAt.getTime() / 1000,
-  //     10
-  //   );
-  //   // Password changed after token created (Error)
-  //   if (passChangedTimestamp > decoded.iat) {
-  //     return next(
-  //       new ApiError(
-  //         'User recently changed his password. please login again..',
-  //         401
-  //       )
-  //     );
-  //   }
-  // }
-
-  req.user = currentUser;
-  next();
 });
 
 // @desc    Authorization (User Permissions)

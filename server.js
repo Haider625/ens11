@@ -1,8 +1,14 @@
+/* eslint-disable import/no-extraneous-dependencies */
+
 const path = require('path')
+const http = require('http');
 
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require('morgan');
+
+const io = require('socket.io');
+const notifier = require('node-notifier'); 
 
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
@@ -23,6 +29,7 @@ const typeText2 = require('./routes/typeText2Rout')
 const typeText3 = require('./routes/typeText3Rout')
 
 const app = express();
+const server = http.createServer(app);
 app.use(express.json());
 app.use(express.static(path.join(__dirname,'uploads')));
 
@@ -30,6 +37,7 @@ dotenv.config({path: 'config.env'})
 
 dbconnection();
 
+const socketIo = io(server)
 
 if(process.env.NODE_ENV === 'devlopment') {
     app.use(morgan('dev'));
@@ -50,20 +58,43 @@ app.use('/api/v1/typeText1',typeText1)
 app.use('/api/v1/typeText2',typeText2)
 app.use('/api/v1/typeText3',typeText3)
 
-app.get('/',(req,res)=>{
-    res.send('sdjf');
-})
+
 
 app.all('*',(req,res,next) => {
-    next(new ApiError(`can t find this route : ${req.originalUrl}`, 400))
+    next(new ApiError(`can t find this route : ${req.originalUrl}`, 404));
  })
+
+// Socket.io handling
+socketIo.on('connection', (socket) => {
+    console.log('A user connected');
+
+    // استقبال إشعارات من العميل
+    socket.on('sendNotification', (data) => {
+        console.log('Received notification from client:', data);
+
+        // إرسال إشعار لجميع العملاء
+        socketIo.emit('receiveNotification', { message: 'New notification!' });
+
+        // إظهار إشعار على جهاز الخادم
+        notifier.notify({
+            title: 'New Notification',
+            message: 'You received a new notification!',
+        });
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
 
 app.use(globalError)
 
-const PORT = process.env.PORT || 6000
- const server = app.listen(PORT , () => {
+
+const PORT = process.env.PORT || 443 
+ server.listen(PORT , () => {
     console.log(`App running on port :${PORT}`);
 })
+
 
 process.on(`unhandledRejection`,(err) =>{
     console.error(`UnhandledRejection Error : ${err.name} | ${err.massage}`);

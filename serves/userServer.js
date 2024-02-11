@@ -3,9 +3,11 @@
 const asyncHandler = require('express-async-handler');
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
+const bcrypt = require('bcryptjs');
 const ApiError = require('../utils/apiError')
 const ApiFeatures = require('../utils/apiFeatures')
 const User = require('../models/userModel')
+const createToken = require('../utils/creatToken');
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
@@ -123,4 +125,53 @@ exports.updateUser =  asyncHandler(async (req, res, next) => {
   }
 
   res.status(200).json({ user: document });
+});
+
+exports.updateLoggedUserPassword = asyncHandler(async (req, res, next) => {
+
+  
+  if (!req.user.Permission.updateLoggedUserPassword) {
+    return next(new ApiError('You do not have permission to delete this order', 403));
+  }
+  // 1) Update user password based user payload (req.user._id)
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      password: await bcrypt.hash(req.body.password, 12),
+      passwordChangedAt: Date.now(),
+      UserChangerPassword : req.user._id
+    },
+    {
+      new: true,
+    }
+  );
+
+  // 2) Generate token
+  const token = createToken(user._id);
+
+  res.status(200).json({ data: user, token });
+});
+
+exports.changeUserPassword = asyncHandler(async (req, res, next) => {
+
+  if (!req.user.Permission.changeUserPassword) {
+    return next(new ApiError('You do not have permission to delete this order', 403));
+  }
+
+  const document = await User.findByIdAndUpdate(
+    req.params.id,
+    {
+      password: await bcrypt.hash(req.body.password, 12),
+      passwordChangedAt: Date.now(),
+      UserChangerPassword : req.user._id
+    },
+    {
+      new: true,
+    }
+  );
+
+  if (!document) {
+    return next(new ApiError(`No document for this id ${req.params.id}`, 404));
+  }
+  res.status(200).json({ data: document });
 });
