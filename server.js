@@ -7,8 +7,8 @@ const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require('morgan');
 
-const io = require('socket.io');
-const notifier = require('node-notifier'); 
+const socketIo = require('socket.io');
+const notifier = require('node-notifier');
 
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
@@ -29,7 +29,10 @@ const typeText2 = require('./routes/typeText2Rout')
 const typeText3 = require('./routes/typeText3Rout')
 
 const app = express();
+
 const server = http.createServer(app);
+const io = socketIo(server);
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname,'uploads')));
 
@@ -37,7 +40,6 @@ dotenv.config({path: 'config.env'})
 
 dbconnection();
 
-const socketIo = io(server)
 
 if(process.env.NODE_ENV === 'devlopment') {
     app.use(morgan('dev'));
@@ -64,8 +66,7 @@ app.all('*',(req,res,next) => {
     next(new ApiError(`can t find this route : ${req.originalUrl}`, 404));
  })
 
-// Socket.io handling
-socketIo.on('connection', (socket) => {
+ io.on('connection', (socket) => {
     console.log('A user connected');
 
     // استقبال إشعارات من العميل
@@ -73,7 +74,7 @@ socketIo.on('connection', (socket) => {
         console.log('Received notification from client:', data);
 
         // إرسال إشعار لجميع العملاء
-        socketIo.emit('receiveNotification', { message: 'New notification!' });
+        io.emit('receiveNotification', { message: 'New notification!' });
 
         // إظهار إشعار على جهاز الخادم
         notifier.notify({
@@ -90,7 +91,7 @@ socketIo.on('connection', (socket) => {
 app.use(globalError)
 
 
-const PORT = process.env.PORT || 443 
+const PORT = process.env.PORT || 6000
  server.listen(PORT , () => {
     console.log(`App running on port :${PORT}`);
 })
