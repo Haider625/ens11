@@ -15,9 +15,9 @@ exports.createWordTextValidator = [
   check('name')
   .notEmpty()
   .withMessage('name required')
-  .isLength({ min: 5 })
+  .isLength({ min: 1 })
   .withMessage('Too short name')
-  .isLength({ max: 100 })
+  .isLength({ max: 250 })
   .withMessage('Too long name'),
 
   validatorMiddleware,

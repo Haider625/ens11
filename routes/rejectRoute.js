@@ -6,7 +6,7 @@ const {
     rejectConfirm,
     getRejectedOrders,
     getRejectedWorks,
-    getOrdersWithRejectState,
+    getAllRejected,
     getRejectedDone,
     getUserOrders,
     archiveReject,
@@ -26,12 +26,11 @@ router.get('/order',getRejectedOrders)
 
 router.get('/work',getRejectedWorks)
 
-router.get('/rejected',getOrdersWithRejectState)
+router.get('/rejected',getAllRejected)
 
 router.get('/done',getRejectedDone)
 
 router.get('/getUserOrders',getUserOrders)
-
 
 router.put('/order/:id',rejectOrder)
 

@@ -6,22 +6,26 @@ const orderSchema = new mongoose.Schema(
   {
     type1: {
        type: String,
+       required: [true, 'type1 required'],
     },
 
     type2: {
       type: String,
+      required: [true, 'type2 required'],
     },
 
     type3: {
       type: String,
+      required: [true, 'type3 required'],
     },
 
-    number : Number ,
-
+    number :{
+      type: Number,
+      maxlength: [10, 'Too long caption'],
+    },
     caption: {
       type: String,
-      minlength: [4, 'Too short caption'],
-      maxlength: [300, 'Too long caption'],
+      maxlength: [310, 'Too long caption'],
     },
 
     orderimg : String,
@@ -89,13 +93,18 @@ const orderSchema = new mongoose.Schema(
      
     }],
 
-    users : [{
+    users : {
       type: mongoose.Schema.ObjectId,
       ref: 'User',
       default: null,
       set: function (userId) {
         return userId || this.user || null;
       },
+    },
+
+    usersOnprase : [{
+      type: mongoose.Schema.ObjectId,
+      ref: 'User',
     }],
 
     createdBy :{
@@ -110,11 +119,11 @@ const orderSchema = new mongoose.Schema(
          default: Date.now
          },
       editedBy: {
-         type: mongoose.Schema.ObjectId,
-          ref: 'User'
-         }, // استبدل 'User' باسم السكيما الخاصة بالمستخدمين
+        type: mongoose.Schema.ObjectId,
+         ref: 'User'
+        },
       action:   { 
-        type:String
+        type:String,
       },
       reason :{ 
         type:String
@@ -155,10 +164,15 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'createdBy',
         select: {
-          '_id' :1,
-          'name':1,
-          'userId':1,
-          'group':1,
+          '_id' :0,
+          'name' :1,
+          'userId' :1,
+          'jobTitle' :1,
+          'school' :1,
+          'group' :0,
+          'GroupscanViw' :0,
+          'active' :1,
+          'image' : 1
       },
       options: { depth: 1 }
     },
@@ -187,24 +201,42 @@ orderSchema.pre(/^find/, function (next) {
           '_id' :0,
           'name' :1,
           'userId' :1,
+          'jobTitle' :1,
+          'school' :1,
+          'group' :0,
+          'GroupscanViw' :0,
+          'active' :1,
           'image' : 1
         },
         options:{depth :1}
-    }
+    },
+    {
+      path : 'history.action.editedBy',
+        select :{
+          '_id' :0,
+          'name' :1,
+          'userId' :1,
+          'jobTitle' :1,
+          'school' :1,
+          'group' :0,
+          'GroupscanViw' :0,
+          'active' :1,
+          'image' : 1
+        },
+        options:{depth :1}
+    },
+    { 
+      path: 'usersOnprase',
+        select: {
+          '_id' :1,
+          'name':1,
+          'userId':1,
+          'group':1,
+      },
+      options: { depth: 1 }
+    },
 
   ])
-  // this.populate({
-  //   path: 'createdBy',
-  //   select: 'name userId',
-  //   })
-  // this.populate({
-  //  path: 'users',
-  //  select: 'name userId school group ',
-  //   });
-//   this.populate({
-//     path: 'history.editedBy',
-//     select: 'name userId',
-//      });
   next();
 });
 
@@ -219,7 +251,6 @@ const setImageURL = (doc) => {
   }
 };
 
-// findOne, findAll, and update
 orderSchema.pre('findOne', function (next) {
   setImageURL(this);
   next();
@@ -236,10 +267,10 @@ orderSchema.pre('update', function (next) {
   next();
 });
 
-// create
 orderSchema.pre('save', function (next) {
   setImageURL(this);
   next();
 });
+
 const Order = mongoose.model('Order', orderSchema);
-module.exports = Order; // Export the Order model
+module.exports = Order; 

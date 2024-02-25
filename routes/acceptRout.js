@@ -9,7 +9,8 @@ const {
     endWork,
     confirmWorkCompletion,
     AcceptArchive,
- 
+    uploadOrderImage,
+    resizeImage,
 } = require('../serves/accept');
 
 const auth = require('../serves/auth');
@@ -29,10 +30,10 @@ router.put(('/acceptorder/:id'),acceptOrder)
 
 router.put(('/startwork/:id'),startWork)
 
-router.put(('/endwork/:id'),endWork)
+router.put(('/endwork/:id'),uploadOrderImage,resizeImage,endWork)
 
 router.put(('/confirm/:id'),confirmWorkCompletion)
 
-router.post('/Archive',AcceptArchive)
+router.post('/Archive/:id',AcceptArchive)
 
 module.exports = router;

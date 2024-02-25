@@ -1,8 +1,11 @@
+/* eslint-disable prefer-destructuring */
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/orderModel')
 const ApiError = require('../utils/apiError');
 const ApiFeatures = require('../utils/apiFeatures');
 const archive = require('../models/archive')
+const groups = require('../models/groupUser')
+const user = require('../models/userModel')
 
 exports.getRejectedOrders = asyncHandler(async (req, res) => {
 
@@ -67,12 +70,47 @@ exports.getRejectedDone = asyncHandler(async (req, res) => {
       .json({ results: documents.length, paginationResult, data: documents });
   });
 
-exports.getOrdersWithRejectState = asyncHandler(async (req, res) => {
+exports.getAllRejected = asyncHandler(async (req, res) => {
+  const loggedInUserId = req.user._id;
 
+  // let filter = {};
+  // if (req.filter) {
+    
+  //   filter = req.filter;
+  // }
+
+  const userGroup = await user.findOne({ _id: loggedInUserId });
+  const userGroupLevel = userGroup.group.level;
+  const userGroupInLevel = userGroup.group.inlevel;
+  
+  const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
+
+
+  const groupIds = similarGroups.map(group => group._id);
+
+  const groupFilter = {
+    groups: {
+      $in: groupIds ,
+    }
+  };
   const filter = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], groups: req.user.group };
-    // Build query
+
     const documentsCounts = await Order.countDocuments();
-    const apiFeatures = new ApiFeatures(Order.find(filter), req.query)
+    const loggedInUserIdString = loggedInUserId.toString();
+    const acceptedOrdersFilter = {
+      $or: [
+        { createdBy: loggedInUserIdString },
+        {
+          $and: [
+            { State: 'reject' },
+            { StateWork: 'reject' },
+            { StateDone: 'reject' }
+          ]
+        }
+      ]
+    }
+
+    const apiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
       .paginate(documentsCounts)
       .filter()
       .search(Order)
@@ -85,7 +123,7 @@ exports.getOrdersWithRejectState = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .json({ results: documents.length, paginationResult, data: documents });
+      .json({ results: documents.length, paginationResult, order: documents });
   });
 
 exports.getUserOrders = asyncHandler(async (req, res, next) => {
@@ -108,15 +146,16 @@ exports.getUserOrders = asyncHandler(async (req, res, next) => {
 exports.rejectOrder = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
   const userId = req.user._id;
-  const loggedUser = req.user;
 
   const { reason } = req.body;
 
   if (!req.user.Permission.canRejectOrder) {
     return next(new ApiError('Unauthorized to reject orders' ,403));
   }
-    // العثور على الطلب وتحديث حالته
-    const rejectOrder = await Order.findById(orderId);
+
+    const rejectOrder = await Order.findByIdAndUpdate(
+      orderId
+      );
 
     if (!rejectOrder) {
       return next(new ApiError(`No order found for this id`, 404));
@@ -125,41 +164,41 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     rejectOrder.State = 'reject';
     rejectOrder.StateReasonReject = reason;
 
-    // إضافة معلومات السجل
     rejectOrder.history.push({
       editedAt: Date.now(),
       editedBy: userId,
-      action: `تم رفض الطلب من قبل :${userId}`,
+      action: `تم رفض الطلب من قبل`,
       reason: reason
     });
-
-    const lastGroup = rejectOrder.groups[rejectOrder.groups.length - 1]
-    // تحديث الكروب والفلات المتعلقة بالمستخدم المسجل
-    rejectOrder.group = lastGroup ;
-
-    // التحقق من قيمة rejectOrder.groups وإضافة قيمة المجموعة الجديدة إليها
-    if (rejectOrder.groups === null || rejectOrder.groups === undefined) {
-      rejectOrder.groups = [loggedUser.group];
-    } else {
-      rejectOrder.groups.push(loggedUser.group);
+    if (rejectOrder.State === 'reject'){
+      const lastGroup = rejectOrder.groups[rejectOrder.groups.length - 1]
+      rejectOrder.group = lastGroup ;
+    }else{
+      const lastGroup = rejectOrder.groups[rejectOrder.groups.length]
+      rejectOrder.group = lastGroup ;
     }
-    // حفظ التغييرات
+
+    // if (rejectOrder.groups === null || rejectOrder.groups === undefined) {
+    //   rejectOrder.groups = [loggedUser.group];
+    // } else {
+    //   rejectOrder.groups.push(loggedUser.group);
+    // }
+
     await rejectOrder.save();
 
-    res.status(200).json({ rejectOrder });
+    res.status(200).json({ order : rejectOrder });
 });
 
 exports.rejectWork = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
   const userId = req.user._id;
-  const loggedUser = req.user;
 
   const { reason } = req.body;
 
   if (!req.user.Permission.canRejectWork) {
     return next(new ApiError('Unauthorized to reject work' ,403));
   }
-    // العثور على الطلب وتحديث حالته
+
     const rejectWork = await Order.findById(orderId);
 
     if (!rejectWork) {
@@ -169,34 +208,33 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
     rejectWork.StateWork = 'reject';
     rejectWork.StateWorkReasonReject = reason;
 
-    // إضافة معلومات السجل
     rejectWork.history.push({
       editedAt: Date.now(),
       editedBy: userId,
-      action: `تم رفض الطلب من قبل :${userId}`,
+      action: `تم رفض العمل من قبل`,
       reason: reason
     });
 
-    const lastGroup = rejectWork.groups[rejectWork.groups.length - 1]
-    // تحديث الكروب والفلات المتعلقة بالمستخدم المسجل
-    rejectWork.group = lastGroup ;
+    // const lastGroup = rejectWork.groups[rejectWork.groups.length - 1]
 
-    // التحقق من قيمة rejectOrder.groups وإضافة قيمة المجموعة الجديدة إليها
-    if (rejectWork.groups === null || rejectWork.groups === undefined) {
-      rejectWork.groups = [loggedUser.group];
+    // rejectWork.group = lastGroup ;
+
+    if (rejectWork.userOrders === null || rejectWork.usersOnprase === undefined) {
+      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length ]
+      rejectWork.users = lastGroup ;
     } else {
-      rejectWork.groups.push(loggedUser.group);
+      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length -2]
+      rejectWork.users = lastGroup ;
     }
-    // حفظ التغييرات
+
     await rejectWork.save();
 
-    res.status(200).json({ rejectWork });
+    res.status(200).json({ order :rejectWork });
 });
 
 exports.rejectConfirm = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
   const userId = req.user._id;
-  const loggedUser = req.user;
 
   const { reason } = req.body;
 
@@ -217,24 +255,16 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
     rejectConfirm.history.push({
       editedAt: Date.now(),
       editedBy: userId,
-      action: `تم رفض الطلب من قبل :${userId}`,
+      action: `تم رفض تنفيذ العمل من قبل`,
       reason: reason
     });
 
-    const lastGroup = rejectConfirm.groups[rejectConfirm.groups.length - 2]
-    // تحديث الكروب والفلات المتعلقة بالمستخدم المسجل
-    rejectConfirm.group = lastGroup ;
+    const lastGroup = rejectConfirm.usersOnprase[rejectConfirm.usersOnprase.length -2]
+    rejectConfirm.users = lastGroup ;
 
-    // التحقق من قيمة rejectOrder.groups وإضافة قيمة المجموعة الجديدة إليها
-    if (rejectConfirm.groups === null || rejectConfirm.groups === undefined) {
-      rejectConfirm.groups = [loggedUser.group];
-    } else {
-      rejectConfirm.groups.push(loggedUser.group);
-    }
-    // حفظ التغييرات
     await rejectConfirm.save();
 
-    res.status(200).json({ rejectConfirm });
+    res.status(200).json({ order:rejectConfirm });
 });
 
 exports.archiveReject = asyncHandler(async (req, res, next) => {
@@ -256,8 +286,9 @@ exports.archiveReject = asyncHandler(async (req, res, next) => {
       completedBy: req.user._id, // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
       completionDate: new Date(),
     });
-
     // حفظ السجل
     await completedRequest.save();
+    await Order.findByIdAndUpdate(orderId, { users: null, group: null ,groups :null });
+    
     res.status(200).json({ completedRequest });
 });

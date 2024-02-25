@@ -13,6 +13,8 @@ const ApiError = require('../utils/apiError');
 const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
+const reject  = require('./reject')
+
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
@@ -108,7 +110,7 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     newOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
-    action: `تم انشاء الطلب من قيل : ${loggedInUserId}`
+    action: `تم انشاء الطلب من قبل`
   });
   newOrder.save()
   res.status(201).json({ order: newOrder });
@@ -162,18 +164,18 @@ exports.updateOrder = asyncHandler(async (req, res, next) => {
   }
 
   // إعداد قيمة group الجديدة بتوصيف الطلب الحالي والقيمة الجديدة
-  const updatedGroup = [...currentOrder.group, ...req.body.group];
+  // const updatedGroup = [...currentOrder.group, ...req.body.group];
 
   // تحديث الطلب باستخدام findByIdAndUpdate
   const updatedOrder = await Order
-    .findByIdAndUpdate(req.params.id, { ...req.body, group: updatedGroup }, { new: true })
+    .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
     .populate('donimgs');
 
   // إضافة إدخال إلى سجل التاريخ
   updatedOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
-    action: `تم تعديل الطلب من قبل: ${loggedInUserId}`
+    action: `تم تعديل الطلب من قبل`
   });
 
   // حفظ التغييرات
@@ -182,56 +184,8 @@ exports.updateOrder = asyncHandler(async (req, res, next) => {
   res.status(200).json({ order: updatedOrder });
 });
 
-exports.getOrders = asyncHandler(async (req, res, next) => {
-  // التأكد من أن لديه الصلاحية المطلوبة للوصول لبيانات الطلب
-  if (!req.user.Permission.canViwsOrder) {
-    return next(new ApiError('You do not have permission to view this order', 403));
-  }
-
-  const loggedInUserId = req.user._id;
-  let filter = {};
-  if (req.filter) {
-    filter = req.filter;
-  }
-
-  
-  const userGroup = await user.findOne({ _id: loggedInUserId });
-  const userGroupLevel = userGroup.group.level;
-  const userGroupInLevel = userGroup.group.inlevel; // إضافة هذا السطر للحصول على inlevel
-  
-  // البحث عن الكروبات التي تحمل نفس مستوى الفل ونفس مستوى inlevel
-  const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
-  
-  // جمع معرفات الكروبات
-  const groupIds = similarGroups.map(group => group._id);
-  
-  // إضافة شرط للبحث عن الطلبات التي تنتمي إلى الكروبات المطابقة في سجل المستخدم
-  const groupFilter = { group: { $in: groupIds } };
-  
-  // حصول على إحصائيات الطلبات
-  const orderStats = await getAggregateStats(Order, groupIds, filter, 'State');
-  const stateWorksStats = await getAggregateStats(Order, groupIds, filter, 'StateWork');
-  const StateDoneStats = await getAggregateStats(Order, groupIds, filter, 'StateDone')
-  
-  const documentsCounts = await Order.countDocuments();
-  
-  const apiFeatures = new ApiFeatures(Order.find({ ...groupFilter, ...filter }), req.query)
-    .paginate(documentsCounts)
-    .filter()
-    .search(Order)
-    .limitFields()
-    .sort();
-  
-  const { mongooseQuery, paginationResult } = await apiFeatures;
-  const documents = await mongooseQuery;
-  
-  res
-    .status(200)
-    .json({ results: documents.length, paginationResult, orderStats, stateWorksStats,StateDoneStats, order: documents });
-})
-
 exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
-  // التأكد من أن لديه الصلاحية المطلوبة للوصول لبيانات الطلب
+
   if (!req.user.Permission.canViwsOrder) {
     return next(new ApiError('You do not have permission to view this order', 403));
   }
@@ -246,28 +200,50 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
   const userGroupLevel = userGroup.group.level;
   const userGroupInLevel = userGroup.group.inlevel;
   
-
-  // البحث عن الكروبات التي تحمل نفس مستوى الفل ونفس مستوى inlevel
   const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
 
-  // جمع معرفات الكروبات
+
   const groupIds = similarGroups.map(group => group._id);
 
-  // استبعاد كروب المستخدم من البحث وإضافة الكروبات الأخرى
   const groupFilter = {
     groups: {
-      $in: groupIds ,// إضافة الكروبات الأخرى
+      $in: groupIds ,
     }
   };
 
-  // حصول على إحصائيات الطلبات
-  const orderStats = await getAggregateStats(Order, groupIds, filter, 'State');
-  const stateWorksStats = await getAggregateStats(Order, groupIds, filter, 'StateWork');
-  const StateDoneStats = await getAggregateStats(Order, groupIds, filter, 'StateDone');
-  
   const documentsCounts = await Order.countDocuments();
+  const loggedInUserIdString = loggedInUserId.toString();
+  const acceptedOrdersFilter = {
+    $or: [
+      { createdBy: { $ne: loggedInUserIdString }},
+      {
+        $and: [
+          { State:  {$ne: 'reject'} },
+          { StateWork:{ $ne: 'reject'}  },
+          { StateDone: {$ne: 'reject'  }}
+        ]
+      }
+    ]
+  };
 
-  const apiFeatures = new ApiFeatures(Order.find({ ...groupFilter, ...filter }), req.query)
+  // let acceptedOrdersFilter = {};
+  
+  // // التحقق مما إذا كان المستخدم الحالي هو الذي قام بإنشاء الطلب
+  // if (Order && Order.createdBy && Order.createdBy.group && Order.group && Order.group.toString() === Order.createdBy.group.toString()) {
+  //   acceptedOrdersFilter = {
+  //     State: {
+  //       $ne: 'reject'
+  //     },
+  //     StateWork: {
+  //       $ne: 'reject'
+  //     },
+  //     StateDone: {
+  //       $ne: 'reject'
+  //     }
+  //   };
+  // }
+
+  const apiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
     .paginate(documentsCounts)
     .filter()
     .search(Order)
@@ -279,29 +255,123 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
 
   res
     .status(200)
-    .json({ results: documents.length, paginationResult, orderStats, stateWorksStats, StateDoneStats, order: documents });
+    .json({ results: documents.length, paginationResult, order: documents });
 });
 
-// وظيفة مساعدة للحصول على إحصائيات الطلبات
-async function getAggregateStats(model, groupIds, filter, field) {
-  const stats = await model.aggregate([
-    {
-      $match: {
-        group: { $in: groupIds },
-        ...filter
-      }
-    },
-    {
-      $group: {
-        _id: `$${field}`,
-        count: { $sum: 1 }
-      }
-    }
-  ]);
+exports.getOrders = asyncHandler(async (req, res, next) => {
+  // التأكد من أن لديه الصلاحية المطلوبة للوصول لبيانات الطلب
+  if (!req.user.Permission.canViwsOrder) {
+    return next(new ApiError('You do not have permission to view this order', 403));
+  }
 
-  // تحويل نتائج الإحصائيات إلى كائن
-  return Object.fromEntries(stats.map(item => [item._id, item.count]));
-}
+
+  const loggedInUserId = req.user._id;
+  let filter = {};
+  if (req.filter) {
+    filter = req.filter;
+  }
+
+  const userGroup = await user.findOne({ _id: loggedInUserId });
+  const userGroupLevel = userGroup.group.level;
+  const userGroupInLevel = userGroup.group.inlevel;
+  
+  // البحث عن الكروبات التي تحمل نفس مستوى الفل ونفس مستوى inlevel
+  const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
+  
+  // جمع معرفات الكروبات
+  const groupIds = similarGroups.map(group => group._id);
+  
+  // إضافة شرط للبحث عن الطلبات التي تنتمي إلى الكروبات المطابقة في سجل المستخدم
+  const groupFilter = { group: { $in: groupIds } };
+  const groupsFilter = {
+    groups: {
+      $in: groupIds ,
+    }
+  };
+  
+  const documentsCounts = await Order.countDocuments();
+
+  const loggedInUserIdString = loggedInUserId.toString();
+  
+  // شرط إضافي لتصفية الطلبات المرفوضة التي ليست من إنشاء المستخدم الحالي
+  const acceptedOrdersFilter = {
+    $or: [
+      { createdBy: { $ne: loggedInUserIdString }},
+      {
+        $and: [
+          { State: { $ne: 'reject' } },
+          { StateWork: { $ne: 'reject' } },
+          { StateDone: { $ne: 'reject' } }
+        ]
+      }
+    ]
+  };
+  const acceptedOrdersFilters = {
+    $or: [
+      { createdBy: loggedInUserIdString },
+      {
+        $and: [
+          { State: 'reject' },
+          { StateWork: 'reject' },
+          { StateDone: 'reject' }
+        ]
+      }
+    ]
+  }
+
+  const apiFeatures = new ApiFeatures(
+    Order.find({ $or: [{ ...groupFilter }, { users: loggedInUserId }], $and :[{...acceptedOrdersFilter}], ...filter }), 
+    req.query
+  )
+    .paginate(documentsCounts)
+    .filter()
+    .search(Order)
+    .limitFields()
+    .sort();
+  
+  const { mongooseQuery, paginationResult } =  apiFeatures;
+  const documents = await mongooseQuery;
+
+  const countOnepreasApiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupsFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
+
+
+  const { mongooseQuery: countOnepreasMongooseQuery } =  countOnepreasApiFeatures;
+  const countOnepreas = await countOnepreasMongooseQuery;
+  const filters = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], groups: req.user.group };
+
+  const countRejectApiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupsFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilters}], ...filters}), req.query)
+  const { mongooseQuery: countRejectMongooseQuery } =  countRejectApiFeatures;
+  const countReject = await countRejectMongooseQuery;
+  res
+    .status(200)
+    .json({ 
+      results: documents.length,
+       paginationResult ,
+       CountOnepreas:countOnepreas .length, 
+       countReject : countReject.length,
+       orders: documents 
+      });
+});
+
+// async function getAggregateStats(model, groupIds, filter, field) {
+//   const stats = await model.aggregate([
+//     {
+//       $match: {
+//         group: { $in: groupIds },
+//         ...filter
+//       }
+//     },
+//     {
+//       $group: {
+//         _id: `$${field}`,
+//         count: { $sum: 1 }
+//       }
+//     }
+//   ]);
+
+//   // تحويل نتائج الإحصائيات إلى كائن
+//   return Object.fromEntries(stats.map(item => [item._id, item.count]));
+// }
 
 exports.getAllText = asyncHandler(async (req, res, next) => {
   try {
@@ -321,3 +391,91 @@ exports.getAllText = asyncHandler(async (req, res, next) => {
   }
 });
 
+exports.putOrder = asyncHandler(async (req, res, next) => {
+  const loggedInUserId = req.user._id;
+  const orderId = req.params.orderId;
+  const userDoc = await user.findOne({ _id: loggedInUserId });
+
+  if (!req.user.Permission.canCreatOrder) {
+    return next(new ApiError('You do not have permission to update this order', 403));
+  }
+
+  // ابحث عن الطلب الحالي باستخدام findById
+  const currentOrder = await Order
+  .findByIdAndUpdate(orderId, { ...req.body}, { new: true })
+  .populate('donimgs');
+
+  if (!currentOrder) {
+    return next(new ApiError('Order not found', 404));
+  }
+
+  if (!userDoc) {
+    return res.status(404).json({ success: false, error: 'User not found' });
+  }
+
+  const loggedInUserIdString = loggedInUserId.toString();
+
+  if (
+    currentOrder.createdBy &&
+    currentOrder.createdBy._id &&
+    loggedInUserIdString !== currentOrder.createdBy._id.toString()
+  ) {
+    return next(new ApiError('You cannot update this order', 403));
+  }
+
+  const lowerLevelGroup = userDoc.group.levelSend;
+  
+  if (!lowerLevelGroup) {
+    return next(new ApiError(`Not found levelSend`, 404));
+  }
+
+  const groupss = [userDoc.group._id];
+
+  currentOrder.set({
+    // ...req.body,
+    // orderimg : req.body.orderimg,
+    group: lowerLevelGroup,
+    groups: groupss,
+    createdBy: req.user._id,
+  });
+
+  currentOrder.history.push({
+    editedAt: Date.now(),
+    editedBy: loggedInUserId,
+    action: `تم تعديل الطلب من قبل`
+  });
+
+  currentOrder.State = 'onprase';
+  currentOrder.StateWork = 'onprase';
+  currentOrder.StateDone = 'onprase';
+  // احفظ الطلب المحدث
+  await currentOrder.save();
+
+  res.status(200).json({ order: currentOrder });
+});
+
+exports.deleteAll = asyncHandler(async (req,res,next) => {
+
+  if (!req.user.Permission.canDeletOrder) {
+    return next(new ApiError('You do not have permission to delete this order', 403));
+  }
+
+  const document = await Order.deleteMany({});
+
+  if (!document) {
+    return next(new ApiError(``, 404));
+  }
+  res.status(204).send();
+});
+
+exports.getAllOrder = asyncHandler(async(req,res,next) => {
+
+  const documents = await Order.find({});
+
+  if (!documents || documents.length === 0) {
+
+    return res.status(204).json({ message: 'No documents found.' });
+  }
+
+  res.status(200).json({ results : documents.length, documents: documents });
+})

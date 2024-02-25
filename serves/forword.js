@@ -111,14 +111,12 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
       return next(new ApiError('You do not have permission to Forword this order', 403));
   }
 
-  // التحقق من وجود الطلب باستخدام findById
   const order = await Order.findById(orderId);
   
   if (!order) {
       return res.status(404).json({ message: 'الطلب غير موجود' });
   }
 
-  // التحقق مما إذا كانت الكروب موجودة بالفعل في الطلب
   const isGroupExistsInOrder = order.group.groupIds
   if (isGroupExistsInOrder) {
       return res.status(400).json({ message: 'الكروب موجود بالفعل في الطلب' });
@@ -127,26 +125,21 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
   order.history.push({
       editedAt: Date.now(),
       editedBy: loggedInUserId,
-      action: `تم تحويل الطلب بواسطة: ${loggedInUserId}`,
+      action: `تم توجيه الطلب من قبل`,
       reason: reason
   });
 
-  // قم بتعيين group بقيمة الـ groupIds
   order.group = groupIds;
 
-// (اختياري) إذا كان لديك حقل يسمى loggedInUserId.group في مستخدمك، قد ترغب في تعيينه أيضًا
 if (order.groups === null || order.groups === undefined) {
   order.groups = [loggedUser.group];
 } else {
   order.groups.push(loggedUser.group);
 }
 
-
-  // تعيين السبب للحالة عند المعالجة
   order.State = 'onprase';
   order.StateReasonOnprase = reason;
 
-  // حفظ التغييرات في الطلب
   await order.save();
 
   return res.status(200).json({ order });

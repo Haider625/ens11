@@ -105,22 +105,41 @@ exports.updateArchive =  asyncHandler(async (req, res, next) => {
 });
 
 exports.getArchivesAccept = asyncHandler(async (req, res, next) => {
-    try {
-      // ابحث في جميع الطلبات المقبولة في حالة الطلب 'accept' أو 'acceptwork' في حالة العمل
-      const acceptedOrders = await archives.find({
-        $or: [
-          { 'State': 'accept' },
-          { 'StateWork': 'acceptwork' },
-          { 'stateDone' : 'accept'}
-        ]
-      });
-  
-      // قم بإرجاع النتائج
-      res.status(200).json({archives : acceptedOrders });
-    } catch (error) {
-
-      return next(new ApiError(500, 'Internal Server Error'));
-    }
+  try {
+    // ابحث في جميع الطلبات المقبولة في حالة الطلب 'accept' أو 'acceptwork' في حالة العمل
+    const acceptedOrders = await archives.find({
+      $or: [
+        { 'orderId.State': 'accept' },
+        { 'orderId.StateWork': 'endwork' },
+        { 'orderId.StateDone' : 'accept'} 
+      ]
+    }).populate([
+      { 
+        path: 'orderId',
+          select: {
+          '_id' : 1,
+          'type1':1,
+          'type2':1,
+          'type3':1,
+          'number':1,
+          'caption' : 1,
+          'group' : 0,
+          'groups' : 0,
+          'State' : 1,
+          'StateWork' : 1,
+          'StateDone' : 1,
+          'users' : 0,
+          'createdBy' : 0,
+          'history' : 1,
+        },
+        options: { depth: 1 }
+      },
+    ]);
+    
+    res.status(200).json({ archives: acceptedOrders });
+  } catch (error) {
+    return next(new ApiError(500, 'Internal Server Error'));
+  }
 });
 
 exports.getArchivesReject =  asyncHandler(async (req, res, next) => {

@@ -1,8 +1,47 @@
 const asyncHandler = require('express-async-handler');
+
+const { v4: uuidv4 } = require('uuid');
+const sharp = require('sharp')
+
 const Order = require('../models/orderModel');
 const User = require('../models/userModel');
 const ApiError = require('../utils/apiError');
 const Archive = require('../models/archive')
+
+const { uploadMixOfImages } = require('../middlewares/uploadImage');
+
+exports.uploadOrderImage = uploadMixOfImages([
+
+  {
+    name: 'donimgs',
+    maxCount: 5,
+  },
+]);
+
+exports.resizeImage = asyncHandler(async (req, res, next) => {
+  // Image processing for donimgs
+  if (req.files && req.files.donimgs) {
+    req.body.donimgs = [];
+    await Promise.all(
+      req.files.donimgs.map(async (img, index) => {
+        const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
+  
+        await sharp(img.buffer)
+          .resize(600, 600)
+          .toFormat('jpeg')
+          .jpeg({ quality: 95 })
+          .toFile(`uploads/orders/${imageName}`, (err) => {
+            if (err) {
+              console.error('Error saving image:', err);
+            } else {
+              req.body.donimgs.push(imageName) ;
+            }
+          });
+      })
+    );
+  }
+  next();
+});
 
 exports.getUsersInGroup = asyncHandler(async (req, res, next) => {
   const loggedInUserId = req.user._id;
@@ -46,19 +85,20 @@ exports.getUserOrders = asyncHandler(async (req, res, next) => {
 exports.acceptOrder = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
   const loggedInUserId = req.user._id; // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
-  
+  const loggedUser = req.user
   const {users , reason } = req.body;
  
   if (!req.user.Permission.canAcceptOrder) {
     return res.status(403).json({ message: 'Permission denied' });
   }
-  // تحديث حالة الطلب إلى "accept" وسجل معرف المستخدم الذي قام بالتحديث
+
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { 
         State: 'accept',
         StateReasonAccept : reason,
-        users : users
+        users : users,
+        $addToSet: { usersOnprase: req.body.users } 
   },
     { new: true }
   );
@@ -67,14 +107,24 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
     return next(new ApiError(`No order found for this id`, 404));
   }
   
-  // إضافة سجل جديد إلى مصفوفة history
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId ,
-  action : `تم قبول طلبك من قبل ${loggedInUserId}`,
+  action : `تم قبول الطلب من قبل`,
   reason : reason
 });
+
+
+if (updatedOrder.groups === null || updatedOrder.groups === undefined) {
+  updatedOrder.groups = [loggedUser.group];
+} else {
+  updatedOrder.groups.push(loggedUser.group);
+}
+
+updatedOrder.usersOnprase.push(updatedOrder.users);
+
 updatedOrder.group = null ;
+
 await updatedOrder.save();
 
   res.status(200).json({accept : updatedOrder });
@@ -90,7 +140,9 @@ exports.acceptwork = asyncHandler(async(req,res,next) => {
     {   
      
       StateWork: 'acceptwork',
-      StateWorkReasonAccept : reason
+      StateWorkReasonAccept : reason,
+      users : loggedInUserId,
+      $addToSet: { usersOnprase: req.body.loggedInUserId } 
       
     },
     { new: true }
@@ -103,9 +155,11 @@ exports.acceptwork = asyncHandler(async(req,res,next) => {
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
- action : `تم قبول العمل على طلبك من قبل ${loggedInUserId}`,
+ action : `تم قبول العمل من قبل`,
  reason : reason
 });
+
+
 
 await updatedOrder.save();
   
@@ -122,7 +176,9 @@ exports.startWork = asyncHandler(async(req,res,next) => {
     {
       $set: {
         StateWork: 'startwork',
-        StateWorkReasonAccept : reason
+        StateWorkReasonAccept : reason ,
+        users : loggedInUserId,
+        $addToSet: { usersOnprase: req.body.loggedInUserId }
         }
     },
     { new: true }
@@ -135,7 +191,7 @@ exports.startWork = asyncHandler(async(req,res,next) => {
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
-  action : `تم بدء العمل على طلبك من قبل ${loggedInUserId}` ,
+  action : `تم بدء العمل من قبل` ,
   reason: reason
 });
 
@@ -144,37 +200,33 @@ await updatedOrder.save();
   res.status(200).json({ accept : updatedOrder });
 });
 
-exports.endWork = asyncHandler(async(req,res,next) => {
-  const loggedInUserId = req.user._id; // ايجاد المستخدم الذي عمل تسجيل دخول
-  const orderId = req.params.id;
+exports.endWork = asyncHandler(async (req, res, next) => {
+  const loggedInUserId = req.user._id;
   const {reason} = req.body
-  
-  // تحديث حالة الطلب إلى "accept" وسجل معرف المستخدم الذي قام بالتحديث
-  const updatedOrder = await Order.findByIdAndUpdate(
-    orderId,
-    { 
-     
-      StateWork: 'endwork',
-      StateWorkReasonAccept : reason
-      
-  },
-    { new: true }
-  );
+  const currentOrder = await Order.findById(req.params.id);
 
-  if (!updatedOrder) { 
-    return next(new ApiError(`No order found for this id`, 404));
+  if (!currentOrder) {
+    return next(new ApiError('Order not found', 404));
   }
-  // إضافة سجل جديد إلى مصفوفة history
-updatedOrder.history.push({
-  editedAt: Date.now(),
-  editedBy: loggedInUserId,
-  action : `تم انهاء العمل على طلبك من قبل ${loggedInUserId}`,
-  reason : reason
-});
 
-await updatedOrder.save();
+  const updatedOrder = await Order
+    .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
+    .populate('donimgs');
 
-  res.status(200).json({ accept : updatedOrder });
+  updatedOrder.StateWork = 'endwork'
+  updatedOrder.StateWorkReasonAccept = reason
+  updatedOrder.users = loggedInUserId ;
+  updatedOrder.usersOnprase = {$addToSet: { usersOnprase: req.body.loggedInUserId }}
+  updatedOrder.history.push({
+    editedAt: Date.now(),
+    editedBy: loggedInUserId,
+    action: `تم انهاء العمل من قبل`,
+    reason:reason
+  });
+  
+  await updatedOrder.save();
+
+  res.status(200).json({ order: updatedOrder });
 });
 
 exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
@@ -200,7 +252,7 @@ exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
-  action : `تم بدء العمل على طلبك من قبل ${loggedInUserId}`,
+  action : `تم تاكيد اتمام العمل من قبل`,
   reason : reason
 });
 
@@ -216,25 +268,25 @@ exports.AcceptArchive = asyncHandler(async (req, res, next) => {
       const orderId = req.params.id;
   
       // التحقق مما إذا كان حالة الطلب 'done'
-      const order = await Order.findById(orderId);
-      if (!order || order.StateWork !== 'done') {
-        return next(new ApiError(`Order not found or not in 'done' state`, 404));
-      }
-  
+      // const order = await Order.findById(orderId);
+      // if (!order || order.StateDone !== 'accept') {
+      //   return next(new ApiError(`Order not found or not in 'done' state`, 404));
+      // }
       // إنشاء سجل للطلب المكتمل
       const completedRequest = new Archive({
         orderId: orderId,
         completedBy: req.user._id, // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
         completionDate: new Date(),
       });
-  
       // حفظ السجل في جدول الأرشيف
       await completedRequest.save();
-  
+
+      await Order.findByIdAndUpdate(orderId, { users: null, group: null ,groups :null });
+      // await orderId.save();
       // (اختياري) يمكنك إزالة الطلب من جدول الطلبات إذا أردت
-      // await Order.findByIdAndRemove(orderId);
+      //  const order = await Order.findByIdAndRemove(orderId);
   
-      res.status(200).json({ accept : completedRequest });
+      res.status(200).json({ accept : completedRequest});
     } catch (error) {
       return next(new ApiError(500, 'Internal Server Error'));
     }
