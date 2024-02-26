@@ -155,9 +155,11 @@ exports.forwordOrdersUp = asyncHandler(async(req, res, next) => {
 
       const { forwordGroup, levelSend } = userObject.group;
 
-      const {forwordOrdersUp} = userObject
+      const {forwordOrdersUp} = userObject;
 
-      res.status(200).json({ forwordGroup, levelSend ,forwordOrdersUp});
+      const mergedData = [...forwordGroup, levelSend, forwordOrdersUp];
+
+      res.status(200).json({groups : mergedData });
 })
 
 exports.forwordWorkDown = asyncHandler(async(req, res, next) => {
@@ -169,9 +171,11 @@ exports.forwordWorkDown = asyncHandler(async(req, res, next) => {
 
       const { forwordGroup, levelsReceive } = userObject.group;
 
-      const {forwordWorkDown} = userObject
+      const {forwordWorkDown} = userObject;
 
-      res.status(200).json({ forwordGroup, levelsReceive ,forwordWorkDown });
+      const mergedData = [...forwordGroup, levelsReceive, forwordWorkDown];
+
+      res.status(200).json({groups :mergedData});
 })
 
 

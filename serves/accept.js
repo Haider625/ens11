@@ -50,33 +50,32 @@ exports.getUsersInGroup = asyncHandler(async (req, res, next) => {
     return res.status(403).json({ message: 'Permission denied' });
   }
 
-  // احصل على المجموعة التي ينتمي إليها المستخدم المسجل
   const user = await User.findOne({ _id: loggedInUserId });
   
   if (!user || !user.group) {
     return res.status(404).json({ message: 'User not associated with any group' });
   }
 
-  // احصل على جميع المستخدمين الذين ينتمون إلى نفس المجموعة
-  const usersInGroup = await User.find({ group: user.group  });
+  const usersInGroup = await User.find({ group: user.group  },{_id:1,name:1 , group :0,GroupscanViw:0})
 
-  const usersInGroups = await User.find({ group: user.group.levelsReceive  });
+  const usersInGroups = await User.find({ group: user.group.levelsReceive },{_id:1,name:1 , group :0,GroupscanViw:0});
 
-  return res.status(200).json({accept : usersInGroup ,usersInGroups });
+
+  const mergedData  = [usersInGroup,usersInGroups]
+
+  return res.status(200).json({ users : mergedData });
 });
 
 exports.getUserOrders = asyncHandler(async (req, res, next) => {
   try {
-    // استخدام معرّف المستخدم من req.user
+
     const userId = req.user._id;
     
-    // البحث عن الطلبات التي يكون معرّف المستخدم في حقل users
     const userOrders = await Order.find({ 'users': userId });
 
-    // إرسال النتائج إلى العميل
     res.status(200).json({ accept: userOrders });
   } catch (error) {
-    // في حالة وجود أي خطأ، يتم إرسال استجابة خطأ إلى العميل
+
     console.error('Error in getUserOrders:', error);
     return next(new ApiError(500, 'Internal Server Error'));
   }
@@ -84,7 +83,7 @@ exports.getUserOrders = asyncHandler(async (req, res, next) => {
 
 exports.acceptOrder = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
-  const loggedInUserId = req.user._id; // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
+  const loggedInUserId = req.user._id; 
   const loggedUser = req.user
   const {users , reason } = req.body;
  
