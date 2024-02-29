@@ -93,13 +93,13 @@ exports.getAllRejected = asyncHandler(async (req, res) => {
       $in: groupIds ,
     }
   };
-  const filter = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], groups: req.user.group };
+  const filter = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], group: req.user.group };
 
     const documentsCounts = await Order.countDocuments();
     const loggedInUserIdString = loggedInUserId.toString();
     const acceptedOrdersFilter = {
       $or: [
-        { createdBy: loggedInUserIdString },
+        { createdBy: loggedInUserId },
         {
           $and: [
             { State: 'reject' },

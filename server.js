@@ -7,9 +7,6 @@ const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require('morgan');
 
-const socketIo = require('socket.io');
-const notifier = require('node-notifier');
-
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
 const globalError = require('./middlewares/errmiddlware')
@@ -28,10 +25,11 @@ const typeText1 = require('./routes/typeText1Rout')
 const typeText2 = require('./routes/typeText2Rout')
 const typeText3 = require('./routes/typeText3Rout')
 
+const socketHandler = require('./utils/socket');
+
 const app = express();
 
 const server = http.createServer(app);
-const io = socketIo(server);
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname,'uploads')));
@@ -66,34 +64,38 @@ app.all('*',(req,res,next) => {
     next(new ApiError(`can t find this route : ${req.originalUrl}`, 404));
  })
 
- io.on('connection', (socket) => {
-    console.log('A user connected');
+//  io.on('connection', (socket) => {
+//     console.log('A user connected', socket.id);
 
-    // استقبال إشعارات من العميل
-    socket.on('sendNotification', (data) => {
-        console.log('Received notification from client:', data);
+//     // استقبال إشعارات من العميل
+//     socket.on('sendNotification', (data) => {
+//         console.log('Received notification from client:', data);
 
-        // إرسال إشعار لجميع العملاء
-        io.emit('receiveNotification', { message: 'New notification!' });
+//         // إرسال إشعار لجميع العملاء
+//         io.emit('receiveNotification', { message: 'New notification!' });
 
-        // إظهار إشعار على جهاز الخادم
-        notifier.notify({
-            title: 'New Notification',
-            message: 'You received a new notification!',
-        });
-    });
+//         // إظهار إشعار على جهاز الخادم
+//         notifier.notify({
+//             title: 'New Notification',
+//             message: 'You received a new notification!',
+//         });
+//     });
 
-    socket.on('disconnect', () => {
-        console.log('User disconnected');
-    });
-});
+//     socket.on('disconnect', () => {
+//         console.log('User disconnected');
+//     });
+// });
 
-app.use(globalError)
+socketHandler(server);
+
+app.use(globalError) ;
 
 
-const PORT = process.env.PORT || 6000
+const PORT = process.env.PORT || 6000 ;
  server.listen(PORT , () => {
     console.log(`App running on port :${PORT}`);
+    // // eslint-disable-next-line global-require
+    // require('./utils/socketHandler')(server);
 })
 
 

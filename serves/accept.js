@@ -61,7 +61,7 @@ exports.getUsersInGroup = asyncHandler(async (req, res, next) => {
   const usersInGroups = await User.find({ group: user.group.levelsReceive },{_id:1,name:1 , group :0,GroupscanViw:0});
 
 
-  const mergedData  = [usersInGroup,usersInGroups]
+  const mergedData  = [...usersInGroup,...usersInGroups]
 
   return res.status(200).json({ users : mergedData });
 });
@@ -97,7 +97,7 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
         State: 'accept',
         StateReasonAccept : reason,
         users : users,
-        $addToSet: { usersOnprase: req.body.users } 
+        $addToSet: { usersOnprase: loggedInUserId } 
   },
     { new: true }
   );

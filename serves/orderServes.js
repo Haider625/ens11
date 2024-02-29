@@ -1,7 +1,9 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-use-before-define */
 /* eslint-disable no-undef */
 /* eslint-disable prefer-destructuring */
 const asyncHandler = require('express-async-handler');
+
 
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
@@ -13,7 +15,7 @@ const ApiError = require('../utils/apiError');
 const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
-const reject  = require('./reject')
+const { io, sendNotificationToGroup } = require('../utils/socket');
 
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
@@ -107,6 +109,14 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
 
 
   const newOrder = await Order.create(orderData);
+
+  const usersToNotify = await user.find({ 'group.levelSend': lowerLevelGroup });
+
+  // eslint-disable-next-line no-restricted-syntax
+  for (const userToNotify of usersToNotify) {
+    sendNotification(userToNotify, 'You have a new order!');
+  }
+
     newOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
@@ -114,6 +124,7 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   });
   newOrder.save()
   res.status(201).json({ order: newOrder });
+  io.emit('newOrder', newOrder);
 });
 
 exports.getOrder = asyncHandler(async (req, res, next) => {
@@ -218,9 +229,9 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
       { createdBy: { $ne: loggedInUserIdString }},
       {
         $and: [
-          { State:  {$ne: 'reject'} },
-          { StateWork:{ $ne: 'reject'}  },
-          { StateDone: {$ne: 'reject'  }}
+          { State: { $ne: 'reject' } },
+          { StateWork: { $ne: 'reject' } },
+          { StateDone: { $ne: 'reject' } }
         ]
       }
     ]
@@ -313,7 +324,8 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
         $and: [
           { State: 'reject' },
           { StateWork: 'reject' },
-          { StateDone: 'reject' }
+          { StateDone: 'reject' },
+          
         ]
       }
     ]
@@ -334,10 +346,9 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
 
   const countOnepreasApiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupsFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
 
-
   const { mongooseQuery: countOnepreasMongooseQuery } =  countOnepreasApiFeatures;
   const countOnepreas = await countOnepreasMongooseQuery;
-  const filters = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], groups: req.user.group };
+  const filters = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], group: req.user.group };
 
   const countRejectApiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupsFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilters}], ...filters}), req.query)
   const { mongooseQuery: countRejectMongooseQuery } =  countRejectApiFeatures;

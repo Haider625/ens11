@@ -19,7 +19,7 @@ router.use(auth.protect);
 
 // router.get(('/getAccepts'),getAccepts)
 
-router.get(('/getOrders'),forwordOrdersUp)
+router.get(('/getGroups'),forwordOrdersUp)
 router.get(('/forwordWorkDown'),forwordWorkDown)
 
 // router.get(('/getRejects'),getRejects)

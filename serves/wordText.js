@@ -34,33 +34,21 @@ exports.getWordText =   asyncHandler(async (req, res, next) => {
     res.status(200).json({ wordText: document });
   });
 
-exports.getsWordText = asyncHandler(async (req, res,next) => {
-
+  exports.getsWordText = asyncHandler(async (req, res, next) => {
     if (!req.user.Permission.canViwsWordtext) {
-      return next(new ApiError('You do not have permission to viws this wordText', 403));
+        return next(new ApiError('You do not have permission to view this wordText', 403));
     }
 
     let filter = {};
     if (req.filterObj) {
-      filter = req.filterObj;
+        filter = req.filterObj;
     }
-    // Build query
-    const documentsCounts = await wordText.countDocuments();
-    const apiFeatures = new ApiFeatures(wordText.find(filter), req.query)
-      .paginate(documentsCounts)
-      .filter()
-      .search(wordText)
-      .limitFields()
-      .sort();
 
-    // Execute query
-    const { mongooseQuery, paginationResult } = apiFeatures;
-    const documents = await mongooseQuery;
+    // يجب استخدام `find` للحصول على نتائج الاستعلام وانتظارها باستخدام `await`
+    const apiFeatures = await wordText.find(filter);
 
-    res
-      .status(200)
-      .json({ results: documents.length, paginationResult, wordText: documents });
-  });
+    res.status(200).json({ wordText: apiFeatures });
+});
 
 exports.deleteWordText =  asyncHandler(async (req, res, next) => {
     
