@@ -94,7 +94,7 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { 
-        State: 'accept',
+        
         StateReasonAccept : reason,
         users : users,
         $addToSet: { usersOnprase: loggedInUserId } 
@@ -105,15 +105,22 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
-  
+  if(updatedOrder.State === 'accept'){
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId ,
-  action : `تم قبول الطلب من قبل`,
+  action : `تم توجيه الطلب من قبل`,
   reason : reason
-});
-
-
+});  
+  }else {
+    updatedOrder.history.push({
+      editedAt: Date.now(),
+      editedBy: loggedInUserId ,
+      action : `تم قبول الطلب من قبل`,
+      reason : reason
+    });
+  }
+  updatedOrder.State = 'accept' 
 if (updatedOrder.groups === null || updatedOrder.groups === undefined) {
   updatedOrder.groups = [loggedUser.group];
 } else {

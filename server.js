@@ -96,7 +96,7 @@ const PORT = process.env.PORT || 6000 ;
     console.log(`App running on port :${PORT}`);
     // // eslint-disable-next-line global-require
     // require('./utils/socketHandler')(server);
-})
+});
 
 
 process.on(`unhandledRejection`,(err) =>{

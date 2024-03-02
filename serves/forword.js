@@ -125,7 +125,7 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
   order.history.push({
       editedAt: Date.now(),
       editedBy: loggedInUserId,
-      action: `تم توجيه الطلب من قبل`,
+      action: `تم تحويل الطلب من قبل`,
       reason: reason
   });
 

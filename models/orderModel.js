@@ -114,10 +114,10 @@ const orderSchema = new mongoose.Schema(
      },
 
      history: [{
-      editedAt: { 
-        type: Date,
-         default: Date.now
-         },
+      editedAt: {
+        type: String,
+        default: () => new Date().toLocaleString('ar-IQ', { timeZone: 'Asia/Baghdad' }),
+      },
       editedBy: {
         type: mongoose.Schema.ObjectId,
          ref: 'User'
@@ -239,6 +239,8 @@ orderSchema.pre(/^find/, function (next) {
   ])
   next();
 });
+
+
 
 const setImageURL = (doc) => {
   if (doc.orderimg && !doc.orderimg.startsWith(process.env.BASE_URL)) {
