@@ -15,7 +15,7 @@ const ApiError = require('../utils/apiError');
 const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
-const { io, sendNotificationToGroup } = require('../utils/socket');
+const {io } = require('../utils/socket');
 
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
@@ -110,21 +110,21 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
 
   const newOrder = await Order.create(orderData);
 
-  const usersToNotify = await user.find({ 'group.levelSend': lowerLevelGroup });
-
-  // eslint-disable-next-line no-restricted-syntax
-  for (const userToNotify of usersToNotify) {
-    sendNotification(userToNotify, 'You have a new order!');
-  }
-
     newOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
     action: `تم انشاء الطلب من قبل`
   });
   newOrder.save()
+
+  const usersInGroup = await user.find({ 'group._id': lowerLevelGroup }); // افتراض اسم الحقل الذي يحتوي على معرف الكروب في نموذج المستخدم هو 'group._id'
+
+  // eslint-disable-next-line no-shadow
+  usersInGroup.forEach(users => {
+    io.emit('newOrder', newOrder); // افتراض اسم الحقل الذي يحتوي على معرف الجلسة (session ID) في نموذج المستخدم هو 'socketId'
+  });
   res.status(201).json({ order: newOrder });
-  io.emit('newOrder', newOrder);
+
 });
 
 exports.getOrder = asyncHandler(async (req, res, next) => {

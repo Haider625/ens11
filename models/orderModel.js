@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
+const moment = require('../config/moment');
 
 const orderSchema = new mongoose.Schema(
   {
@@ -114,10 +115,15 @@ const orderSchema = new mongoose.Schema(
      },
 
      history: [{
-      editedAt: {
-        type: String,
-        default: () => new Date().toLocaleString('ar-IQ', { timeZone: 'Asia/Baghdad' }),
-      },
+      editedAt: { 
+        type: Date,
+        default: () => {
+          const userTimeZone = 'Asia/Baghdad'; // replace with actual user-selected zone
+          const date = new Date();
+          date.setUTCHours(date.getUTCHours() + (new Date(userTimeZone)).getTimezoneOffset() / 60);
+          return date;
+        },
+         },
       editedBy: {
         type: mongoose.Schema.ObjectId,
          ref: 'User'
@@ -127,7 +133,8 @@ const orderSchema = new mongoose.Schema(
       },
       reason :{ 
         type:String
-      }
+      },
+      imgDone : [String],
   }]
 
   },
@@ -164,7 +171,7 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'createdBy',
         select: {
-          '_id' :0,
+          '_id' :1,
           'name' :1,
           'userId' :1,
           'jobTitle' :1,
@@ -250,6 +257,14 @@ const setImageURL = (doc) => {
   if (doc.donimgs && doc.donimgs.length > 0) {
     const imagesList = doc.donimgs.map((image) => image.startsWith(process.env.BASE_URL) ? image : `${process.env.BASE_URL}/orders/${image}`);
     doc.donimgs = imagesList;
+  }
+  if (doc.history && doc.history.length > 0) {
+    doc.history.forEach(entry => {
+      if (entry.imgDone && entry.imgDone.length > 0) {
+        const imagesList = entry.imgDone.map((image) => image.startsWith(process.env.BASE_URL) ? image : `${process.env.BASE_URL}/orders/${image}`);
+        entry.imgDone = imagesList;
+      }
+    });
   }
 };
 

@@ -16,6 +16,10 @@ exports.uploadOrderImage = uploadMixOfImages([
     name: 'donimgs',
     maxCount: 5,
   },
+  {
+    name: 'imgDone',
+    maxCount: 5,
+  },
 ]);
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
@@ -40,6 +44,27 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
       })
     );
   }
+  if (req.files && req.files.donimgs) {
+    req.body.imgDone = []; // قم بإعادة تهيئة قائمة الصور المنتهية
+    await Promise.all(
+        req.files.donimgs.map(async (img, index) => {
+            const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
+
+            await sharp(img.buffer)
+                .resize(600, 600)
+                .toFormat('jpeg')
+                .jpeg({ quality: 95 })
+                .toFile(`uploads/orders/${imageName}`, (err) => {
+                    if (err) {
+                        console.error('Error saving image:', err);
+                    } else {
+                        req.body.imgDone.push(imageName);
+                    }
+                });
+        })
+    );
+}
+
   next();
 });
 
@@ -218,16 +243,17 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
     .populate('donimgs');
-
+  
   updatedOrder.StateWork = 'endwork'
   updatedOrder.StateWorkReasonAccept = reason
-  updatedOrder.users = loggedInUserId ;
-  updatedOrder.usersOnprase = {$addToSet: { usersOnprase: req.body.loggedInUserId }}
+  updatedOrder.users = null
+  updatedOrder.usersOnprase = {$addToSet: { usersOnprase: updatedOrder.createdBy._id }}
   updatedOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
     action: `تم انهاء العمل من قبل`,
-    reason:reason
+    reason:reason,
+    imgDone: updatedOrder.donimgs
   });
   
   await updatedOrder.save();
@@ -264,8 +290,18 @@ updatedOrder.history.push({
 
 await updatedOrder.save();
 
+const completedRequest = new Archive({
+  orderId: orderId,
+  completedBy: req.user._id, // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
+  completionDate: new Date(),
+});
+// حفظ السجل في جدول الأرشيف
+await completedRequest.save();
+
+await Order.findByIdAndUpdate(orderId, { users: null, group: null ,groups :null });
+
   
-  res.status(200).json({ accept : updatedOrder });
+  res.status(200).json({ accept :completedRequest});
 });
 
 exports.AcceptArchive = asyncHandler(async (req, res, next) => {

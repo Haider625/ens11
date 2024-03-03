@@ -41,7 +41,7 @@ exports.uploadMixOfImages = (arrayOfFields) => {
     upload(req, res, (err) => {
       if (err) {
         console.error('Multer Error:', err);
-        return res.status(500).json({ error: 'Error uploading images' });
+        return res.status(500).json({ error: `Error uploading images` });
       }
       next();
     });
