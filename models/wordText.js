@@ -17,10 +17,14 @@ const wordTextSchema = new mongoose.Schema(
             type: [{
               type: String,
             }]
-          }
+        },
+        createdAt: {
+            type :Date,
+            default:Date.now()
+        },
         
     },
-    { timestamps: true }
+
 );   
 wordTextSchema.plugin(mongoosePaginate);
 // wordTextSchema.pre(/^find/, function (next) {

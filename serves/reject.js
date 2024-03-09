@@ -107,7 +107,8 @@ exports.getAllRejected = asyncHandler(async (req, res) => {
             { StateDone: 'reject' }
           ]
         }
-      ]
+      ],
+      archive: { $ne: true }
     }
 
     const apiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
@@ -177,13 +178,13 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
       const lastGroup = rejectOrder.groups[rejectOrder.groups.length]
       rejectOrder.group = lastGroup ;
     }
-
+    
     // if (rejectOrder.groups === null || rejectOrder.groups === undefined) {
     //   rejectOrder.groups = [loggedUser.group];
     // } else {
     //   rejectOrder.groups.push(loggedUser.group);
     // }
-
+    rejectOrder.updatedAt =Date.now()
     await rejectOrder.save();
 
     res.status(200).json({ order : rejectOrder });
@@ -226,7 +227,7 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
       const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length -2]
       rejectWork.users = lastGroup ;
     }
-
+    rejectWork.updatedAt =Date.now()
     await rejectWork.save();
 
     res.status(200).json({ order :rejectWork });
@@ -247,7 +248,7 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
     if (!rejectConfirm) {
       return next(new ApiError(`No order found for this id`, 404));
     }
-
+    rejectConfirm.StateWork = 'onprase';
     rejectConfirm.StateDone = 'reject';
     rejectConfirm.StateDoneReasonReject = reason;
 
@@ -259,9 +260,9 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
       reason: reason
     });
 
-    const lastGroup = rejectConfirm.usersOnprase[rejectConfirm.usersOnprase.length -2]
-    rejectConfirm.users = lastGroup ;
-
+    const lastGroup = rejectConfirm.usersOnprase[rejectConfirm.usersOnprase.length -3]
+    rejectConfirm.users = lastGroup;
+    rejectConfirm.updatedAt =Date.now()
     await rejectConfirm.save();
 
     res.status(200).json({ order:rejectConfirm });
@@ -278,17 +279,9 @@ exports.archiveReject = asyncHandler(async (req, res, next) => {
     if (!currentOrder) {
       return next(new ApiError(404, 'Order not found'));
     }
-
-    // إنشاء سجل للطلب المكتمل
-    // eslint-disable-next-line new-cap
-    const completedRequest = new archive({
-      orderId: currentOrder._id,
-      completedBy: req.user._id, // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
-      completionDate: new Date(),
-    });
-    // حفظ السجل
-    await completedRequest.save();
-    await Order.findByIdAndUpdate(orderId, { users: null, group: null ,groups :null });
+    currentOrder.archive = true;
+    currentOrder.updatedAt =Date.now()
+    currentOrder.save()
     
-    res.status(200).json({ completedRequest });
+    res.status(200).json({ order : currentOrder });
 });

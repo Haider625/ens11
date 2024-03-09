@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable prefer-destructuring */
 
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/apiError')
@@ -38,16 +40,29 @@ exports.getWordText =   asyncHandler(async (req, res, next) => {
     if (!req.user.Permission.canViwsWordtext) {
         return next(new ApiError('You do not have permission to view this wordText', 403));
     }
-
-    let filter = {};
-    if (req.filterObj) {
-        filter = req.filterObj;
-    }
-
-    // يجب استخدام `find` للحصول على نتائج الاستعلام وانتظارها باستخدام `await`
-    const apiFeatures = await wordText.find(filter);
-
-    res.status(200).json({ wordText: apiFeatures });
+      if (req.filter) {
+        filter = req.filter;
+      }
+    
+      const documentsCounts = await wordText.countDocuments();
+      const apiFeatures = new ApiFeatures(
+        wordText.find({filter }), 
+        req.query
+      )
+        .paginate(documentsCounts)
+        
+        .search('wordText')
+        .limitFields()
+      const { mongooseQuery, paginationResult } =  apiFeatures;
+    
+      const documents = await mongooseQuery;
+      res
+        .status(200)
+        .json({ 
+          results: documents.length,
+           paginationResult ,
+           wordText: documents 
+          });
 });
 
 exports.deleteWordText =  asyncHandler(async (req, res, next) => {

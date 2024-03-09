@@ -78,10 +78,10 @@ exports.getsUser = asyncHandler(async (req, res,next) => {
   const documentsCounts = await User.countDocuments();
   const apiFeatures = new ApiFeatures(User.find(filter), req.query)
     .paginate(documentsCounts)
-    .filter()
-    .search(User)
+    .search('User')
     .limitFields()
     .sort();
+  
 
   // Execute query
   const { mongooseQuery, paginationResult } = apiFeatures;

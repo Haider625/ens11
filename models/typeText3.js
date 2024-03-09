@@ -8,8 +8,12 @@ const typeText3Schema = new mongoose.Schema(
             maxlength: [150, 'Too long name'],
             required: [true, 'name required'],
         },
+        createdAt: {
+            type :Date,
+            default:Date.now()
+          },
     },
-    { timestamps: true }
+ 
 );   
 
 module.exports = mongoose.model('typeText3', typeText3Schema);

@@ -15,7 +15,9 @@ const ApiError = require('../utils/apiError');
 const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
-const {io } = require('../utils/socket');
+const {getFormattedDate} = require('../config/moment')
+const {io}  = require('../utils/socket');
+
 
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
@@ -77,8 +79,9 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   const users = await user.findOne({ _id: loggedInUserId });
 
   if (!req.user.Permission.canCreatOrder) {
-    return next(new ApiError('You do not have permission to delete this order', 403));
+    return next(new ApiError('You do not have permission to create this order', 403));
   }
+  
 
   if (!users) {
     return res.status(404).json({ success: false, error: 'User not found' });
@@ -111,18 +114,12 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   const newOrder = await Order.create(orderData);
 
     newOrder.history.push({
-    editedAt: Date.now(),
+    editedAt: getFormattedDate(),
     editedBy: loggedInUserId,
     action: `تم انشاء الطلب من قبل`
   });
   newOrder.save()
 
-  const usersInGroup = await user.find({ 'group._id': lowerLevelGroup }); // افتراض اسم الحقل الذي يحتوي على معرف الكروب في نموذج المستخدم هو 'group._id'
-
-  // eslint-disable-next-line no-shadow
-  usersInGroup.forEach(users => {
-    io.emit('newOrder', newOrder); // افتراض اسم الحقل الذي يحتوي على معرف الجلسة (session ID) في نموذج المستخدم هو 'socketId'
-  });
   res.status(201).json({ order: newOrder });
 
 });
@@ -231,35 +228,25 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
         $and: [
           { State: { $ne: 'reject' } },
           { StateWork: { $ne: 'reject' } },
-          { StateDone: { $ne: 'reject' } }
         ]
       }
-    ]
+    ],
+    archive: { $ne: true }
   };
 
-  // let acceptedOrdersFilter = {};
-  
-  // // التحقق مما إذا كان المستخدم الحالي هو الذي قام بإنشاء الطلب
-  // if (Order && Order.createdBy && Order.createdBy.group && Order.group && Order.group.toString() === Order.createdBy.group.toString()) {
-  //   acceptedOrdersFilter = {
-  //     State: {
-  //       $ne: 'reject'
-  //     },
-  //     StateWork: {
-  //       $ne: 'reject'
-  //     },
-  //     StateDone: {
-  //       $ne: 'reject'
-  //     }
-  //   };
-  // }
 
-  const apiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
+
+  const apiFeatures = new ApiFeatures(Order.find({
+    $and: [
+      { $or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }] },
+      { $and: [{ ...acceptedOrdersFilter }, { ...filter }] }
+    ]
+  }), req.query)
     .paginate(documentsCounts)
-    .filter()
-    .search(Order)
+    .search('Order')
     .limitFields()
     .sort();
+
 
   const { mongooseQuery, paginationResult } = await apiFeatures;
   const documents = await mongooseQuery;
@@ -274,7 +261,6 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   if (!req.user.Permission.canViwsOrder) {
     return next(new ApiError('You do not have permission to view this order', 403));
   }
-
 
   const loggedInUserId = req.user._id;
   let filter = {};
@@ -311,11 +297,11 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
       {
         $and: [
           { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' } },
-          { StateDone: { $ne: 'reject' } }
+          { StateWork: { $ne: 'reject' } }
         ]
       }
-    ]
+    ],
+    archive: { $ne: true }
   };
   const acceptedOrdersFilters = {
     $or: [
@@ -328,20 +314,26 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
           
         ]
       }
-    ]
+    ],
+    archive: { $ne: true }
   }
 
   const apiFeatures = new ApiFeatures(
-    Order.find({ $or: [{ ...groupFilter }, { users: loggedInUserId }], $and :[{...acceptedOrdersFilter}], ...filter }), 
+    Order.find({ 
+      $and: [
+      {$or: [{ ...groupFilter }, { users: loggedInUserId }],},
+      {$and :[{...acceptedOrdersFilter}], ...filter }
+      ]
+    }), 
     req.query
   )
     .paginate(documentsCounts)
-    .filter()
-    .search(Order)
+    .search('Order')
     .limitFields()
     .sort();
   
   const { mongooseQuery, paginationResult } =  apiFeatures;
+
   const documents = await mongooseQuery;
 
   const countOnepreasApiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupsFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
@@ -459,6 +451,8 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   currentOrder.State = 'onprase';
   currentOrder.StateWork = 'onprase';
   currentOrder.StateDone = 'onprase';
+
+  currentOrder.updatedAt =Date.now()
   // احفظ الطلب المحدث
   await currentOrder.save();
 
@@ -490,3 +484,53 @@ exports.getAllOrder = asyncHandler(async(req,res,next) => {
 
   res.status(200).json({ results : documents.length, documents: documents });
 })
+
+// exports.getOrders = asyncHandler(async(req,res,next) => {
+//   const character = req.query.character;
+  
+//   if (!character) {
+//     return res.status(400).json({ error: 'يرجى تقديم الحرف للبحث عنه' });
+//   }
+
+//   try {
+//     // البحث في قاعدة البيانات باستخدام Mongoose والتعبيرات العادية
+//     const result = await Order.find({ type1: { $regex: new RegExp(character, 'i') } });
+//     res.json(result);
+//   } catch (error) {
+//     res.status(500).json({ error: 'حدث خطأ أثناء البحث في قاعدة البيانات' });
+//   }
+// })
+
+
+// exports.getOrders = asyncHandler(async (req, res, next) => {
+//   // التأكد من أن لديه الصلاحية المطلوبة للوصول لبيانات الطلب
+//   if (!req.user.Permission.canViwsOrder) {
+//     return next(new ApiError('You do not have permission to view this order', 403));
+//   }
+//   let filter = {};
+//   if (req.filter) {
+//     filter = req.filter;
+//   }
+
+//   const documentsCounts = await Order.countDocuments();
+//   const apiFeatures = new ApiFeatures(
+//     Order.find({filter }), 
+//     req.query
+//   )
+//     .paginate(documentsCounts)
+    
+//     .search('Order')
+//     .limitFields()
+
+  
+//   const { mongooseQuery, paginationResult } =  apiFeatures;
+
+//   const documents = await mongooseQuery;
+//   res
+//     .status(200)
+//     .json({ 
+//       results: documents.length,
+//        paginationResult ,
+//        orders: documents 
+//       });
+// });

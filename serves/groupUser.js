@@ -45,13 +45,12 @@ exports.getsGroupUser = asyncHandler(async (req, res,next) => {
   // Build query
   const documentsCounts = await groups.countDocuments();
   const apiFeatures = new ApiFeatures(groups.find(filter), req.query)
-    .paginate(documentsCounts)
-    .filter()
-    .search(groups)
-    .limitFields()
-    .sort();
+  .paginate(documentsCounts)
+  .search('Order')
+  .limitFields()
+  .sort();
 
-  // Execute query
+
   const { mongooseQuery, paginationResult } = apiFeatures;
   const documents = await mongooseQuery;
 

@@ -29,9 +29,13 @@ const router = express.Router();
 
 router.use(auth.protect);
 
+
+
 router.route('/')
 .get(getOrders)
 .post(uploadOrderImage,resizeImage,createOrderValidator,createOrderSend);
+
+
 
 router.get('/getAllText',getAllText)
 

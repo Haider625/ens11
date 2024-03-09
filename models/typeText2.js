@@ -12,8 +12,12 @@ const typeText2Schema = new mongoose.Schema(
             type : mongoose.Schema.ObjectId,
             ref : 'typeText3',
         }],
+        createdAt: {
+            type :Date,
+            default:Date.now()
+          },
     },
-    { timestamps: true }
+
 );   
 typeText2Schema.pre(/^find/, function (next) {
     this.populate({

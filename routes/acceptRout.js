@@ -34,6 +34,6 @@ router.put(('/endwork/:id'),uploadOrderImage,resizeImage,endWork)
 
 router.put(('/confirm/:id'),confirmWorkCompletion)
 
-router.post('/Archive/:id',AcceptArchive)
+router.put('/Archive/:id',AcceptArchive)
 
 module.exports = router;

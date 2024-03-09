@@ -36,7 +36,10 @@ const userSchema = new mongoose.Schema(
         minlength: [4,'Too short school'],
         maxlength: [32,'Too long school']
       },
-      phone: String,
+      phone:{
+        type : String,
+        unique: true,
+      },
       image: String,
       passwordChangedAt :Date,
       UserChangerPassword : {
@@ -288,8 +291,11 @@ const userSchema = new mongoose.Schema(
         type: Boolean,
         default: true,
       },
+      createdAt: {
+        type :Date,
+        default:Date.now()
+      },
     },
-    {timestamps: true}
   );
   
   userSchema.pre('save', async function (next) {

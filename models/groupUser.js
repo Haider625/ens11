@@ -34,9 +34,12 @@ const groupUserSchema = new mongoose.Schema(
         services : [{
            type :mongoose.Schema.ObjectId,
            ref : 'typeText2'
-        }]
+        }],
+        createdAt: {
+            type :Date,
+            default:Date.now()
+        },
     },
-    { timestamps: true }
 );   
 groupUserSchema.pre(/^find/, function (next) {
     this.populate([

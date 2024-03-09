@@ -1,19 +1,27 @@
-// استيراد moment.js
+// Import moment.js
 // eslint-disable-next-line import/no-extraneous-dependencies
 const moment = require('moment-timezone');
 
-// تحديد المنطقة الزمنية للعراق
+// Set the timezone to Asia/Baghdad
 moment.tz.setDefault('Asia/Baghdad');
 
-// دالة لإظهار السنة و الشهر و اليوم و الساعة و الدقيقة
+// Function to return the formatted date and time
 function getFormattedDate() {
   return moment().format('YYYY-MM-DD HH:mm');
 }
 
-// مثال على استخدام الدالة
-console.log(getFormattedDate()); // سيُخرج التاريخ والوقت الحاليين بتوقيت العراق
+// Example of using the function
+// console.log(getFormattedDate()); // Outputs the current date and time in the Iraq timezone
 
-// تصدير الدالة
+// Override Date.now to return the current timestamp
+Date.now = function() {
+  return new Date().getTime() + (3 * 60 * 60 * 1000); // إضافة 3 ساعات بالميلي ثانية
+};
+// const timestamp = Date.now();
+// const date = new Date(timestamp);
+// console.log(date);
+; 
+// Export the function
 module.exports = {
   getFormattedDate,
 };

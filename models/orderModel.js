@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
-const moment = require('../config/moment');
+const {getFormattedDate} = require('../config/moment');
 
 const orderSchema = new mongoose.Schema(
   {
@@ -108,6 +108,11 @@ const orderSchema = new mongoose.Schema(
       ref: 'User',
     }],
 
+    archive : {
+      type:Boolean,
+      default : false,
+    },
+
     createdBy :{
         type :mongoose.Schema.ObjectId,
         ref : 'User',
@@ -117,13 +122,8 @@ const orderSchema = new mongoose.Schema(
      history: [{
       editedAt: { 
         type: Date,
-        default: () => {
-          const userTimeZone = 'Asia/Baghdad'; // replace with actual user-selected zone
-          const date = new Date();
-          date.setUTCHours(date.getUTCHours() + (new Date(userTimeZone)).getTimezoneOffset() / 60);
-          return date;
-        },
-         },
+        default:Date.now(),
+      },
       editedBy: {
         type: mongoose.Schema.ObjectId,
          ref: 'User'
@@ -135,10 +135,18 @@ const orderSchema = new mongoose.Schema(
         type:String
       },
       imgDone : [String],
-  }]
+  }],
+  createdAt: {
+    type :Date,
+    default:Date.now()
+  },
+  updatedAt: {
+    type :Date,
+    default:Date.now()
+  }
 
   },
-  { timestamps: true, toJSON: { virtuals: true } }
+  {toJSON: { virtuals: true } }
 );
 
 orderSchema.plugin(mongoosePaginate);

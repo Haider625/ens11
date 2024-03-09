@@ -155,6 +155,7 @@ if (updatedOrder.groups === null || updatedOrder.groups === undefined) {
 updatedOrder.usersOnprase.push(updatedOrder.users);
 
 updatedOrder.group = null ;
+updatedOrder.updatedAt =Date.now()
 
 await updatedOrder.save();
 
@@ -191,7 +192,7 @@ updatedOrder.history.push({
 });
 
 
-
+updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
   
   res.status(200).json({accept : updatedOrder });
@@ -200,6 +201,7 @@ await updatedOrder.save();
 exports.startWork = asyncHandler(async(req,res,next) => {
   const loggedInUserId = req.user._id; // ايجاد المستخدم الذي عمل تسجيل دخول
   const orderId = req.params.id;
+  const loggedUser = req.user
   const {reason} = req.body
   // تحديث حالة الطلب إلى "accept" وسجل معرف المستخدم الذي قام بالتحديث
   const updatedOrder = await Order.findByIdAndUpdate(
@@ -209,8 +211,9 @@ exports.startWork = asyncHandler(async(req,res,next) => {
         StateWork: 'startwork',
         StateWorkReasonAccept : reason ,
         users : loggedInUserId,
-        $addToSet: { usersOnprase: req.body.loggedInUserId }
-        }
+        
+        },
+         $addToSet: { usersOnprase:loggedInUserId  }
     },
     { new: true }
   );
@@ -218,6 +221,11 @@ exports.startWork = asyncHandler(async(req,res,next) => {
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
+  // if (updatedOrder.usersOnprase === null || updatedOrder.usersOnprase === undefined) {
+  //   updatedOrder.usersOnprase = [loggedUser];
+  // } else {
+  //   updatedOrder.usersOnprase= {$addToSet: { usersOnprase:loggedInUserId  }}
+  // }
   // إضافة سجل جديد إلى مصفوفة history
 updatedOrder.history.push({
   editedAt: Date.now(),
@@ -225,7 +233,7 @@ updatedOrder.history.push({
   action : `تم بدء العمل من قبل` ,
   reason: reason
 });
-
+updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
   
   res.status(200).json({ accept : updatedOrder });
@@ -247,7 +255,7 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   updatedOrder.StateWork = 'endwork'
   updatedOrder.StateWorkReasonAccept = reason
   updatedOrder.users = null
-  updatedOrder.usersOnprase = {$addToSet: { usersOnprase: updatedOrder.createdBy._id }}
+  updatedOrder.usersOnprase.push(updatedOrder.createdBy);
   updatedOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
@@ -255,7 +263,7 @@ exports.endWork = asyncHandler(async (req, res, next) => {
     reason:reason,
     imgDone: updatedOrder.donimgs
   });
-  
+  updatedOrder.updatedAt =Date.now()
   await updatedOrder.save();
 
   res.status(200).json({ order: updatedOrder });
@@ -287,48 +295,25 @@ updatedOrder.history.push({
   action : `تم تاكيد اتمام العمل من قبل`,
   reason : reason
 });
-
+updatedOrder.archive = true ;
+updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
 
-const completedRequest = new Archive({
-  orderId: orderId,
-  completedBy: req.user._id, // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
-  completionDate: new Date(),
-});
-// حفظ السجل في جدول الأرشيف
-await completedRequest.save();
-
-await Order.findByIdAndUpdate(orderId, { users: null, group: null ,groups :null });
 
   
-  res.status(200).json({ accept :completedRequest});
+  res.status(200).json({ accept :updatedOrder});
 });
 
 exports.AcceptArchive = asyncHandler(async (req, res, next) => {
  
     try {
       const orderId = req.params.id;
-  
-      // التحقق مما إذا كان حالة الطلب 'done'
-      // const order = await Order.findById(orderId);
-      // if (!order || order.StateDone !== 'accept') {
-      //   return next(new ApiError(`Order not found or not in 'done' state`, 404));
-      // }
-      // إنشاء سجل للطلب المكتمل
-      const completedRequest = new Archive({
-        orderId: orderId,
-        completedBy: req.user._id, // افتراض وجود نظام المصادقة وتوفر معرف المستخدم
-        completionDate: new Date(),
-      });
-      // حفظ السجل في جدول الأرشيف
-      await completedRequest.save();
 
-      await Order.findByIdAndUpdate(orderId, { users: null, group: null ,groups :null });
-      // await orderId.save();
-      // (اختياري) يمكنك إزالة الطلب من جدول الطلبات إذا أردت
-      //  const order = await Order.findByIdAndRemove(orderId);
+      const AcceptArchive = await Order.findByIdAndUpdate(orderId);
+      AcceptArchive.archive = true ;
+      AcceptArchive.save();
   
-      res.status(200).json({ accept : completedRequest});
+      res.status(200).json({ accept : AcceptArchive});
     } catch (error) {
       return next(new ApiError(500, 'Internal Server Error'));
     }
