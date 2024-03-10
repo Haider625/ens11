@@ -48,14 +48,13 @@ class ApiFeatures {
       // التحقق من وجود نموذج صحيح
       let query = {};
     
-      if (!modelName) {
+      if (!modelName ) {
         return this;
       }
       // التحقق من وجود كلمة مفتاحية
       if (this.queryString.keyword) {
         const keyword = this.queryString.keyword.toLowerCase();
         const keywordRegex = new RegExp(keyword, 'i');
-        console.log('Keyword Regex:', keywordRegex);
         if (modelName === 'Order') {
           // const editedByUserIds = await User.distinct('_id', { name: { $regex: keywordRegex } });
 
@@ -87,16 +86,6 @@ class ApiFeatures {
         } else {
           query = { name: { $regex: keywordRegex } };
         }
-        console.log('Search Query:', {
-          '$or': [
-            { type1: { $regex: keywordRegex.source } },
-            { type2: { $regex: keywordRegex.source } },
-            { type3: { $regex: keywordRegex.source } },
-            { caption: { $regex: keywordRegex.source } },
-            { 'history.editedBy.name': { $regex: keywordRegex.source,} }
-
-          ]
-        });
         // استخدام هذا المتغير لحفظ حالة الاستعلام بعد كل تغيير
         const modifiedQuery = this.mongooseQuery;
         
@@ -108,7 +97,11 @@ class ApiFeatures {
         } catch (error) {
           console.error('Error executing query:', error);
         }
-      }
+        if (this.mongooseQuery.length === 0) {
+          return;
+        }
+      } 
+
     
       return this;
     }

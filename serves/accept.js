@@ -146,11 +146,11 @@ updatedOrder.history.push({
     });
   }
   updatedOrder.State = 'accept' 
-if (updatedOrder.groups === null || updatedOrder.groups === undefined) {
-  updatedOrder.groups = [loggedUser.group];
-} else {
-  updatedOrder.groups.push(loggedUser.group);
-}
+// if (updatedOrder.groups === null || updatedOrder.groups === undefined) {
+//   updatedOrder.groups = [loggedUser.group];
+// } else {
+//   updatedOrder.groups.push(loggedUser.group);
+// }
 
 updatedOrder.usersOnprase.push(updatedOrder.users);
 

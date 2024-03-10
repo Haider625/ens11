@@ -174,10 +174,31 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     if (rejectOrder.State === 'reject'){
       const lastGroup = rejectOrder.groups[rejectOrder.groups.length - 1]
       rejectOrder.group = lastGroup ;
+      rejectOrder.groups.pop();
     }else{
-      const lastGroup = rejectOrder.groups[rejectOrder.groups.length]
+      const lastGroup = rejectOrder.groups[rejectOrder.groups.length  ]
       rejectOrder.group = lastGroup ;
     }
+
+    // let lastGroupIndex;
+
+    // if (rejectOrder.State === 'reject') {
+    //   // إذا كانت الحالة "رفض"، قم بتحديد الفهرس الخاص بآخر عنصر في المصفوفة
+    //   lastGroupIndex = rejectOrder.groups.length - 1;
+    //   rejectOrder.group = rejectOrder.groups[lastGroupIndex];
+    // } else {
+    //   // إذا لم تكن الحالة "رفض"، قم بتحديد الفهرس الخاص بآخر عنصر في المصفوفة
+    //   lastGroupIndex = rejectOrder.groups.length;
+    //   rejectOrder.group = rejectOrder.groups[lastGroupIndex];
+    // }
+    
+    // // عند إعادة تنفيذ الشرط وكون الحالة "رفض"، قلل قيمة lastGroupIndex بواحد
+    // if (rejectOrder.State === 'reject') {
+    //   lastGroupIndex -= 1;
+    // }
+    
+    // // يمكنك استخدام lastGroupIndex حسب احتياجاتك فيما بعد
+    // console.log('Last Group Index:', lastGroupIndex);
     
     // if (rejectOrder.groups === null || rejectOrder.groups === undefined) {
     //   rejectOrder.groups = [loggedUser.group];
@@ -220,13 +241,24 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
 
     // rejectWork.group = lastGroup ;
 
-    if (rejectWork.userOrders === null || rejectWork.usersOnprase === undefined) {
+    if (rejectWork.StateWork === 'reject'){
+      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 1]
+      rejectWork.users = lastGroup ;
+      rejectWork.usersOnprase.pop();
+    }else{
       const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length ]
       rejectWork.users = lastGroup ;
-    } else {
-      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length -2]
-      rejectWork.users = lastGroup ;
     }
+
+    // if (rejectWork.userOrders === null || rejectWork.usersOnprase === undefined) {
+    //   const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length ]
+    //   rejectWork.users = lastGroup ;
+
+    // } else {
+    //   const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length -1]
+    //   rejectWork.users = lastGroup ;
+    //   rejectWork.usersOnprase.pop();
+    // }
     rejectWork.updatedAt =Date.now()
     await rejectWork.save();
 

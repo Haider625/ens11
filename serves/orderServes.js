@@ -225,16 +225,14 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
     $or: [
       { createdBy: { $ne: loggedInUserIdString }},
       {
-        $and: [
-          { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' } },
-        ]
-      }
+        // $and: [
+        //   { State: { $ne: 'reject' } },
+        //   { StateWork: { $ne: 'reject' } },
+        // ]
+       }
     ],
     archive: { $ne: true }
   };
-
-
 
   const apiFeatures = new ApiFeatures(Order.find({
     $and: [
@@ -295,10 +293,10 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     $or: [
       { createdBy: { $ne: loggedInUserIdString }},
       {
-        $and: [
-          { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' } }
-        ]
+        // $and: [
+        //   { State: { $ne: 'reject' } },
+        //   { StateWork: { $ne: 'reject' } }
+        // ]
       }
     ],
     archive: { $ne: true }

@@ -111,8 +111,7 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
       return next(new ApiError('You do not have permission to Forword this order', 403));
   }
 
-  const order = await Order.findByIdAndUpdate(orderId, {$addToSet: { groups: groupIds } 
-  },);
+  const order = await Order.findByIdAndUpdate(orderId ,);
   
   if (!order) {
       return res.status(404).json({ message: 'الطلب غير موجود' });
@@ -130,14 +129,11 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
       reason: reason
   });
 
-  order.group = groupIds;
-
-// if (order.groups === null || order.groups === undefined) {
-//   order.groups = [loggedUser.group];
-// } else {
-//   order.groups.push(loggedUser.group);
-// }
-
+  if (!order.groups.some(group => group._id.equals(loggedUser.group._id))) {
+    order.groups.push(loggedUser.group);
+  }
+  
+order.group = groupIds;
   order.State = 'onprase';
   order.StateReasonOnprase = reason;
   order.updatedAt =Date.now()
