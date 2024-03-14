@@ -50,7 +50,7 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(new ApiError('User is not active', 403));
   }
 
-  // 4) generate token
+  // 4) generate token 
   const token = createToken(user._id);
 
   // Delete password from the response

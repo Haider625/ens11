@@ -6,7 +6,7 @@ const sharp = require('sharp')
 const Order = require('../models/orderModel');
 const User = require('../models/userModel');
 const ApiError = require('../utils/apiError');
-const Archive = require('../models/archive')
+const socketHandler  = require('../utils/socket');
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
@@ -159,7 +159,13 @@ updatedOrder.updatedAt =Date.now()
 
 await updatedOrder.save();
 
-  res.status(200).json({accept : updatedOrder });
+const updatOrder = await Order.findById(updatedOrder._id).populate('users');
+
+const roomUser = updatOrder.users.userId;
+const message = 'اجراء اللازم لطفاً';
+socketHandler.sendNotificationToUser(roomUser,message);
+
+  res.status(200).json({accept : updatOrder });
 });
 
 exports.acceptwork = asyncHandler(async(req,res,next) => {
@@ -235,8 +241,12 @@ updatedOrder.history.push({
 });
 updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
-  
-  res.status(200).json({ accept : updatedOrder });
+const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
+
+const roomUser = updatOrder.createdBy.userId;
+const message = 'يتم تنفيذ طلبك';
+socketHandler.sendNotificationToUser(roomUser,message);
+  res.status(200).json({ accept : updatOrder });
 });
 
 exports.endWork = asyncHandler(async (req, res, next) => {
@@ -266,7 +276,13 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   updatedOrder.updatedAt =Date.now()
   await updatedOrder.save();
 
-  res.status(200).json({ order: updatedOrder });
+  const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
+
+const roomUser = updatOrder.createdBy.userId;
+const message = 'يرجى تاكيد انجاز العمل';
+socketHandler.sendNotificationToUser(roomUser,message);
+
+  res.status(200).json({ order: updatOrder });
 });
 
 exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
@@ -299,9 +315,27 @@ updatedOrder.archive = true ;
 updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
 
+const updatOrder = await Order.findById(updatedOrder._id).populate('usersOnprase','groups');
+
+updatOrder.usersOnprase.forEach(users => {
+  const roomName = users.userId;
+  const message = 'تم تاكيد انجاز العمل';
+  
+  if (roomName !== loggedInUserId) {
+    socketHandler.sendNotificationToUser(roomName, message);
+  }
+
+});
+
+updatOrder.groups.forEach(group => {
+  const roomName = group.name;
+  const message = 'تم تاكيد انجاز العمل';
+  socketHandler.sendNotificationToRoom(roomName, message);
+
+});
 
   
-  res.status(200).json({ accept :updatedOrder});
+  res.status(200).json({ accept :updatOrder});
 });
 
 exports.AcceptArchive = asyncHandler(async (req, res, next) => {
@@ -312,7 +346,7 @@ exports.AcceptArchive = asyncHandler(async (req, res, next) => {
       const AcceptArchive = await Order.findByIdAndUpdate(orderId);
       AcceptArchive.archive = true ;
       AcceptArchive.save();
-  
+
       res.status(200).json({ accept : AcceptArchive});
     } catch (error) {
       return next(new ApiError(500, 'Internal Server Error'));

@@ -86,7 +86,7 @@ app.all('*',(req,res,next) => {
 //     });
 // });
 
-socketHandler(server);
+socketHandler.initializeSocket(server);
 
 app.use(globalError) ;
 

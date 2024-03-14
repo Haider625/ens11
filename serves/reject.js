@@ -6,6 +6,7 @@ const ApiFeatures = require('../utils/apiFeatures');
 const archive = require('../models/archive')
 const groups = require('../models/groupUser')
 const user = require('../models/userModel')
+const socketHandler  = require('../utils/socket');
 
 exports.getRejectedOrders = asyncHandler(async (req, res) => {
 
@@ -176,7 +177,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
       rejectOrder.group = lastGroup ;
       rejectOrder.groups.pop();
     }else{
-      const lastGroup = rejectOrder.groups[rejectOrder.groups.length  ]
+      const lastGroup = rejectOrder.groups[rejectOrder.groups.length -1]
       rejectOrder.group = lastGroup ;
     }
 
@@ -207,6 +208,12 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     // }
     rejectOrder.updatedAt =Date.now()
     await rejectOrder.save();
+
+    const updatOrder = await Order.findById(rejectOrder._id).populate('group');
+
+    const roomgroup = updatOrder.group.name;
+    const message = 'تم رفض الطلب';
+    socketHandler.sendNotificationToRoom(roomgroup,message);
 
     res.status(200).json({ order : rejectOrder });
 });
@@ -246,7 +253,7 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
       rejectWork.users = lastGroup ;
       rejectWork.usersOnprase.pop();
     }else{
-      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length ]
+      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length -1]
       rejectWork.users = lastGroup ;
     }
 
@@ -262,7 +269,13 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
     rejectWork.updatedAt =Date.now()
     await rejectWork.save();
 
-    res.status(200).json({ order :rejectWork });
+  const updatOrder = await Order.findById(rejectWork._id).populate('users');
+
+  const roomUser = updatOrder.users.userId;
+  const message = 'تم رفض تنفيذ الطلب';
+  socketHandler.sendNotificationToUser(roomUser,message);
+
+    res.status(200).json({ order :updatOrder });
 });
 
 exports.rejectConfirm = asyncHandler(async (req, res, next) => {
@@ -296,6 +309,12 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
     rejectConfirm.users = lastGroup;
     rejectConfirm.updatedAt =Date.now()
     await rejectConfirm.save();
+
+    const updatOrder = await Order.findById(rejectConfirm._id).populate('users');
+
+    const roomUser = updatOrder.users.userId;
+    const message = 'تم رفض تنفيذ العمل على الطلب';
+    socketHandler.sendNotificationToUser(roomUser,message);
 
     res.status(200).json({ order:rejectConfirm });
 });

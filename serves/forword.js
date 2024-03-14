@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
 const Order = require('../models/orderModel');
 const ApiError = require('../utils/apiError');
+const socketHandler  = require('../utils/socket');
 
 // exports.reject = asyncHandler(async (req, res, next) => {
 //     const loggedInUserId = req.user._id;
@@ -111,7 +112,10 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
       return next(new ApiError('You do not have permission to Forword this order', 403));
   }
 
-  const order = await Order.findByIdAndUpdate(orderId ,);
+  const order = await Order.findById(orderId).populate({
+    path: 'group',
+    select: 'name', // حدد الحقول التي ترغب في استرجاعها من الكروب
+  });
   
   if (!order) {
       return res.status(404).json({ message: 'الطلب غير موجود' });
@@ -138,8 +142,13 @@ order.group = groupIds;
   order.StateReasonOnprase = reason;
   order.updatedAt =Date.now()
   await order.save();
+  const updatOrder = await Order.findById(order._id).populate('group');
 
-  return res.status(200).json({ order });
+  const roomgroup = updatOrder.group.name;
+  const message = 'تم وصول طلب جديد';
+  socketHandler.sendNotificationToRoom(roomgroup,message);
+
+  return res.status(200).json({order: updatOrder });
 })
 
 // هذه الدالة تقوم بجلب الكروبات العلى من المستخدم و الذي في مستواه حسب صلاحيات الكروب الذي سجل فيه 
@@ -174,22 +183,3 @@ exports.forwordWorkDown = asyncHandler(async(req, res, next) => {
 
       res.status(200).json({groups :mergedData});
 })
-
-
-// دالة لازالة العناصر المكررة 
-// exports.forwordWorkDown = asyncHandler(async(req, res, next) => {
-//   const userId = req.user._id;
-
-//   // العثور على المستخدم باستخدام findById
-//   const userObject = await User.findById(userId);
-
-//   const { group, forwordWorkDown } = userObject;
-
-//   const {forwordGroup} = group;
-//   const {levelsReceive} = group;
-
-//   // إزالة العناصر المكررة بين forwordGroup و levelsReceive
-//   const filteredForwordGroup = forwordGroup.filter(item => !levelsReceive.includes(item));
-
-//   res.status(200).json({ forwordGroup: filteredForwordGroup, levelsReceive, forwordWorkDown });
-// });

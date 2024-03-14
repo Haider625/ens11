@@ -4,6 +4,7 @@
 /* eslint-disable prefer-destructuring */
 const asyncHandler = require('express-async-handler');
 
+const socketIo = require('socket.io');
 
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
@@ -16,7 +17,7 @@ const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
 const {getFormattedDate} = require('../config/moment')
-const {io}  = require('../utils/socket');
+const socketHandler  = require('../utils/socket');
 
 
 
@@ -75,7 +76,6 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
 exports.createOrderSend = asyncHandler(async (req, res) => {
   const loggedInUserId = req.user._id;
 
-  // جلب بيانات المستخدم بما في ذلك levelSend
   const users = await user.findOne({ _id: loggedInUserId });
 
   if (!req.user.Permission.canCreatOrder) {
@@ -86,9 +86,9 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   if (!users) {
     return res.status(404).json({ success: false, error: 'User not found' });
   }
-  // احصل على الكروب الذي يحتوي على مستوى أقل برقم واحد
+
   const lowerLevelGroup = users.group.levelSend;
-  // تحقق من وجود الكروب
+
   if (!lowerLevelGroup) {
     return  next(new ApiError(`Not found levelSend`, 404));
   }
@@ -119,7 +119,9 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     action: `تم انشاء الطلب من قبل`
   });
   newOrder.save()
-
+  const roomgroup = newOrder.group.name;
+  const message = 'تم وصول طلب جديد';
+  socketHandler.sendNotificationToRoom(roomgroup,message);
   res.status(201).json({ order: newOrder });
 
 });
@@ -453,6 +455,10 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   currentOrder.updatedAt =Date.now()
   // احفظ الطلب المحدث
   await currentOrder.save();
+
+  const roomgroup = currentOrder.group.name;
+  const message = 'تم وصول طلب جديد';
+  socketHandler.sendNotificationToRoom(roomgroup,message);
 
   res.status(200).json({ order: currentOrder });
 });
