@@ -11,7 +11,7 @@ function getFormattedDate() {
 }
 
 // Example of using the function
-// console.log(getFormattedDate()); // Outputs the current date and time in the Iraq timezone
+console.log(getFormattedDate()); // Outputs the current date and time in the Iraq timezone
 
 // Override Date.now to return the current timestamp
 Date.now = function() {

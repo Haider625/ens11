@@ -6,6 +6,7 @@ const http = require('http');
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require('morgan');
+const cron = require('node-cron');
 
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
@@ -24,6 +25,9 @@ const forword = require('./routes/forwordRout')
 const typeText1 = require('./routes/typeText1Rout')
 const typeText2 = require('./routes/typeText2Rout')
 const typeText3 = require('./routes/typeText3Rout')
+const messageSocket = require('./routes/messageSocket')
+
+const { cronTask } = require('./serves/messageSocket');
 
 const socketHandler = require('./utils/socket');
 
@@ -37,6 +41,8 @@ app.use(express.static(path.join(__dirname,'uploads')));
 dotenv.config({path: 'config.env'})
 
 dbconnection();
+
+cron.schedule('*/10 * * * *', cronTask);
 
 
 if(process.env.NODE_ENV === 'devlopment') {
@@ -57,6 +63,7 @@ app.use('/api/v1/forword',forword)
 app.use('/api/v1/typeText1',typeText1)
 app.use('/api/v1/typeText2',typeText2)
 app.use('/api/v1/typeText3',typeText3)
+app.use('/api/v1/messageSocket',messageSocket)
 
 
 
@@ -64,27 +71,6 @@ app.all('*',(req,res,next) => {
     next(new ApiError(`can t find this route : ${req.originalUrl}`, 404));
  })
 
-//  io.on('connection', (socket) => {
-//     console.log('A user connected', socket.id);
-
-//     // استقبال إشعارات من العميل
-//     socket.on('sendNotification', (data) => {
-//         console.log('Received notification from client:', data);
-
-//         // إرسال إشعار لجميع العملاء
-//         io.emit('receiveNotification', { message: 'New notification!' });
-
-//         // إظهار إشعار على جهاز الخادم
-//         notifier.notify({
-//             title: 'New Notification',
-//             message: 'You received a new notification!',
-//         });
-//     });
-
-//     socket.on('disconnect', () => {
-//         console.log('User disconnected');
-//     });
-// });
 
 socketHandler.initializeSocket(server);
 

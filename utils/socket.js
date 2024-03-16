@@ -3,6 +3,7 @@
 const socketIo = require('socket.io');
 
 const User = require('../models/userModel')
+const messageSocket = require('../models/messageSocket');
 
 let io;
 
@@ -31,21 +32,23 @@ module.exports = {
         });
     },
 
-  sendNotificationToUser: function (roomUser, message) {
+  sendNotificationToUser: async function (roomUser, message) {
     console.log(roomUser)
     if (io.sockets.adapter.rooms.has(roomUser)) {
       io.to(roomUser).emit('notification', message);
-  } else {
+      await messageSocket.create({ room: roomUser, message: message });
+    } else {
       console.log('roomUser does not exist');
-  }
+    }
 },
 
-    sendNotificationToRoom: function (roomgroup, message) {
+    sendNotificationToRoom: async function (roomgroup, message) {
       console.log(roomgroup)
       if (io.sockets.adapter.rooms.has(roomgroup)) {
         io.to(roomgroup).emit('notification', message);
-    } else {
+        await messageSocket.create({ room: roomgroup, message: message });
+      } else {
         console.log('roomgroup does not exist');
-    }
+      }
   }
 };
