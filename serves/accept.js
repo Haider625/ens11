@@ -343,7 +343,7 @@ exports.AcceptArchive = asyncHandler(async (req, res, next) => {
     try {
       const orderId = req.params.id;
 
-      const AcceptArchive = await Order.findByIdAndUpdate(orderId);
+      const AcceptArchive = await Order.findById(orderId);
       AcceptArchive.archive = true ;
       AcceptArchive.save();
 

@@ -78,10 +78,10 @@ exports.getsArchive = asyncHandler(async (req, res, next) => {
     $or: [
       { createdBy: { $ne: loggedInUserIdString }},
       {
-        $and: [
-          { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' } },
-        ]
+        // $and: [
+        //   { State: { $ne: 'reject' } },
+        //   { StateWork: { $ne: 'reject' } },
+        // ]
       }
     ],
     archive: { $ne: false }

@@ -7,6 +7,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require('morgan');
 const cron = require('node-cron');
+const retelimit = require('express-rate-limit')
 
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
@@ -35,7 +36,7 @@ const app = express();
 
 const server = http.createServer(app);
 
-app.use(express.json());
+app.use(express.json({limit : '50kb'}));
 app.use(express.static(path.join(__dirname,'uploads')));
 
 dotenv.config({path: 'config.env'})
@@ -50,11 +51,16 @@ if(process.env.NODE_ENV === 'devlopment') {
     console.log(`node : ${process.env.NODE_ENV}`)
 }
 
+const limiter = retelimit({
+    windowMs:15 * 60 * 1000,
+    max : 100
+})
+
 app.use('/api/v1/order',orderRout) 
 app.use('/api/v1/user',UserRout) 
 app.use('/api/v1/auth',authRout) 
 app.use('/api/v1/group',groupUser) 
-app.use('/api/v1/accept',accept) 
+app.use('/api/v1/accept',accept)
 app.use('/api/v1/word',wordText) 
 app.use('/api/v1/viewGroup',viewGroup) 
 app.use('/api/v1/Archive',Archive) 
