@@ -96,7 +96,7 @@ exports.updateMessageSocket =   asyncHandler(async (req, res, next) => {
   exports.cronTask = asyncHandler(async () => {
     // حساب التاريخ الذي يعود إلى شهر واحد مضى
     
-    const oneMonthAgo = moment().subtract(1, 'minutes').toDate();
+    const oneMonthAgo = moment().subtract(1, 'months').toDate();
 
     console.log(oneMonthAgo)
 

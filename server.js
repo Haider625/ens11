@@ -7,7 +7,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require('morgan');
 const cron = require('node-cron');
-const retelimit = require('express-rate-limit')
+const rateLimit = require('express-rate-limit');
 
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
@@ -51,10 +51,13 @@ if(process.env.NODE_ENV === 'devlopment') {
     console.log(`node : ${process.env.NODE_ENV}`)
 }
 
-const limiter = retelimit({
-    windowMs:15 * 60 * 1000,
-    max : 100
-})
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // فترة النافذة بالميلي ثانية (15 دقيقة)
+    max: 100, // الحد الأقصى لعدد الطلبات خلال النافذة
+    message: 'Too many accounts created from this IP, please try again after an hour'
+});
+
+app.use('/api', limiter);
 
 app.use('/api/v1/order',orderRout) 
 app.use('/api/v1/user',UserRout) 
