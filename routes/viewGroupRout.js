@@ -22,10 +22,4 @@ router.route('/')
 router.route('/:groupId')
 .get(getOrdersByGroup)
 
-// router.route('/:id')
-// .get()
-// .delete()
-// .put()
-
-
 module.exports = router;

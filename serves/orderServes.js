@@ -120,7 +120,10 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   });
   newOrder.save()
   const roomgroup = newOrder.group.name;
-  const message = 'تم وصول طلب جديد';
+const message = {
+  title: "تنبيه جديد",
+  body: "تم وصول طلب جديد"
+};
   socketHandler.sendNotificationToRoom(roomgroup,message);
   res.status(201).json({ order: newOrder });
 

@@ -46,6 +46,7 @@ module.exports = {
       console.log(roomgroup)
       if (io.sockets.adapter.rooms.has(roomgroup)) {
         io.to(roomgroup).emit('notification', message);
+        console.log(message)
         await messageSocket.create({ room: roomgroup, message: message });
       } else {
         console.log('roomgroup does not exist');

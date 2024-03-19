@@ -109,7 +109,6 @@ exports.getUserOrders = asyncHandler(async (req, res, next) => {
 exports.acceptOrder = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
   const loggedInUserId = req.user._id; 
-  const loggedUser = req.user
   const {users , reason } = req.body;
  
   if (!req.user.Permission.canAcceptOrder) {
@@ -146,11 +145,6 @@ updatedOrder.history.push({
     });
   }
   updatedOrder.State = 'accept' 
-// if (updatedOrder.groups === null || updatedOrder.groups === undefined) {
-//   updatedOrder.groups = [loggedUser.group];
-// } else {
-//   updatedOrder.groups.push(loggedUser.group);
-// }
 
 updatedOrder.usersOnprase.push(updatedOrder.users);
 
@@ -162,7 +156,10 @@ await updatedOrder.save();
 const updatOrder = await Order.findById(updatedOrder._id).populate('users');
 
 const roomUser = updatOrder.users.userId;
-const message = 'اجراء اللازم لطفاً';
+const message = {
+  title: "تنبيه جديد",
+  body: "اجراء اللازم لطفاً"
+};
 socketHandler.sendNotificationToUser(roomUser,message);
 
   res.status(200).json({accept : updatOrder });
@@ -205,11 +202,10 @@ await updatedOrder.save();
 });
 
 exports.startWork = asyncHandler(async(req,res,next) => {
-  const loggedInUserId = req.user._id; // ايجاد المستخدم الذي عمل تسجيل دخول
+  const loggedInUserId = req.user._id; 
   const orderId = req.params.id;
-  const loggedUser = req.user
   const {reason} = req.body
-  // تحديث حالة الطلب إلى "accept" وسجل معرف المستخدم الذي قام بالتحديث
+
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     {
@@ -227,12 +223,7 @@ exports.startWork = asyncHandler(async(req,res,next) => {
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
-  // if (updatedOrder.usersOnprase === null || updatedOrder.usersOnprase === undefined) {
-  //   updatedOrder.usersOnprase = [loggedUser];
-  // } else {
-  //   updatedOrder.usersOnprase= {$addToSet: { usersOnprase:loggedInUserId  }}
-  // }
-  // إضافة سجل جديد إلى مصفوفة history
+
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
@@ -244,7 +235,10 @@ await updatedOrder.save();
 const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
 const roomUser = updatOrder.createdBy.userId;
-const message = 'يتم تنفيذ طلبك';
+const message = {
+  title: "تنبيه جديد",
+  body: "يتم تنفيذ طلبك"
+};
 socketHandler.sendNotificationToUser(roomUser,message);
   res.status(200).json({ accept : updatOrder });
 });
@@ -279,7 +273,10 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
 const roomUser = updatOrder.createdBy.userId;
-const message = 'يرجى تاكيد انجاز العمل';
+const message = {
+  title: "تنبيه جديد",
+  body: "يرجى تاكيد انجاز العمل"
+};
 socketHandler.sendNotificationToUser(roomUser,message);
 
   res.status(200).json({ order: updatOrder });
