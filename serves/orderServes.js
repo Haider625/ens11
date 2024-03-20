@@ -104,15 +104,18 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     createdBy: req.user._id,
     user : req.body.user,
     orderimg : req.body.orderimg,
-    donimgs :req.body.donimgs
+    donimgs :req.body.donimgs,
   };
   // تحقق من وجود lowerLevelGroup._id قبل الطباعة
 
 
   const newOrder = await Order.create(orderData);
 
+  newOrder.createdAt =Date.now()
+  newOrder.updatedAt =Date.now()
+
     newOrder.history.push({
-    editedAt: getFormattedDate(),
+    editedAt: Date.now(),
     editedBy: loggedInUserId,
     action: `تم انشاء الطلب من قبل`
   });
@@ -162,34 +165,28 @@ exports.deleteOrder = asyncHandler(async (req, res, next) => {
 exports.updateOrder = asyncHandler(async (req, res, next) => {
   const loggedInUserId = req.user._id;
 
-  // التحقق من صلاحيات التحرير
   if (!req.user.Permission.canEidtOrder) {
     return next(new ApiError('You do not have permission to edit this order', 403));
   }
 
-  // جلب الطلب الحالي قبل التعديل
   const currentOrder = await Order.findById(req.params.id);
 
   if (!currentOrder) {
     return next(new ApiError('Order not found', 404));
   }
 
-  // إعداد قيمة group الجديدة بتوصيف الطلب الحالي والقيمة الجديدة
-  // const updatedGroup = [...currentOrder.group, ...req.body.group];
-
-  // تحديث الطلب باستخدام findByIdAndUpdate
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
     .populate('donimgs');
 
-  // إضافة إدخال إلى سجل التاريخ
+  updatedOrder.updatedAt =Date.now()
+
   updatedOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
     action: `تم تعديل الطلب من قبل`
   });
 
-  // حفظ التغييرات
   await updatedOrder.save();
 
   res.status(200).json({ order: updatedOrder });
