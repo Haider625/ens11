@@ -6,6 +6,7 @@ const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const ApiError = require('../utils/apiError');
 const createToken = require('../utils/creatToken');
+const {sanitizeUser} = require('../utils/sanaitizeData')
 
 const User = require('../models/userModel');
 // @desc    Signup
@@ -29,7 +30,7 @@ exports.singup = asyncHandler(async (req, res, next) => {
     await user.save();
   }
 
-  res.status(201).json({ user : user, token });
+  res.status(201).json({ user :user, token });
 });
 
 

@@ -5,8 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start:dev": "nodemon server.js",
-    "start:prod": "NODE_ENV=production node server.js",
-    "start": "node server.js"
+    "start:prod": "NODE_ENV=production node server.js"
   },
   "author": "",
   "license": "ISC",
@@ -16,8 +15,10 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "express-async-handler": "^1.2.0",
+    "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.2.0",
     "express-validator": "^7.0.1",
+    "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.45",
@@ -33,7 +34,8 @@
     "slugify": "^1.6.6",
     "socket.io": "^4.7.4",
     "socket.io-client": "^4.7.4",
-    "uuid": "^9.0.1"
+    "uuid": "^9.0.1",
+    "xss-clean": "^0.1.4"
   },
   "devDependencies": {
     "eslint": "^8.55.0",

@@ -8,6 +8,8 @@ const dotenv = require("dotenv");
 const morgan = require('morgan');
 const cron = require('node-cron');
 const rateLimit = require('express-rate-limit');
+const  mongoSanitize  =  require ( 'express-mongo-sanitize' ) ;
+const xss = require('xss-clean')
 
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
@@ -50,10 +52,13 @@ if(process.env.NODE_ENV === 'devlopment') {
     app.use(morgan('dev'));
     console.log(`node : ${process.env.NODE_ENV}`)
 }
+// To remove data using these defaults:
+app.use(mongoSanitize());
+app.use(xss())
 
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // فترة النافذة بالميلي ثانية (15 دقيقة)
-    max: 100, // الحد الأقصى لعدد الطلبات خلال النافذة
+    windowMs: 15 * 60 * 1000,
+    max: 100, 
     message: 'Too many accounts created from this IP, please try again after an hour'
 });
 
@@ -89,8 +94,7 @@ app.use(globalError) ;
 const PORT = process.env.PORT || 6000 ;
  server.listen(PORT , () => {
     console.log(`App running on port :${PORT}`);
-    // // eslint-disable-next-line global-require
-    // require('./utils/socketHandler')(server);
+
 });
 
 
