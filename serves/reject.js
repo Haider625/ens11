@@ -173,7 +173,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
       reason: reason
     });
     if (rejectOrder.State === 'reject'){
-      const lastGroup = rejectOrder.groups[rejectOrder.groups.length - 2]
+      const lastGroup = rejectOrder.groups[rejectOrder.groups.length - 1]
       rejectOrder.group = lastGroup ;
       rejectOrder.groups.pop();
     }else{
@@ -222,7 +222,7 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
     });
 
     if (rejectWork.StateWork === 'reject'){
-      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 2]
+      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 1]
       rejectWork.users = lastGroup ;
       rejectWork.usersOnprase.pop();
     }else{
@@ -283,6 +283,7 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
       title: "تنبيه جديد",
       body: "تم رفض تنفيذ العمل على الطلب"
     };
+
     socketHandler.sendNotificationToUser(roomUser,message);
 
     res.status(200).json({ order:rejectConfirm });
