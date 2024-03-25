@@ -222,7 +222,7 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
     });
 
     if (rejectWork.StateWork === 'reject'){
-      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 1]
+      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 2]
       rejectWork.users = lastGroup ;
       rejectWork.usersOnprase.pop();
     }else{

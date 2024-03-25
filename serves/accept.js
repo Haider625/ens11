@@ -146,6 +146,8 @@ updatedOrder.history.push({
   }
   updatedOrder.State = 'accept' 
 
+  updatedOrder.StateWork = 'onprase'
+
 updatedOrder.usersOnprase.push(updatedOrder.users);
 
 updatedOrder.group = null ;
