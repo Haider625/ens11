@@ -173,7 +173,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
       reason: reason
     });
     if (rejectOrder.State === 'reject'){
-      const lastGroup = rejectOrder.groups[rejectOrder.groups.length - 1]
+      const lastGroup = rejectOrder.groups[rejectOrder.groups.length - 2]
       rejectOrder.group = lastGroup ;
       rejectOrder.groups.pop();
     }else{
