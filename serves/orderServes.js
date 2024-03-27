@@ -301,6 +301,18 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     ],
     archive: { $ne: true }
   };
+  const acceptedOrdersOnepressFilter = {
+    $or: [
+      { createdBy: { $ne: loggedInUserIdString }},
+      {
+        // $and: [
+        //   { State: { $ne: 'reject' } },
+        //   { StateWork: { $ne: 'reject' } }
+        // ]
+      }
+    ],
+    archive: { $ne: true }
+  };
   const acceptedOrdersFilters = {
     $or: [
       { createdBy: loggedInUserIdString },
@@ -334,7 +346,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
 
   const documents = await mongooseQuery;
 
-  const countOnepreasApiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupsFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
+  const countOnepreasApiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupsFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersOnepressFilter}], ...filter}), req.query)
 
   const { mongooseQuery: countOnepreasMongooseQuery } =  countOnepreasApiFeatures;
   const countOnepreas = await countOnepreasMongooseQuery;
