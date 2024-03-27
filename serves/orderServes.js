@@ -455,7 +455,10 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   await currentOrder.save();
 
   const roomgroup = currentOrder.group.name;
-  const message = 'تم وصول طلب جديد';
+  const message = {
+    title: "تنبيه جديد",
+    body: "تم وصول طلب جديد"
+  };
   socketHandler.sendNotificationToRoom(roomgroup,message);
 
   res.status(200).json({ order: currentOrder });
