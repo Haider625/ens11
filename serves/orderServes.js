@@ -465,8 +465,8 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   currentOrder.updatedAt =Date.now()
   // احفظ الطلب المحدث
   await currentOrder.save();
-
-  const roomgroup = currentOrder.group.name;
+  const updatOrder = await Order.findById(currentOrder._id).populate('group');
+  const roomgroup = updatOrder.group.name;
   const message = {
     title: "تنبيه جديد",
     body: "تم وصول طلب جديد"
