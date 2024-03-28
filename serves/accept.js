@@ -315,11 +315,12 @@ updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
 
 const updatOrder = await Order.findById(updatedOrder._id).populate('usersOnprase','groups');
-
+const message = {
+  title: "تنبيه جديد",
+  body: "تم تاكيد انجاز العمل"
+};
 updatOrder.usersOnprase.forEach(users => {
   const roomName = users.userId;
-  const message = 'تم تاكيد انجاز العمل';
-  
   if (roomName !== loggedInUserId) {
     socketHandler.sendNotificationToUser(roomName, message);
   }
@@ -328,7 +329,6 @@ updatOrder.usersOnprase.forEach(users => {
 
 updatOrder.groups.forEach(group => {
   const roomName = group.name;
-  const message = 'تم تاكيد انجاز العمل';
   socketHandler.sendNotificationToRoom(roomName, message);
 
 });
