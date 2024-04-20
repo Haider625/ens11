@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema(
       },
       userId: {
         type: String,
-        // required: [true, 'userId required'],
+        required: [true, 'userId required'],
         minlength: [4,'Too short userId'],
         maxlength : [16,'Too long userId'],
         unique: true,
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
       },     
       jobTitle : {
         type: String,
-        // required: [true, 'jobTitle required'],
+        required: [true, 'jobTitle required'],
         minlength: [4,'Too short job title'],
         maxlength: [32,'Too long job title']
       },

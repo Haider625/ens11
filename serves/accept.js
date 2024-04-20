@@ -8,6 +8,13 @@ const User = require('../models/userModel');
 const ApiError = require('../utils/apiError');
 const socketHandler  = require('../utils/socket');
 
+const {
+  acceptOrderMessageHistory,
+  startWorkMessageHistory,
+  endWorkMessageHistory,
+  confirmWorkMessageHistory
+} = require('../utils/MessagesHistort')
+
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
 exports.uploadOrderImage = uploadMixOfImages([
@@ -133,14 +140,14 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId ,
-  action : `تم توجيه الطلب من قبل`,
+  action : acceptOrderMessageHistory,
   reason : reason
 });  
   }else {
     updatedOrder.history.push({
       editedAt: Date.now(),
       editedBy: loggedInUserId ,
-      action : `تم قبول الطلب من قبل`,
+      action : acceptOrderMessageHistory,
       reason : reason
     });
   }
@@ -158,10 +165,14 @@ await updatedOrder.save();
 const updatOrder = await Order.findById(updatedOrder._id).populate('users');
 
 const roomUser = updatOrder.users.userId;
-const message = {
-  title: "تنبيه جديد",
-  body: "اجراء اللازم لطفاً"
-};
+const message =  {
+  type: "order_update",
+  title: "تم الموافقة على الطلب",
+  body : `تمت الموافقة من قبل ${req.user.name}`,
+  action: "open_page",
+  page : "home",
+  orderID: updatOrder._id,
+}
 socketHandler.sendNotificationToUser(roomUser,message);
 
   res.status(200).json({accept : updatOrder });
@@ -229,7 +240,7 @@ exports.startWork = asyncHandler(async(req,res,next) => {
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
-  action : `تم بدء العمل من قبل` ,
+  action : startWorkMessageHistory ,
   reason: reason
 });
 updatedOrder.updatedAt =Date.now()
@@ -237,11 +248,16 @@ await updatedOrder.save();
 const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
 const roomUser = updatOrder.createdBy.userId;
-const message = {
-  title: "تنبيه جديد",
-  body: "يتم تنفيذ طلبك"
-};
+const message =  {
+  type: "order_update",
+  title: "تم البدء بالعمل على الطلبك",
+  body : `تم بدء العمل من قبل ${req.user.name}`,
+  action: "open_page",
+  page : "home",
+  orderID: updatOrder._id,
+}
 socketHandler.sendNotificationToUser(roomUser,message);
+
   res.status(200).json({ accept : updatOrder });
 });
 
@@ -265,7 +281,7 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   updatedOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
-    action: `تم انهاء العمل من قبل`,
+    action: endWorkMessageHistory,
     reason:reason,
     imgDone: updatedOrder.donimgs
   });
@@ -275,11 +291,16 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
 const roomUser = updatOrder.createdBy.userId;
-const message = {
-  title: "تنبيه جديد",
-  body: "يرجى تاكيد انجاز العمل"
-};
+const message =  {
+  type: "order_update",
+  title: "تم إنهاء العمل على طلبك",
+  body : `تم إنهاء العمل من قبل ${req.user.name}`,
+  action: "open_page",
+  page : "onprase",
+  orderID: updatOrder._id,
+}
 socketHandler.sendNotificationToUser(roomUser,message);
+
 
   res.status(200).json({ order: updatOrder });
 });
@@ -292,10 +313,8 @@ exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { 
-      
         StateDone: 'accept',
         StateDoneReasonAccept : reason
-        
     },
     { new: true }
   );
@@ -307,7 +326,7 @@ exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
-  action : `تم تاكيد اتمام العمل من قبل`,
+  action : confirmWorkMessageHistory,
   reason : reason
 });
 updatedOrder.archive = true ;
@@ -315,10 +334,15 @@ updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
 
 const updatOrder = await Order.findById(updatedOrder._id).populate('usersOnprase','groups');
-const message = {
-  title: "تنبيه جديد",
-  body: "تم تاكيد انجاز العمل"
-};
+
+const message =  {
+  type: "order_update",
+  title: "تم تأكيد اتمام عملك",
+  body : `تمت الموافقة من قبل ${req.user.name}`,
+  action: "open_page",
+  page : "onepreas",
+  orderID: updatOrder._id,
+}
 updatOrder.usersOnprase.forEach(users => {
   const roomName = users.userId;
   if (roomName !== loggedInUserId) {
@@ -333,7 +357,6 @@ updatOrder.groups.forEach(group => {
 
 });
 
-  
   res.status(200).json({ accept :updatOrder});
 });
 

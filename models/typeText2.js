@@ -8,9 +8,9 @@ const typeText2Schema = new mongoose.Schema(
             maxlength: [150, 'Too long name'],
             required: [true, 'name required'],
         },
-        typeText3 :[{
+        typeText1 :[{
             type : mongoose.Schema.ObjectId,
-            ref : 'typeText3',
+            ref : 'typeText1',
         }],
         createdAt: {
             type :Date,
@@ -21,7 +21,7 @@ const typeText2Schema = new mongoose.Schema(
 );   
 typeText2Schema.pre(/^find/, function (next) {
     this.populate({
-      path: 'typeText3',
+      path: 'typeText1',
       select: 'name ',
     })
     next();

@@ -3,6 +3,7 @@ const User = require('../models/userModel');
 const Order = require('../models/orderModel');
 const ApiError = require('../utils/apiError');
 const socketHandler  = require('../utils/socket');
+const {forwordMessageSocket} =require('../utils/MessagesSocket')
 
 exports.forwordOrder = asyncHandler(async(req, res, next) => {
   const loggedInUserId = req.user._id;
@@ -46,10 +47,15 @@ order.group = groupIds;
   const updatOrder = await Order.findById(order._id).populate('group');
 
   const roomgroup = updatOrder.group.name;
-  const message = {
-    title: "تنبيه جديد",
-    body: "تم وصول طلب جديد"
-  };
+
+  const message =  {
+    type: "order_update",
+    title: "تم تحويل الطلب",
+    body : `تمت تحويل طلبك الى  ${req.user.name}`,
+    action: "open_page",
+    page : "home",
+    orderID: updatOrder._id,
+}
   socketHandler.sendNotificationToRoom(roomgroup,message);
 
   return res.status(200).json({order: updatOrder });

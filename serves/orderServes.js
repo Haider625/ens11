@@ -1,23 +1,20 @@
-/* eslint-disable import/no-extraneous-dependencies */
-/* eslint-disable no-use-before-define */
 /* eslint-disable no-undef */
 /* eslint-disable prefer-destructuring */
 const asyncHandler = require('express-async-handler');
-
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
-const Order = require('../models/orderModel')
-const groups = require('../models/groupUser')
-const user = require('../models/userModel')
-const ApiFeatures = require('../utils/apiFeatures')
+const Order = require('../models/orderModel');
+const groups = require('../models/groupUser');
+const user = require('../models/userModel');
+const ApiFeatures = require('../utils/apiFeatures');
 const ApiError = require('../utils/apiError');
 const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
-const {getFormattedDate} = require('../config/moment')
 const socketHandler  = require('../utils/socket');
-
-
+const {sanitizeOrder} = require('../utils/sanaitizeData');
+const {createDataSocket,updatedatasocket} =require('../utils/MessagesSocket');
+const {createMessageHistory,updateMessageHistory} = require('../utils/MessagesHistort');
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
@@ -101,12 +98,11 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     number : req.body.number,
     group: lowerLevelGroup ,
     groups: groupss ,
-    createdBy: req.user._id,
+    createdBy: req.user,
     user : req.body.user,
     orderimg : req.body.orderimg,
     donimgs :req.body.donimgs,
   };
-  // تحقق من وجود lowerLevelGroup._id قبل الطباعة
 
 
   const newOrder = await Order.create(orderData);
@@ -117,15 +113,23 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
     newOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
-    action: `تم انشاء الطلب من قبل`
+    action: createMessageHistory
   });
   newOrder.save()
   const roomgroup = newOrder.group.name;
-const message = {
-  title: "تنبيه جديد",
-  body: "تم وصول طلب جديد"
-};
+
+  const message = {
+    type: "new_order",
+    title: `تم وصول طلب جديد من قبل ${req.user.name}`,
+    body : ``,
+    action: "open_page",
+    page : "home",
+    orderID: newOrder._id,
+
+}
+
   socketHandler.sendNotificationToRoom(roomgroup,message);
+
   res.status(201).json({ order: newOrder });
 
 });
@@ -366,26 +370,6 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
       });
 });
 
-// async function getAggregateStats(model, groupIds, filter, field) {
-//   const stats = await model.aggregate([
-//     {
-//       $match: {
-//         group: { $in: groupIds },
-//         ...filter
-//       }
-//     },
-//     {
-//       $group: {
-//         _id: `$${field}`,
-//         count: { $sum: 1 }
-//       }
-//     }
-//   ]);
-
-//   // تحويل نتائج الإحصائيات إلى كائن
-//   return Object.fromEntries(stats.map(item => [item._id, item.count]));
-// }
-
 exports.getAllText = asyncHandler(async (req, res, next) => {
   try {
     // جلب البيانات من TypeText1
@@ -455,7 +439,7 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   currentOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
-    action: `تم تعديل الطلب من قبل`
+    action: updateMessageHistory
   });
 
   currentOrder.State = 'onprase';
@@ -463,14 +447,19 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   currentOrder.StateDone = 'onprase';
 
   currentOrder.updatedAt =Date.now()
-  // احفظ الطلب المحدث
+
   await currentOrder.save();
   const updatOrder = await Order.findById(currentOrder._id).populate('group');
   const roomgroup = updatOrder.group.name;
-  const message = {
-    title: "تنبيه جديد",
-    body: "تم وصول طلب جديد"
-  };
+
+  const message =  {
+    type: "order_update",
+    title: `تم تعديل طلب من قبل ${req.user.name}`,
+    body : ``,
+    action: "open_page",
+    page : "home",
+    orderID: updatOrder._id,
+}
   socketHandler.sendNotificationToRoom(roomgroup,message);
 
   res.status(200).json({ order: currentOrder });
@@ -501,53 +490,3 @@ exports.getAllOrder = asyncHandler(async(req,res,next) => {
 
   res.status(200).json({ results : documents.length, documents: documents });
 })
-
-// exports.getOrders = asyncHandler(async(req,res,next) => {
-//   const character = req.query.character;
-  
-//   if (!character) {
-//     return res.status(400).json({ error: 'يرجى تقديم الحرف للبحث عنه' });
-//   }
-
-//   try {
-//     // البحث في قاعدة البيانات باستخدام Mongoose والتعبيرات العادية
-//     const result = await Order.find({ type1: { $regex: new RegExp(character, 'i') } });
-//     res.json(result);
-//   } catch (error) {
-//     res.status(500).json({ error: 'حدث خطأ أثناء البحث في قاعدة البيانات' });
-//   }
-// })
-
-
-// exports.getOrders = asyncHandler(async (req, res, next) => {
-//   // التأكد من أن لديه الصلاحية المطلوبة للوصول لبيانات الطلب
-//   if (!req.user.Permission.canViwsOrder) {
-//     return next(new ApiError('You do not have permission to view this order', 403));
-//   }
-//   let filter = {};
-//   if (req.filter) {
-//     filter = req.filter;
-//   }
-
-//   const documentsCounts = await Order.countDocuments();
-//   const apiFeatures = new ApiFeatures(
-//     Order.find({filter }), 
-//     req.query
-//   )
-//     .paginate(documentsCounts)
-    
-//     .search('Order')
-//     .limitFields()
-
-  
-//   const { mongooseQuery, paginationResult } =  apiFeatures;
-
-//   const documents = await mongooseQuery;
-//   res
-//     .status(200)
-//     .json({ 
-//       results: documents.length,
-//        paginationResult ,
-//        orders: documents 
-//       });
-// });

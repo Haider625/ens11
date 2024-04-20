@@ -2,12 +2,11 @@
 
 const path = require('path')
 const http = require('http');
-
 const express = require("express");
 const dotenv = require("dotenv");
 const morgan = require('morgan');
 const cron = require('node-cron');
-const rateLimit = require('express-rate-limit');
+// const rateLimit = require('express-rate-limit');
 const  mongoSanitize  =  require ( 'express-mongo-sanitize' ) ;
 const xss = require('xss-clean')
 
@@ -28,9 +27,9 @@ const forword = require('./routes/forwordRout')
 const typeText1 = require('./routes/typeText1Rout')
 const typeText2 = require('./routes/typeText2Rout')
 const typeText3 = require('./routes/typeText3Rout')
-const messageSocket = require('./routes/messageSocket')
+const messageSocket = require('./routes/SocketData')
 
-const { cronTask } = require('./serves/messageSocket');
+const { cronTask } = require('./serves/SocketData');
 
 const socketHandler = require('./utils/socket');
 
@@ -45,7 +44,7 @@ dotenv.config({path: 'config.env'})
 
 dbconnection();
 
-cron.schedule('*/10 * * * *', cronTask);
+cron.schedule('* */1000 * * *', cronTask);
 
 
 if(process.env.NODE_ENV === 'devlopment') {
@@ -56,13 +55,13 @@ if(process.env.NODE_ENV === 'devlopment') {
 app.use(mongoSanitize());
 app.use(xss())
 
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100, 
-    message: 'Too many accounts created from this IP, please try again after an hour'
-});
+// const limiter = rateLimit({
+//     windowMs: 15 * 60 * 1000,
+//     max: 5,
+//     message: 'Too many accounts created from this IP, please try again after an hour',
+// });
 
-app.use('/api', limiter);
+// app.use('/api', limiter);
 
 app.use('/api/v1/order',orderRout) 
 app.use('/api/v1/user',UserRout) 
@@ -79,12 +78,9 @@ app.use('/api/v1/typeText2',typeText2)
 app.use('/api/v1/typeText3',typeText3)
 app.use('/api/v1/messageSocket',messageSocket)
 
-
-
 app.all('*',(req,res,next) => {
     next(new ApiError(`can t find this route : ${req.originalUrl}`, 404));
  })
-
 
 socketHandler.initializeSocket(server);
 

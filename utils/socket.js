@@ -1,9 +1,8 @@
-// socketHandler.js
 
 const socketIo = require('socket.io');
 
 const User = require('../models/userModel')
-const messageSocket = require('../models/messageSocket');
+const messageSocket = require('../models/SocketData');
 
 let io;
 
@@ -46,10 +45,15 @@ module.exports = {
       console.log(roomgroup)
       if (io.sockets.adapter.rooms.has(roomgroup)) {
         io.to(roomgroup).emit('notification', message);
-        console.log(message)
-        await messageSocket.create({ room: roomgroup, message: message });
+        await messageSocket.create({ room: roomgroup, message: message});
       } else {
         console.log('roomgroup does not exist');
       }
-  }
+  },
+  sendAllNotification : async function ( message) {
+
+      io.emit('notification', message);
+      await messageSocket.create({ message: message});
+
+},
 };

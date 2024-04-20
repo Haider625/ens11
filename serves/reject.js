@@ -3,10 +3,16 @@ const asyncHandler = require('express-async-handler');
 const Order = require('../models/orderModel')
 const ApiError = require('../utils/apiError');
 const ApiFeatures = require('../utils/apiFeatures');
-const archive = require('../models/archive')
 const groups = require('../models/groupUser')
 const user = require('../models/userModel')
 const socketHandler  = require('../utils/socket');
+
+
+const {
+  rejectOrderMessageHistory,
+  rejectWorkMessageHistory,
+  rejectConfirmMessageHistory
+} =require('../utils/MessagesHistort')
 
 exports.getRejectedOrders = asyncHandler(async (req, res) => {
 
@@ -147,7 +153,7 @@ exports.getUserOrders = asyncHandler(async (req, res, next) => {
 
 exports.rejectOrder = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
-  const userId = req.user._id;
+  const loggedInUserId = req.user._id;
 
   const { reason } = req.body;
 
@@ -168,8 +174,8 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
 
     rejectOrder.history.push({
       editedAt: Date.now(),
-      editedBy: userId,
-      action: `تم رفض الطلب من قبل`,
+      editedBy: loggedInUserId,
+      action: rejectOrderMessageHistory,
       reason: reason
     });
     if (rejectOrder.State === 'reject'){
@@ -186,18 +192,22 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     const updatOrder = await Order.findById(rejectOrder._id).populate('group');
 
     const roomgroup = updatOrder.group.name;
-    const message = {
-      title: "تنبيه جديد",
-      body: "تم رفض الطلب"
-    };
-    socketHandler.sendNotificationToRoom(roomgroup,message);
+    const message =  {
+      type: "order_update",
+      title: "تم رفض طلبك !" ,
+      body : ` ${req.user.name} \n  السبب: ${reason} `,
+      action: "open_page",
+      page : "reject",
+      orderID: updatOrder._id,
+  }
+    socketHandler.sendNotificationToRoom(roomgroup,message,);
 
     res.status(200).json({ order : rejectOrder });
 });
 
 exports.rejectWork = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
-  const userId = req.user._id;
+  const loggedInUserId = req.user._id;
 
   const { reason } = req.body;
 
@@ -216,29 +226,29 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
 
     rejectWork.history.push({
       editedAt: Date.now(),
-      editedBy: userId,
-      action: `تم رفض العمل من قبل`,
+      editedBy: loggedInUserId,
+      action: rejectWorkMessageHistory,
       reason: reason
     });
-
-    if (rejectWork.StateWork === 'reject'){
+    
+      rejectWork.usersOnprase.pop();
       const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 1]
       rejectWork.users = lastGroup ;
-      rejectWork.usersOnprase.pop();
-    }else{
-      const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length -1]
-      rejectWork.users = lastGroup ;
-    }
     rejectWork.updatedAt =Date.now()
     await rejectWork.save();
 
   const updatOrder = await Order.findById(rejectWork._id).populate('users');
 
   const roomUser = updatOrder.users.userId;
-  const message = {
-    title: "تنبيه جديد",
-    body: "تم رفض تنفيذ الطلب"
-  };
+
+  const message =  {
+    type: "order_update",
+    title: "تم رفض العمل على طلبك !",
+    body : ` ${req.user.name} \n  السبب: ${reason} `,
+    action: "open_page",
+    page : "reject",
+    orderID: updatOrder._id,
+}
   socketHandler.sendNotificationToUser(roomUser,message);
 
     res.status(200).json({ order :updatOrder });
@@ -246,7 +256,7 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
 
 exports.rejectConfirm = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
-  const userId = req.user._id;
+  const loggedInUserId = req.user._id;
 
   const { reason } = req.body;
 
@@ -266,8 +276,8 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
     // إضافة معلومات السجل
     rejectConfirm.history.push({
       editedAt: Date.now(),
-      editedBy: userId,
-      action: `تم رفض تنفيذ العمل من قبل`,
+      editedBy: loggedInUserId,
+      action: rejectConfirmMessageHistory,
       reason: reason
     });
 
@@ -279,11 +289,16 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
     const updatOrder = await Order.findById(rejectConfirm._id).populate('users');
 
     const roomUser = updatOrder.users.userId;
-    const message = {
-      title: "تنبيه جديد",
-      body: "تم رفض تنفيذ العمل على الطلب"
-    };
-
+    console.log(roomUser)
+    
+    const message =  {
+      type: "order_update",
+      title: "عملك مرفوض أو غير مكتمل !",
+      body : ` ${req.user.name} \n  السبب: ${reason} `,
+      action: "open_page",
+      page : "reject",
+      orderID: updatOrder._id,
+  }
     socketHandler.sendNotificationToUser(roomUser,message);
 
     res.status(200).json({ order:rejectConfirm });
@@ -293,10 +308,9 @@ exports.archiveReject = asyncHandler(async (req, res, next) => {
 
     const orderId = req.params.id;
 
-    // العثور على الطلب الحالي
+
     const currentOrder = await Order.findById(orderId);
 
-    // التحقق مما إذا كان الطلب موجودًا
     if (!currentOrder) {
       return next(new ApiError(404, 'Order not found'));
     }

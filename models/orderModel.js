@@ -5,6 +5,7 @@ const {getFormattedDate} = require('../config/moment');
 
 const orderSchema = new mongoose.Schema(
   {
+
     type1: {
        type: String,
        required: [true, 'type1 required'],
@@ -24,6 +25,7 @@ const orderSchema = new mongoose.Schema(
       type: Number,
       maxlength: [10, 'Too long caption'],
     },
+
     caption: {
       type: String,
       maxlength: [310, 'Too long caption'],
@@ -44,10 +46,12 @@ const orderSchema = new mongoose.Schema(
       type : String,
       default : "تم قبول الطلب"
     },
+
     StateReasonReject: {
       type : String,
       default : "تم رفظ الطلب"
     },
+
     StateReasonOnprase: {
       type : String,
       default : "تم تحويل الطلب"
@@ -59,10 +63,12 @@ const orderSchema = new mongoose.Schema(
       default: 'onprase',
 
     },
+
     StateWorkReasonAccept: {
       type : String,
       default : "تم قبول الطلب"
     },
+
     StateWorkReasonReject: {
       type : String,
       default : "تم رفظ الطلب"
@@ -79,13 +85,16 @@ const orderSchema = new mongoose.Schema(
       type : String,
       default : "تم قبول الطلب"
     },
+
     StateDoneReasonReject: {
       type : String,
       default : "تم رفظ الطلب"
     },
+
     group : {
       type: mongoose.Schema.ObjectId,
       ref: 'group',
+      
     },
 
     groups: [{
@@ -114,8 +123,8 @@ const orderSchema = new mongoose.Schema(
     },
 
     createdBy :{
-        type :mongoose.Schema.ObjectId,
-        ref : 'User',
+        type: mongoose.Schema.Types.Mixed,
+        // ref : 'User',
         required: [true, 'Order must belong to a user']
      },
 
@@ -136,14 +145,16 @@ const orderSchema = new mongoose.Schema(
       },
       imgDone : [String],
   }],
+
   createdAt: {
     type :Date,
     default:Date.now()
   },
+
   updatedAt: {
     type :Date,
     default:Date.now()
-  }
+  },
 
   },
   {toJSON: { virtuals: true } }
@@ -184,10 +195,9 @@ orderSchema.pre(/^find/, function (next) {
           'userId' :1,
           'jobTitle' :1,
           'school' :1,
-          'group' :0,
           'GroupscanViw' :0,
           'active' :1,
-          'image' : 1
+          'image' : 1,
       },
       options: { depth: 1 }
     },

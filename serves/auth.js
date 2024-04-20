@@ -6,7 +6,6 @@ const asyncHandler = require('express-async-handler');
 const jwt = require('jsonwebtoken');
 const ApiError = require('../utils/apiError');
 const createToken = require('../utils/creatToken');
-const {sanitizeUser} = require('../utils/sanaitizeData')
 
 const User = require('../models/userModel');
 // @desc    Signup
@@ -82,8 +81,6 @@ exports.logout = asyncHandler(async(req, res) => {
   }
 }
 )
-
-
 
 // @desc   make sure the user is logged in
 exports.protect = asyncHandler(async (req, res, next) => {
