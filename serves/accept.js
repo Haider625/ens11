@@ -165,13 +165,15 @@ await updatedOrder.save();
 const updatOrder = await Order.findById(updatedOrder._id).populate('users');
 
 const roomUser = updatOrder.users.userId;
-const message =  {
+
+const message = {
   type: "order_update",
-  title: "تم الموافقة على الطلب",
-  body : `تمت الموافقة من قبل ${req.user.name}`,
+  title: "طلب جديد",
+  body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
   action: "open_page",
   page : "home",
   orderID: updatOrder._id,
+  time : updatOrder.updatedAt
 }
 socketHandler.sendNotificationToUser(roomUser,message);
 
@@ -245,21 +247,66 @@ updatedOrder.history.push({
 });
 updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
-const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
+// const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
-const roomUser = updatOrder.createdBy.userId;
-const message =  {
+// const roomUser = updatOrder.createdBy.userId;
+// const message =  {
+//   type: "order_update",
+//   title: "تم البدء بالعمل على الطلبك",
+//   body : `تم بدء العمل من قبل ${req.user.name}`,
+//   action: "open_page",
+//   page : "home",
+//   orderID: updatOrder._id,
+//   time : updatOrder.updatedAt
+// }
+// socketHandler.sendNotificationToUser(roomUser,message);
+
+  res.status(200).json({ accept : updatedOrder });
+});
+
+exports.confirmManger = asyncHandler(async(req,res,next) => {
+
+  const loggedInUserId = req.user._id;
+  const {reason} = req.body
+  const currentOrder = await Order.findById(req.params.id);
+
+  if (!currentOrder) {
+    return next(new ApiError('Order not found', 404));
+  }
+
+  const updatedOrder = await Order
+    .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
+    .populate('donimgs');
+
+    updatedOrder.StateWork = 'confirmManger'
+    updatedOrder.StateWorkReasonAccept = reason
+    updatedOrder.users = updatedOrder.usersOnprase.filter(usersOnprase => usersOnprase.group.level === 3)[0]._id;
+    updatedOrder.history.push({
+      editedAt: Date.now(),
+      editedBy: loggedInUserId,
+      action: endWorkMessageHistory,
+      reason:reason,
+      imgDone: updatedOrder.donimgs
+    });
+    updatedOrder.updatedAt =Date.now()
+    await updatedOrder.save();
+    const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
+
+const roomUser = updatOrder.users.userId;
+const message = {
   type: "order_update",
-  title: "تم البدء بالعمل على الطلبك",
-  body : `تم بدء العمل من قبل ${req.user.name}`,
+  title: "طلب جديد",
+  body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
   action: "open_page",
-  page : "home",
+  page : "onprase",
   orderID: updatOrder._id,
+  time : updatOrder.updatedAt
 }
 socketHandler.sendNotificationToUser(roomUser,message);
 
-  res.status(200).json({ accept : updatOrder });
-});
+    res.status(200).json({ order: updatOrder });
+
+}) 
 
 exports.endWork = asyncHandler(async (req, res, next) => {
   const loggedInUserId = req.user._id;
@@ -273,10 +320,9 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
     .populate('donimgs');
-  
+
   updatedOrder.StateWork = 'endwork'
   updatedOrder.StateWorkReasonAccept = reason
-  updatedOrder.users = null
   updatedOrder.usersOnprase.push(updatedOrder.createdBy);
   updatedOrder.history.push({
     editedAt: Date.now(),
@@ -290,16 +336,17 @@ exports.endWork = asyncHandler(async (req, res, next) => {
 
   const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
-const roomUser = updatOrder.createdBy.userId;
-const message =  {
-  type: "order_update",
-  title: "تم إنهاء العمل على طلبك",
-  body : `تم إنهاء العمل من قبل ${req.user.name}`,
-  action: "open_page",
-  page : "onprase",
-  orderID: updatOrder._id,
+  const roomUser = updatOrder.createdBy.userId;
+  const message = {
+    type: "order_update",
+    title: "تاكيد الطلب",
+    body : `اكذ انهاء العمل الذي تم من قبل ${req.user.group.name}`,
+    action: "open_page",
+    page : "onprase",
+    orderID: updatOrder._id,
+    time : updatOrder.updatedAt
 }
-socketHandler.sendNotificationToUser(roomUser,message);
+  socketHandler.sendNotificationToUser(roomUser,message);
 
 
   res.status(200).json({ order: updatOrder });
@@ -335,27 +382,30 @@ await updatedOrder.save();
 
 const updatOrder = await Order.findById(updatedOrder._id).populate('usersOnprase','groups');
 
-const message =  {
+const message = {
   type: "order_update",
-  title: "تم تأكيد اتمام عملك",
-  body : `تمت الموافقة من قبل ${req.user.name}`,
+  title: "تاكيد الطلب",
+  body : `تم تاكيد اتمام العمل من قبل ${req.user.group.name}`,
   action: "open_page",
-  page : "onepreas",
+  page : "archive",
   orderID: updatOrder._id,
+  time : updatOrder.updatedAt
 }
-updatOrder.usersOnprase.forEach(users => {
-  const roomName = users.userId;
-  if (roomName !== loggedInUserId) {
-    socketHandler.sendNotificationToUser(roomName, message);
-  }
+// updatOrder.usersOnprase.forEach(users => {
+//   const roomName = users.userId;
+//   if (roomName !== loggedInUserId) {
+//     socketHandler.sendNotificationToUser(roomName, message);
+//   }
 
-});
+// });
 
-updatOrder.groups.forEach(group => {
-  const roomName = group.name;
-  socketHandler.sendNotificationToRoom(roomName, message);
+// updatOrder.groups.forEach(group => {
+//   const roomName = group.name;
+//   socketHandler.sendNotificationToRoom(roomName, message);
 
-});
+// });
+const roomName = updatOrder.users.userId;
+socketHandler.sendNotificationToUser(roomName, message);
 
   res.status(200).json({ accept :updatOrder});
 });

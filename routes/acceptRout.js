@@ -11,6 +11,7 @@ const {
     AcceptArchive,
     uploadOrderImage,
     resizeImage,
+    confirmManger
 } = require('../serves/accept');
 
 const auth = require('../serves/auth');
@@ -29,6 +30,8 @@ router.put(('/acceptwork/:id'),acceptwork)
 router.put(('/acceptorder/:id'),acceptOrder)
 
 router.put(('/startwork/:id'),startWork)
+
+router.put(('/confirmManger/:id'),confirmManger)
 
 router.put(('/endwork/:id'),uploadOrderImage,resizeImage,endWork)
 

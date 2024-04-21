@@ -48,13 +48,14 @@ order.group = groupIds;
 
   const roomgroup = updatOrder.group.name;
 
-  const message =  {
-    type: "order_update",
-    title: "تم تحويل الطلب",
-    body : `تمت تحويل طلبك الى  ${req.user.name}`,
-    action: "open_page",
-    page : "home",
-    orderID: updatOrder._id,
+const message = {
+  type: "order_update",
+  title: "طلب جديد",
+  body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
+  action: "open_page",
+  page : "onprase",
+  orderID: updatOrder._id,
+  time : updatOrder.updatedAt
 }
   socketHandler.sendNotificationToRoom(roomgroup,message);
 

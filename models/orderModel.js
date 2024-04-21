@@ -59,7 +59,7 @@ const orderSchema = new mongoose.Schema(
 
     StateWork: {
       type :String,
-      enum: ['acceptwork','startwork','endwork','reject','onprase'],
+      enum: ['acceptwork','startwork','confirmManger','endwork','reject','onprase'],
       default: 'onprase',
 
     },
@@ -67,6 +67,16 @@ const orderSchema = new mongoose.Schema(
     StateWorkReasonAccept: {
       type : String,
       default : "تم قبول الطلب"
+    },
+    
+    StateWorkReasonConfirmManger: {
+      type : String,
+      default : "تم اتمام الطلب"
+    },
+
+    StateWorkReasonEndwork: {
+      type : String,
+      default : "تم اتمام الطلب"
     },
 
     StateWorkReasonReject: {
@@ -264,7 +274,6 @@ orderSchema.pre(/^find/, function (next) {
   ])
   next();
 });
-
 
 
 const setImageURL = (doc) => {

@@ -12,8 +12,8 @@ const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
 const socketHandler  = require('../utils/socket');
-const {sanitizeOrder} = require('../utils/sanaitizeData');
-const {createDataSocket,updatedatasocket} =require('../utils/MessagesSocket');
+// const {sanitizeOrder} = require('../utils/sanaitizeData');
+// const {createDataSocket,updatedatasocket} =require('../utils/MessagesSocket');
 const {createMessageHistory,updateMessageHistory} = require('../utils/MessagesHistort');
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
@@ -120,12 +120,12 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
 
   const message = {
     type: "new_order",
-    title: `تم وصول طلب جديد من قبل ${req.user.name}`,
-    body : ``,
+    title: "طلب جديد",
+    body : `تم وصول طلب جديد من قبل ${newOrder.group.name}`,
     action: "open_page",
     page : "home",
     orderID: newOrder._id,
-
+    time : newOrder.updatedAt
 }
 
   socketHandler.sendNotificationToRoom(roomgroup,message);
@@ -299,7 +299,8 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
       {
         $and: [
           { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' } }
+          { StateWork: { $ne: 'reject' }  },
+
         ]
       }
     ],
@@ -323,7 +324,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
       {
         $and: [
           { State: 'reject' },
-          { StateWork: 'reject' },
+          { StateWork: 'reject'},
           { StateDone: 'reject' },
           
         ]
@@ -336,7 +337,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     Order.find({ 
       $and: [
       {$or: [{ ...groupFilter }, { users: loggedInUserId }],},
-      {$and :[{...acceptedOrdersFilter}], ...filter }
+      {$and :[{...acceptedOrdersFilter},{ StateWork: { $ne: 'confirmManger' } }], ...filter }
       ]
     }), 
     req.query
@@ -454,11 +455,12 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
 
   const message =  {
     type: "order_update",
-    title: `تم تعديل طلب من قبل ${req.user.name}`,
-    body : ``,
+    title: "طلب جديد",
+    body :`تم تعديل طلب من قبل ${updatOrder.group.name}`,
     action: "open_page",
     page : "home",
     orderID: updatOrder._id,
+    time : updatOrder.updatedAt
 }
   socketHandler.sendNotificationToRoom(roomgroup,message);
 

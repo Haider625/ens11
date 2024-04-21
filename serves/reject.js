@@ -192,13 +192,22 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     const updatOrder = await Order.findById(rejectOrder._id).populate('group');
 
     const roomgroup = updatOrder.group.name;
-    const message =  {
-      type: "order_update",
-      title: "تم رفض طلبك !" ,
-      body : ` ${req.user.name} \n  السبب: ${reason} `,
-      action: "open_page",
-      page : "reject",
-      orderID: updatOrder._id,
+
+    let page;
+    if (updatOrder.createdBy.group.toString() === updatOrder.group._id.toString()) {
+        page = 'reject';
+    } else {
+        page = 'onprase';
+    }
+
+    const message = {
+    type: "order_update",
+    title: "رفض الطلب",
+    body : `تم رفض الطلب من قبل ${req.user.group.name}`,
+    action: "open_page",
+    page : page,
+    orderID: updatOrder._id,
+    time : updatOrder.updatedAt
   }
     socketHandler.sendNotificationToRoom(roomgroup,message,);
 
@@ -240,15 +249,23 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
   const updatOrder = await Order.findById(rejectWork._id).populate('users');
 
   const roomUser = updatOrder.users.userId;
+  let page;
+  if (updatOrder.createdBy.group.toString() === updatOrder.group._id.toString()) {
+      page = 'reject';
+  } else {
+      page = 'onprase';
+  }
 
-  const message =  {
-    type: "order_update",
-    title: "تم رفض العمل على طلبك !",
-    body : ` ${req.user.name} \n  السبب: ${reason} `,
-    action: "open_page",
-    page : "reject",
-    orderID: updatOrder._id,
+  const message = {
+  type: "order_update",
+  title: "رفض الطلب",
+  body : `تم رفض الطلب من قبل ${req.user.group.name}`,
+  action: "open_page",
+  page : page,
+  orderID: updatOrder._id,
+  time : updatOrder.updatedAt
 }
+
   socketHandler.sendNotificationToUser(roomUser,message);
 
     res.status(200).json({ order :updatOrder });
@@ -290,14 +307,21 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
 
     const roomUser = updatOrder.users.userId;
     console.log(roomUser)
-    
-    const message =  {
-      type: "order_update",
-      title: "عملك مرفوض أو غير مكتمل !",
-      body : ` ${req.user.name} \n  السبب: ${reason} `,
-      action: "open_page",
-      page : "reject",
-      orderID: updatOrder._id,
+    let page;
+    if (updatOrder.createdBy.group.toString() === updatOrder.group._id.toString()) {
+        page = 'reject';
+    } else {
+        page = 'onprase';
+    }
+
+    const message = {
+    type: "order_update",
+    title: "تاكيد الطلب",
+    body : `تم رفض التاكيد على الطلب من قبل ${req.user.group.name}`,
+    action: "open_page",
+    page : page,
+    orderID: updatOrder._id,
+    time : updatOrder.updatedAt
   }
     socketHandler.sendNotificationToUser(roomUser,message);
 
