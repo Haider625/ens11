@@ -30,7 +30,7 @@ exports.uploadOrderImage = uploadMixOfImages([
 ]);
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
-  // Image processing for donimgs
+
   if (req.files && req.files.donimgs) {
     req.body.donimgs = [];
     await Promise.all(
@@ -52,7 +52,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
     );
   }
   if (req.files && req.files.donimgs) {
-    req.body.imgDone = []; // قم بإعادة تهيئة قائمة الصور المنتهية
+    req.body.imgDone = []; 
     await Promise.all(
         req.files.donimgs.map(async (img, index) => {
             const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
@@ -155,9 +155,16 @@ updatedOrder.history.push({
 
   updatedOrder.StateWork = 'onprase'
 
-updatedOrder.usersOnprase.push(updatedOrder.users);
+  const existingUserIds = new Set(updatedOrder.usersOnprase.map(user => user._id.toString()));
+  const newUser = updatedOrder.users;
+  
+  if (!existingUserIds.has(newUser._id.toString())) {
+    updatedOrder.usersOnprase.push(newUser);
+  }
+  
 
 updatedOrder.group = null ;
+updatedOrder.usersGroup = updatedOrder.users.group._id ;
 updatedOrder.updatedAt =Date.now()
 
 await updatedOrder.save();
@@ -182,9 +189,9 @@ socketHandler.sendNotificationToUser(roomUser,message);
 
 exports.acceptwork = asyncHandler(async(req,res,next) => {
   const orderId = req.params.id;
-  const loggedInUserId = req.user._id; // ايجاد المستخدم الذي عمل تسجيل دخول
+  const loggedInUserId = req.user._id; 
   const {reason} = req.body
-  // تحديث حالة الطلب إلى "accept" وسجل معرف المستخدم الذي قام بالتحديث
+
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     {   
@@ -201,7 +208,7 @@ exports.acceptwork = asyncHandler(async(req,res,next) => {
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
-  // إضافة سجل جديد إلى مصفوفة history
+
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
@@ -209,7 +216,7 @@ updatedOrder.history.push({
  reason : reason
 });
 
-
+updatedOrder.usersGroup = updatedOrder.users.group._id ;
 updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
   
@@ -245,21 +252,10 @@ updatedOrder.history.push({
   action : startWorkMessageHistory ,
   reason: reason
 });
+updatedOrder.usersGroup = updatedOrder.users.group._id ;
 updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
-// const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
-// const roomUser = updatOrder.createdBy.userId;
-// const message =  {
-//   type: "order_update",
-//   title: "تم البدء بالعمل على الطلبك",
-//   body : `تم بدء العمل من قبل ${req.user.name}`,
-//   action: "open_page",
-//   page : "home",
-//   orderID: updatOrder._id,
-//   time : updatOrder.updatedAt
-// }
-// socketHandler.sendNotificationToUser(roomUser,message);
 
   res.status(200).json({ accept : updatedOrder });
 });
@@ -288,6 +284,7 @@ exports.confirmManger = asyncHandler(async(req,res,next) => {
       reason:reason,
       imgDone: updatedOrder.donimgs
     });
+    updatedOrder.usersGroup = updatedOrder.users.group._id ;
     updatedOrder.updatedAt =Date.now()
     await updatedOrder.save();
     const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
@@ -331,6 +328,7 @@ exports.endWork = asyncHandler(async (req, res, next) => {
     reason:reason,
     imgDone: updatedOrder.donimgs
   });
+  updatedOrder.usersGroup = updatedOrder.users.group._id ;
   updatedOrder.updatedAt =Date.now()
   await updatedOrder.save();
 
@@ -353,10 +351,10 @@ exports.endWork = asyncHandler(async (req, res, next) => {
 });
 
 exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
-  const loggedInUserId = req.user._id; // ايجاد المستخدم الذي عمل تسجيل دخول
+  const loggedInUserId = req.user._id; 
   const orderId = req.params.id;
   const {reason} = req.body
-  // تحديث حالة الطلب إلى "accept" وسجل معرف المستخدم الذي قام بالتحديث
+
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { 
@@ -369,7 +367,7 @@ exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
-  // إضافة سجل جديد إلى مصفوفة history
+
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
@@ -377,6 +375,7 @@ updatedOrder.history.push({
   reason : reason
 });
 updatedOrder.archive = true ;
+updatedOrder.usersGroup = updatedOrder.users.group._id ;
 updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
 
@@ -391,19 +390,7 @@ const message = {
   orderID: updatOrder._id,
   time : updatOrder.updatedAt
 }
-// updatOrder.usersOnprase.forEach(users => {
-//   const roomName = users.userId;
-//   if (roomName !== loggedInUserId) {
-//     socketHandler.sendNotificationToUser(roomName, message);
-//   }
 
-// });
-
-// updatOrder.groups.forEach(group => {
-//   const roomName = group.name;
-//   socketHandler.sendNotificationToRoom(roomName, message);
-
-// });
 const roomName = updatOrder.users.userId;
 socketHandler.sendNotificationToUser(roomName, message);
 

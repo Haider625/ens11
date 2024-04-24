@@ -12,8 +12,7 @@ const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const TypeText3 = require('../models/typeText3');
 const socketHandler  = require('../utils/socket');
-// const {sanitizeOrder} = require('../utils/sanaitizeData');
-// const {createDataSocket,updatedatasocket} =require('../utils/MessagesSocket');
+
 const {createMessageHistory,updateMessageHistory} = require('../utils/MessagesHistort');
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
@@ -259,7 +258,7 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
 });
 
 exports.getOrders = asyncHandler(async (req, res, next) => {
-  // التأكد من أن لديه الصلاحية المطلوبة للوصول لبيانات الطلب
+
   if (!req.user.Permission.canViwsOrder) {
     return next(new ApiError('You do not have permission to view this order', 403));
   }
@@ -274,13 +273,11 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   const userGroupLevel = userGroup.group.level;
   const userGroupInLevel = userGroup.group.inlevel;
   
-  // البحث عن الكروبات التي تحمل نفس مستوى الفل ونفس مستوى inlevel
   const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
   
-  // جمع معرفات الكروبات
+
   const groupIds = similarGroups.map(group => group._id);
   
-  // إضافة شرط للبحث عن الطلبات التي تنتمي إلى الكروبات المطابقة في سجل المستخدم
   const groupFilter = { group: { $in: groupIds } };
   const groupsFilter = {
     groups: {
@@ -292,7 +289,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
 
   const loggedInUserIdString = loggedInUserId.toString();
   
-  // شرط إضافي لتصفية الطلبات المرفوضة التي ليست من إنشاء المستخدم الحالي
+
   const acceptedOrdersFilter = {
     $or: [
       { createdBy: { $ne: loggedInUserIdString }},
@@ -333,8 +330,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     archive: { $ne: true }
   }
 
-  const apiFeatures = new ApiFeatures(
-    Order.find({ 
+  const apiFeatures = new ApiFeatures(Order.find({ 
       $and: [
       {$or: [{ ...groupFilter }, { users: loggedInUserId }],},
       {$and :[{...acceptedOrdersFilter},{ StateWork: { $ne: 'confirmManger' } }], ...filter }

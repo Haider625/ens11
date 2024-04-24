@@ -97,25 +97,21 @@ exports.updateGroupUser = asyncHandler(async (req, res, next) => {
 exports.addGroupBetweenLevels = asyncHandler(async (req, res) => {
   const { name, level1, level2, inlevel } = req.body;
 
-  // التحقق من أن `level1` و `level2` هما أعداد صحيحة
+
   if (!Number.isInteger(Number(level1)) || !Number.isInteger(Number(level2))) {
     throw new ApiError('Invalid integer levels', 400);
   }
 
-  // التحقق من أن الفارق بين الأرقام يساوي 1
   if (Math.abs(Number(level1) - Number(level2)) !== 1) {
     throw new ApiError('Non-consecutive levels', 400);
   }
 
-  // حساب ترتيب الكروب الجديد بين المستويين
   const newLevel = Math.trunc((Number(level1) + Number(level2)) / 2);
 
-  // إنشاء الكروب الجديد بلفل بينهما
 
-  // تحديث المستوى للكروبات الحالية
   await groups.updateMany(
-    { level: { $gte: newLevel } }, // يحدث المستوى للكروبات التي أعلى من المستوى الجديد
-    { $inc: { level: 1 } } // زيادة المستوى بمقدار واحد
+    { level: { $gte: newLevel } }, 
+    { $inc: { level: 1 } } 
   );
 
   const newGroup = await groups.create({ name: name, level: newLevel ,inlevel:inlevel });

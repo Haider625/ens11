@@ -186,6 +186,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
       const lastGroup = rejectOrder.groups[rejectOrder.groups.length -1]
       rejectOrder.group = lastGroup ;
     }
+    rejectOrder.usersGroup = rejectOrder.users.group._id ;
     rejectOrder.updatedAt =Date.now()
     await rejectOrder.save();
 
@@ -243,6 +244,8 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
       rejectWork.usersOnprase.pop();
       const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 1]
       rejectWork.users = lastGroup ;
+
+      rejectWork.usersGroup = rejectWork.users.group._id ;
     rejectWork.updatedAt =Date.now()
     await rejectWork.save();
 
@@ -300,6 +303,7 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
 
     const lastGroup = rejectConfirm.usersOnprase[rejectConfirm.usersOnprase.length -3]
     rejectConfirm.users = lastGroup;
+    rejectConfirm.usersGroup = rejectConfirm.users.group._id ;
     rejectConfirm.updatedAt =Date.now()
     await rejectConfirm.save();
 

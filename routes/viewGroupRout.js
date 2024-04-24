@@ -17,9 +17,10 @@ router.use(auth.protect);
 
 router.route('/')
 .get(getGroupscanViwGroups)
-.post();
 
 router.route('/:groupId')
 .get(getOrdersByGroup)
+
+
 
 module.exports = router;

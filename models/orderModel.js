@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
-const {getFormattedDate} = require('../config/moment');
 
 const orderSchema = new mongoose.Schema(
   {
@@ -68,7 +67,7 @@ const orderSchema = new mongoose.Schema(
       type : String,
       default : "تم قبول الطلب"
     },
-    
+
     StateWorkReasonConfirmManger: {
       type : String,
       default : "تم اتمام الطلب"
@@ -121,6 +120,13 @@ const orderSchema = new mongoose.Schema(
         return userId || this.user || null;
       },
     },
+
+    usersGroup : {
+      type : String,
+      default: null,
+      select : false
+    },
+    
 
     usersOnprase : [{
       type: mongoose.Schema.ObjectId,
@@ -180,8 +186,10 @@ orderSchema.pre(/^find/, function (next) {
         'name':1,
         'level':1,
         'inlevel':1,
-        'levelSend':1,
-        'services' : 1
+        'levelSend':0,
+        'levelsReceive' : 0,
+        'services' : 0,
+        'forwordGroup':0
       },
       options: { depth: 1 }
     },
@@ -192,14 +200,17 @@ orderSchema.pre(/^find/, function (next) {
         'name':1,
         'level':1,
         'inlevel':1,
-        'levelSend':1,
-        'services' : 0
+        'levelSend':0,
+        'levelsReceive' : 0,
+        'services' : 0,
+        'forwordGroup':0
       },
       options: { depth: 1 }
     },
     { 
       path: 'createdBy',
         select: {
+          'Permission' :0,
           '_id' :1,
           'name' :1,
           'userId' :1,
@@ -214,7 +225,7 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'users',
         select: {
-          '_id' :1,
+          '_id' :0,
           'name':1,
           'userId':1,
           'group':1,
@@ -270,6 +281,10 @@ orderSchema.pre(/^find/, function (next) {
       },
       options: { depth: 1 }
     },
+    {
+      path : 'usersGroup',
+      select : {}
+    }
 
   ])
   next();

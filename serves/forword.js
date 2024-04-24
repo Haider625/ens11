@@ -39,9 +39,10 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
     order.groups.push(loggedUser.group);
   }
   
-order.group = groupIds;
+  order.group = groupIds;
   order.State = 'onprase';
   order.StateReasonOnprase = reason;
+  order.usersGroup = order.users.group._id ;
   order.updatedAt =Date.now()
   await order.save();
   const updatOrder = await Order.findById(order._id).populate('group');

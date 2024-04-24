@@ -5,10 +5,6 @@ const {
 
 } = require('../serves/archive');
 
-// const {
-
-// } = require('../utils/validators/archive');
-
 const auth = require('../serves/auth');
 
 const router = express.Router();

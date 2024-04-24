@@ -12,9 +12,6 @@ const {
     archiveReject,
 } = require('../serves/reject');
 
-// const {
-    
-// } = require('../utils/validators/accept');
 
 const auth = require('../serves/auth');
 
