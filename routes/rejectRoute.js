@@ -3,6 +3,7 @@ const express = require('express');
 const {
     rejectOrder,
     rejectWork,
+    rejectConfirmWork,
     rejectConfirm,
     getRejectedOrders,
     getRejectedWorks,
@@ -10,6 +11,7 @@ const {
     getRejectedDone,
     getUserOrders,
     archiveReject,
+
 } = require('../serves/reject');
 
 
@@ -32,6 +34,8 @@ router.get('/getUserOrders',getUserOrders)
 router.put('/order/:id',rejectOrder)
 
 router.put('/work/:id',rejectWork)
+
+router.put('/rejectConfirmWork/:id',rejectConfirmWork)
 
 router.put('/rejectConfirm/:id',rejectConfirm)
 

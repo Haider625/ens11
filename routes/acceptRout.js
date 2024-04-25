@@ -7,11 +7,11 @@ const {
     acceptwork,
     startWork,
     endWork,
-    confirmWorkCompletion,
+    confirmCompletion,
     AcceptArchive,
     uploadOrderImage,
     resizeImage,
-    confirmManger
+    confirmWork
 } = require('../serves/accept');
 
 const auth = require('../serves/auth');
@@ -24,18 +24,17 @@ router.get(('/getuser'),getUsersInGroup)
 
 router.get(('/OrdersUser'),getUserOrders)
 
-
 router.put(('/acceptwork/:id'),acceptwork)
 
 router.put(('/acceptorder/:id'),acceptOrder)
 
 router.put(('/startwork/:id'),startWork)
 
-router.put(('/confirmManger/:id'),confirmManger)
-
 router.put(('/endwork/:id'),uploadOrderImage,resizeImage,endWork)
 
-router.put(('/confirm/:id'),confirmWorkCompletion)
+router.put(('/confirmWork/:id'),uploadOrderImage,resizeImage,confirmWork)
+
+router.put(('/confirm/:id'),confirmCompletion)
 
 router.put('/Archive/:id',AcceptArchive)
 

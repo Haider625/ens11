@@ -11,6 +11,7 @@ const socketHandler  = require('../utils/socket');
 const {
   rejectOrderMessageHistory,
   rejectWorkMessageHistory,
+  rejectConfirmWorkMessageHistory,
   rejectConfirmMessageHistory
 } =require('../utils/MessagesHistort')
 
@@ -244,6 +245,9 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
       rejectWork.usersOnprase.pop();
       const lastGroup = rejectWork.usersOnprase[rejectWork.usersOnprase.length - 1]
       rejectWork.users = lastGroup ;
+      if (!rejectWork.users){
+        return next(new ApiError(`No order found for this id`, 404));
+      }
 
       rejectWork.usersGroup = rejectWork.users.group._id ;
     rejectWork.updatedAt =Date.now()
@@ -253,7 +257,7 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
 
   const roomUser = updatOrder.users.userId;
   let page;
-  if (updatOrder.createdBy.group.toString() === updatOrder.group._id.toString()) {
+  if (updatOrder.createdBy.group.toString() === updatOrder.users.group._id.toString()) {
       page = 'reject';
   } else {
       page = 'onprase';
@@ -273,6 +277,67 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
 
     res.status(200).json({ order :updatOrder });
 });
+exports.rejectConfirmWork = asyncHandler(async (req,res , next) => {
+
+  const orderId = req.params.id;
+
+  const loggedInUserId = req.user._id;
+
+  const { reason } = req.body;
+
+  if (!req.user.Permission.canRejectOrder) {
+    return next(new ApiError('Unauthorized to reject orders' ,403));
+  }
+
+  const rejectConfirmWork = await Order.findByIdAndUpdate(
+    orderId
+    );
+
+  if (!rejectConfirmWork) {
+    return next(new ApiError(`No order found for this id`, 404));
+  }
+
+  rejectConfirmWork.StateWork = 'rejectConfirmWork';
+  rejectConfirmWork.StateWorkReasonReject = reason;
+
+  rejectConfirmWork.users = rejectConfirmWork.usersOnprase[rejectConfirmWork.usersOnprase.length -1]
+
+  rejectConfirmWork.history.push({
+    editedAt: Date.now(),
+    editedBy: loggedInUserId,
+    action: rejectConfirmWorkMessageHistory,
+    reason: reason
+  });
+
+  rejectConfirmWork.usersGroup = rejectConfirmWork.users.group._id ;
+  rejectConfirmWork.updatedAt =Date.now()
+  await rejectConfirmWork.save();
+
+  const updatOrder = await Order.findById(rejectConfirmWork._id).populate('users');
+
+  const roomUser = updatOrder.users.userId;
+  let page;
+  if (updatOrder.createdBy.group.toString() === updatOrder.users.group._id.toString()) {
+      page = 'reject';
+  } else {
+      page = 'onprase';
+  }
+
+  const message = {
+  type: "order_update",
+  title: "تاكيد الطلب",
+  body : `تم رفض التاكيد على الطلب من قبل ${req.user.group.name}`,
+  action: "open_page",
+  page : page,
+  orderID: updatOrder._id,
+  time : updatOrder.updatedAt
+}
+
+  socketHandler.sendNotificationToUser(roomUser,message);
+
+  res.status(200).json({ order : rejectConfirmWork });
+
+})
 
 exports.rejectConfirm = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;

@@ -12,7 +12,8 @@ const {
   acceptOrderMessageHistory,
   startWorkMessageHistory,
   endWorkMessageHistory,
-  confirmWorkMessageHistory
+  confirmWorkMessageHistory,
+  confirmMessageHistory
 } = require('../utils/MessagesHistort')
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
@@ -136,6 +137,7 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
+  
   if(updatedOrder.State === 'accept'){
 updatedOrder.history.push({
   editedAt: Date.now(),
@@ -232,8 +234,6 @@ exports.startWork = asyncHandler(async(req,res,next) => {
     orderId,
     {
       $set: {
-        StateWork: 'startwork',
-        StateWorkReasonAccept : reason ,
         users : loggedInUserId,
         
         },
@@ -242,10 +242,14 @@ exports.startWork = asyncHandler(async(req,res,next) => {
     { new: true }
   );
 
-  if (!updatedOrder) { 
+  if (!updatedOrder ) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
-
+  if (updatedOrder.State !== 'accept' ) { 
+    return next(new ApiError(`you need accepted order`, 404));
+  }
+  updatedOrder.StateWork =  'startwork';
+  updatedOrder.StateWorkReasonAccept = reason ;
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
@@ -260,7 +264,7 @@ await updatedOrder.save();
   res.status(200).json({ accept : updatedOrder });
 });
 
-exports.confirmManger = asyncHandler(async(req,res,next) => {
+exports.endWork = asyncHandler(async(req,res,next) => {
 
   const loggedInUserId = req.user._id;
   const {reason} = req.body
@@ -269,12 +273,15 @@ exports.confirmManger = asyncHandler(async(req,res,next) => {
   if (!currentOrder) {
     return next(new ApiError('Order not found', 404));
   }
+  if (currentOrder.StateWork !== 'startwork' ) { 
+    return next(new ApiError(`you need start the Work in order`, 404));
+  }
 
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
     .populate('donimgs');
 
-    updatedOrder.StateWork = 'confirmManger'
+    updatedOrder.StateWork = 'endwork'
     updatedOrder.StateWorkReasonAccept = reason
     updatedOrder.users = updatedOrder.usersOnprase.filter(usersOnprase => usersOnprase.group.level === 3)[0]._id;
     updatedOrder.history.push({
@@ -284,8 +291,13 @@ exports.confirmManger = asyncHandler(async(req,res,next) => {
       reason:reason,
       imgDone: updatedOrder.donimgs
     });
-    updatedOrder.usersGroup = updatedOrder.users.group._id ;
+
+    if (updatedOrder.users.group) {
+      updatedOrder.usersGroup = updatedOrder.users.group._id;
+    } 
+
     updatedOrder.updatedAt =Date.now()
+
     await updatedOrder.save();
     const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
@@ -305,36 +317,44 @@ socketHandler.sendNotificationToUser(roomUser,message);
 
 }) 
 
-exports.endWork = asyncHandler(async (req, res, next) => {
+exports.confirmWork  = asyncHandler(async (req, res, next) => {
   const loggedInUserId = req.user._id;
   const {reason} = req.body
-  const currentOrder = await Order.findById(req.params.id);
+  const orderId = req.params.id
+  const currentOrder = await Order.findById(orderId);
 
   if (!currentOrder) {
     return next(new ApiError('Order not found', 404));
+  }
+  if (currentOrder.StateWork !== 'endwork' ) { 
+    return next(new ApiError(`you need start the Work in order`, 404));
   }
 
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
     .populate('donimgs');
 
-  updatedOrder.StateWork = 'endwork'
+  updatedOrder.StateWork = 'confirmWork'
   updatedOrder.StateWorkReasonAccept = reason
-  updatedOrder.usersOnprase.push(updatedOrder.createdBy);
+
+  updatedOrder.usersOnprase.push(updatedOrder.users);
+
   updatedOrder.history.push({
     editedAt: Date.now(),
     editedBy: loggedInUserId,
-    action: endWorkMessageHistory,
+    action: confirmWorkMessageHistory,
     reason:reason,
     imgDone: updatedOrder.donimgs
   });
+
   updatedOrder.usersGroup = updatedOrder.users.group._id ;
+  updatedOrder.users = updatedOrder.createdBy._id
   updatedOrder.updatedAt =Date.now()
   await updatedOrder.save();
 
   const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
-  const roomUser = updatOrder.createdBy.userId;
+  const roomUser = updatOrder.users.userId;
   const message = {
     type: "order_update",
     title: "تاكيد الطلب",
@@ -350,28 +370,27 @@ exports.endWork = asyncHandler(async (req, res, next) => {
   res.status(200).json({ order: updatOrder });
 });
 
-exports.confirmWorkCompletion =  asyncHandler(async(req,res,next) => {
+exports.confirmCompletion =  asyncHandler(async(req,res,next) => {
   const loggedInUserId = req.user._id; 
   const orderId = req.params.id;
   const {reason} = req.body
 
-  const updatedOrder = await Order.findByIdAndUpdate(
-    orderId,
-    { 
-        StateDone: 'accept',
-        StateDoneReasonAccept : reason
-    },
-    { new: true }
-  );
+  const updatedOrder = await Order.findByIdAndUpdate(orderId);
 
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
   }
+  if (updatedOrder.StateWork !== 'confirmWork' ) { 
+    return next(new ApiError(`you need start the Work in order`, 404));
+  }
+
+  updatedOrder.StateDone = 'accept'
+  updatedOrder.StateDoneReasonAccept = reason
 
 updatedOrder.history.push({
   editedAt: Date.now(),
   editedBy: loggedInUserId,
-  action : confirmWorkMessageHistory,
+  action : confirmMessageHistory,
   reason : reason
 });
 updatedOrder.archive = true ;
