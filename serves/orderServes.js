@@ -370,13 +370,13 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
 exports.getAllText = asyncHandler(async (req, res, next) => {
   try {
 
-    const typeText1Data = await TypeText1.find({});
+    const typeText1Data = await TypeText1.find({})
 
  
-    const typeText2Data = await TypeText2.find({});
+    const typeText2Data = await TypeText2.find({})
 
 
-    const typeText3Data = await typeText3.find({});
+    const typeText3Data = await typeText3.find({})
 
  
     res.status(200).json({ typeText1Data, typeText2Data, typeText3Data });
