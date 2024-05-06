@@ -273,13 +273,14 @@ exports.endWork = asyncHandler(async(req,res,next) => {
   if (!currentOrder) {
     return next(new ApiError('Order not found', 404));
   }
+  if (currentOrder.StateWork !== 'startwork' ) { 
+    return next(new ApiError(`you need start the Work in order`, 404));
+  }
   if (currentOrder.users.group.level === 3){
     console.log(currentOrder.users.group.level)
     await exports.confirmWork(req, res, next);
   }else {
-  if (currentOrder.StateWork !== 'startwork' ) { 
-    return next(new ApiError(`you need start the Work in order`, 404));
-  }
+ 
 
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
@@ -331,9 +332,9 @@ exports.confirmWork  = asyncHandler(async (req, res, next) => {
   if (!currentOrder) {
     return next(new ApiError('Order not found', 404));
   }
-  if (currentOrder.StateWork !== 'endwork' ) { 
-    return next(new ApiError(`you need start the Work in order`, 404));
-  }
+  // if (currentOrder.StateWork !== 'endwork' ) { 
+  //   return next(new ApiError(`you need end the Work in order`, 404));
+  // }
 
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })

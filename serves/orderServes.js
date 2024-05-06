@@ -10,7 +10,7 @@ const ApiFeatures = require('../utils/apiFeatures');
 const ApiError = require('../utils/apiError');
 const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
-const TypeText3 = require('../models/typeText3');
+const typeText3 = require('../models/typeText3');
 const socketHandler  = require('../utils/socket');
 
 const {createMessageHistory,updateMessageHistory} = require('../utils/MessagesHistort');
@@ -369,16 +369,16 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
 
 exports.getAllText = asyncHandler(async (req, res, next) => {
   try {
-    // جلب البيانات من TypeText1
+
     const typeText1Data = await TypeText1.find({});
 
-    // جلب البيانات من TypeText2 مع البيانات المتعلقة من TypeText3
-    const typeText2Data = await TypeText2.find({}).populate('typeText3');
+ 
+    const typeText2Data = await TypeText2.find({});
 
-    // جلب البيانات من TypeText3
-    const typeText3Data = await TypeText3.find({});
 
-    // إرجاع البيانات
+    const typeText3Data = await typeText3.find({});
+
+ 
     res.status(200).json({ typeText1Data, typeText2Data, typeText3Data });
   } catch (error) {
     next(new ApiError(`Error fetching data: ${error.message}`, 500));
