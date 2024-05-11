@@ -2,6 +2,7 @@
 const asyncHandler = require('express-async-handler');
 const ApiError = require('../utils/apiError')
 const ApiFeatures = require('../utils/apiFeatures')
+const typeText1 = require('../models/typeText1')
 const typeText2 = require('../models/typeText2')
 
 exports.createtypeText2 =   asyncHandler(async (req, res,next) => {
@@ -16,8 +17,13 @@ exports.createtypeText2 =   asyncHandler(async (req, res,next) => {
           new ApiError(`No document for this id ${req.body}`, 404)
         );
       }
-  
-      res.status(201).json({ typeText2: newDoc });
+      const updatedDoc = await typeText1.findOneAndUpdate(
+        { _id: req.body.perntId }, // شرط البحث
+        { new: true } // خيارات إضافية
+    );
+    updatedDoc.DataText2.push(newDoc._id);
+    await updatedDoc.save();
+      res.status(201).json({ typeText2: newDoc ,updatedDoc});
     });
 
 exports.gettypeText2 =   asyncHandler(async (req, res, next) => {

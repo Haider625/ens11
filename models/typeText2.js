@@ -8,22 +8,26 @@ const typeText2Schema = new mongoose.Schema(
             maxlength: [150, 'Too long name'],
             required: [true, 'name required'],
         },
-        typeText1 :[{
+        perntId :{
             type : mongoose.Schema.ObjectId,
             ref : 'typeText1',
+        },
+         DataText3 :[{
+            type : String,
         }],
         createdAt: {
             type :Date,
-            default:Date.now()
+            default:Date.now(),
+            select : false
           },
     },
 
 );   
-typeText2Schema.pre(/^find/, function (next) {
-    this.populate({
-      path: 'typeText1',
-      select: 'name ',
-    })
-    next();
-});
+// typeText2Schema.pre(/^find/, function (next) {
+//     this.populate({
+//       path: 'typeText3',
+//       select: 'name ',
+//     })
+//     next();
+// });
 module.exports = mongoose.model('typeText2', typeText2Schema);

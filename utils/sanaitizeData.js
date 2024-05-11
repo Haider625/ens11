@@ -39,3 +39,11 @@
 //         history:order.history
 //     }
 // }
+
+exports.sanitizeType1 = function (typeText1) {
+        return {
+        id : typeText1._id,
+        name : typeText1.name,
+        DataText2 : typeText1.DataText2,
+    }
+}
