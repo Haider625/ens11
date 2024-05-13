@@ -18,8 +18,8 @@ exports.createtypeText3 =   asyncHandler(async (req, res,next) => {
         );
       }
       const updatedDoc = await typeText2.findOneAndUpdate(
-        { _id: req.body.perntId }, // شرط البحث
-        { new: true } // خيارات إضافية
+        { _id: req.body.perntId }, 
+        { new: true } 
     );
     if (!updatedDoc) {
       return next(

@@ -13,7 +13,8 @@ const {
     resizeImage,
     putOrder,
     deleteAll,
-    getAllOrder
+    getAllOrder,
+    
 } = require('../serves/orderServes');
 
 const {

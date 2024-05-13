@@ -18,9 +18,14 @@ exports.createtypeText2 =   asyncHandler(async (req, res,next) => {
         );
       }
       const updatedDoc = await typeText1.findOneAndUpdate(
-        { _id: req.body.perntId }, // شرط البحث
-        { new: true } // خيارات إضافية
+        { _id: req.body.perntId },
+        { new: true }
     );
+    if (!updatedDoc) {
+      return next(
+        new ApiError(`No document for this id ${req.body}`, 404)
+      );
+    }
     updatedDoc.DataText2.push(newDoc._id);
     await updatedDoc.save();
       res.status(201).json({ typeText2: newDoc ,updatedDoc});

@@ -162,9 +162,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     return next(new ApiError('Unauthorized to reject orders' ,403));
   }
 
-    const rejectOrder = await Order.findByIdAndUpdate(
-      orderId
-      );
+    const rejectOrder = await Order.findById(orderId);
 
     if (!rejectOrder) {
       return next(new ApiError(`No order found for this id`, 404));
@@ -187,7 +185,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
       const lastGroup = rejectOrder.groups[rejectOrder.groups.length -1]
       rejectOrder.group = lastGroup ;
     }
-    rejectOrder.usersGroup = rejectOrder.users.group._id ;
+    // rejectOrder.usersGroup = rejectOrder.users.group._id ;
     rejectOrder.updatedAt =Date.now()
     await rejectOrder.save();
 
