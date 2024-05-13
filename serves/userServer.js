@@ -3,6 +3,7 @@
 const asyncHandler = require('express-async-handler');
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
+const fs = require('fs').promises;
 const bcrypt = require('bcryptjs');
 const ApiError = require('../utils/apiError')
 const ApiFeatures = require('../utils/apiFeatures')
@@ -24,13 +25,19 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
   if (req.files && req.files.image) {
     const orderimgFileName = `user-${uuidv4()}-${Date.now()}.jpeg`;
 
-    await sharp(req.files.image[0].buffer)
+    await sharp(req.files.image[0].path)
       .toFormat('jpeg')
       .jpeg({ quality: 95 })
       .toFile(`uploads/users/${orderimgFileName}`);
 
     // Save image into our db
     req.body.image = orderimgFileName;
+  }
+  try {
+    await fs.rm('uploads/test', { recursive: true });
+    console.log('Contents of "uploads/test" directory deleted successfully.');
+  } catch (err) {
+    // console.error('Error deleting contents of "uploads/test" directory:', err);
   }
   next()
 })

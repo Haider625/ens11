@@ -3,6 +3,7 @@
 const asyncHandler = require('express-async-handler');
 const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
+const fs = require('fs').promises;
 const Order = require('../models/orderModel');
 const groups = require('../models/groupUser');
 const user = require('../models/userModel');
@@ -32,42 +33,83 @@ exports.uploadOrderImage = uploadMixOfImages([
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
   // Image processing for orderimg
-  if (req.files && req.files.orderimg) {
-    const orderimgFileName = `order-${uuidv4()}-${Date.now()}.jpeg`;
+  if (req.files.orderimg) {
+    const orderimgFile = req.files.orderimg[0]; // Get the uploaded file object
+    const orderimgFileName = `order-${uuidv4()}-${Date.now()}.jpeg`; // Generate a unique file name
 
-    await sharp(req.files.orderimg[0].buffer)
+    // Resize and save the image
+    await sharp(orderimgFile.path)
       .resize(600, 600)
       .toFormat('jpeg')
-      .jpeg({ quality: 95 })
-      .toFile(`uploads/orders/${orderimgFileName}`);
+      .jpeg({ quality: 80 })
+       .toFile(`uploads/orders/${orderimgFileName}`);
 
     // Save image into our db
     req.body.orderimg = orderimgFileName;
   }
 
+
   // Image processing for donimgs
-  if (req.files && req.files.donimgs) {
+  if (req.files.donimgs) {
     req.body.donimgs = [];
     await Promise.all(
       req.files.donimgs.map(async (img, index) => {
         const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
   
-        await sharp(img.buffer)
+        await sharp(img.path)
           .resize(600, 600)
           .toFormat('jpeg')
           .jpeg({ quality: 95 })
-          .toFile(`uploads/orders/${imageName}`, (err) => {
-            if (err) {
-              console.error('Error saving image:', err);
-            } else {
-              req.body.donimgs.push(imageName) ;
-            }
-          });
+          .toFile(`uploads/orders/${imageName}`)
+     
+          req.body.donimgs.push(imageName) ;  
+      
       })
     );
   }
+  try {
+    await fs.rm('uploads/test', { recursive: true });
+    console.log('Contents of "uploads/test" directory deleted successfully.');
+  } catch (err) {
+    // console.error('Error deleting contents of "uploads/test" directory:', err);
+  }
   next();
 });
+
+// const multerStorage = multer.diskStorage({
+//   destination : function (req,file , cb) {
+//     cb(null, 'uploads/orders')
+//   },
+//   // filename : function (req,file,cb) {
+//   //   // const ext = file.mimetype.split('/')[1];
+//   //   const filename = `order-${uuidv4()}-${Date.now()}.jpeg`;
+//   //   req.body.orderimg = filename;
+//   //   cb(null , filename)
+//   // },
+// })
+
+// const upload = multer({ storage :multerStorage })
+
+// exports.uploadOrderImage = upload.single('orderimg')
+
+// const multerStorages = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, 'uploads/orders');
+//   },
+//   filename: function (req, file, cb) {
+//     // const ext = file.mimetype.split('/')[1];
+//     const filename = `order-${uuidv4()}-${Date.now()}.jpeg`;
+//     // if (!req.body.donimgs) {
+//     //   req.body.donimgs = [];
+//     // }
+//     req.body.donimgs.push(filename);
+//     cb(null, filename);
+//   },
+// });
+
+// const uploads = multer({ storage: multerStorages });
+
+// exports.uploadOrderImages = uploads.array('donimgs', 5);
 
 exports.createOrderSend = asyncHandler(async (req, res) => {
   const loggedInUserId = req.user._id;
