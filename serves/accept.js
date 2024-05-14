@@ -39,9 +39,9 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
         const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
   
         await sharp(img.path)
-          .resize(600, 600)
+          .resize(1000, 1000)
           .toFormat('jpeg')
-          .jpeg({ quality: 95 })
+          .jpeg({ quality: 90 })
           .toFile(`uploads/orders/${imageName}`)
             
       
@@ -57,9 +57,9 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
             const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
 
             await sharp(img.path)
-                .resize(600, 600)
+                .resize(1000, 1000)
                 .toFormat('jpeg')
-                .jpeg({ quality: 95 })
+                .jpeg({ quality: 90 })
                 .toFile(`uploads/orders/${imageName}`, (err) => {
                     if (err) {
                         console.error('Error saving image:', err);
@@ -71,10 +71,15 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
     );
 }
 try {
-  await fs.rm('uploads/test', { recursive: true });
-  console.log('Contents of "uploads/test" directory deleted successfully.');
+  const files = await fs.readdir('uploads/test');
+  // Iterate through files and delete them
+  await Promise.all(files.map(async (file) => {
+    await fs.unlink(`uploads/test/${file}`);
+    // console.log(`File ${file} deleted successfully.`);
+  }));
+  // console.log('Contents of "uploads/test" directory deleted successfully.');
 } catch (err) {
-  // console.error('Error deleting contents of "uploads/test" directory:', err);
+  console.error('Error deleting contents of "uploads/test" directory:', err);
 }
   next();
 });
