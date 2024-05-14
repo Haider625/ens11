@@ -50,26 +50,26 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
       })
     );
   }
-//   if (req.files && req.files.donimgs) {
-//     req.body.imgDone = []; 
-//     await Promise.all(
-//         req.files.donimgs.map(async (img, index) => {
-//             const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
+  if (req.files && req.files.donimgs) {
+    req.body.imgDone = []; 
+    await Promise.all(
+        req.files.donimgs.map(async (img, index) => {
+            const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
 
-//             await sharp(img.buffer)
-//                 .resize(600, 600)
-//                 .toFormat('jpeg')
-//                 .jpeg({ quality: 95 })
-//                 .toFile(`uploads/orders/${imageName}`, (err) => {
-//                     if (err) {
-//                         console.error('Error saving image:', err);
-//                     } else {
-//                         req.body.imgDone.push(imageName);
-//                     }
-//                 });
-//         })
-//     );
-// }
+            await sharp(img.path)
+                .resize(600, 600)
+                .toFormat('jpeg')
+                .jpeg({ quality: 95 })
+                .toFile(`uploads/orders/${imageName}`, (err) => {
+                    if (err) {
+                        console.error('Error saving image:', err);
+                    } else {
+                        req.body.imgDone.push(imageName);
+                    }
+                });
+        })
+    );
+}
 try {
   await fs.rm('uploads/test', { recursive: true });
   console.log('Contents of "uploads/test" directory deleted successfully.');
