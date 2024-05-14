@@ -382,7 +382,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   const apiFeatures = new ApiFeatures(Order.find({ 
       $and: [
       {$or: [{ ...groupFilter }, { users: loggedInUserId }],},
-      {$and :[{...acceptedOrdersFilter},{ StateWork: { $ne: 'confirmWork' } },{ StateWork: { $ne: 'endWork' } }], ...filter }
+      {$and :[{...acceptedOrdersFilter},{ StateWork: { $ne: 'confirmWork' } },{ StateWork: { $ne: 'endwork' } }], ...filter }
       ]
     }), 
     req.query

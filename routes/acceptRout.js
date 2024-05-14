@@ -32,7 +32,7 @@ router.put(('/startwork/:id'),startWork)
 
 router.put(('/endwork/:id'),uploadOrderImage,resizeImage,endWork)
 
-router.put(('/confirmWork/:id'),uploadOrderImage,resizeImage,confirmWork)
+router.put(('/confirmWork/:id'),confirmWork)
 
 router.put(('/confirm/:id'),confirmCompletion)
 
