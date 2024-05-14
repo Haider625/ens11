@@ -32,7 +32,7 @@ exports.uploadOrderImage = uploadMixOfImages([
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
 
-  if (req.files.donimgs) {
+  if (req.files && req.files.donimgs) {
     req.body.donimgs = [];
     await Promise.all(
       req.files.donimgs.map(async (img, index) => {
@@ -292,7 +292,7 @@ exports.endWork = asyncHandler(async(req,res,next) => {
 
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
-    .populate('donimgs');
+    // .populate('donimgs');
 
     updatedOrder.StateWork = 'endwork'
     updatedOrder.StateWorkReasonAccept = reason
@@ -346,7 +346,7 @@ exports.confirmWork  = asyncHandler(async (req, res, next) => {
 
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
-    .populate('donimgs');
+    // .populate('donimgs');
 
   updatedOrder.StateWork = 'confirmWork'
   updatedOrder.StateWorkReasonAccept = reason

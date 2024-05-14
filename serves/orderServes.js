@@ -33,13 +33,13 @@ exports.uploadOrderImage = uploadMixOfImages([
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
   // Image processing for orderimg
-  if (req.files.orderimg) {
+  if (req.files && req.files.orderimg) {
     const orderimgFile = req.files.orderimg[0]; // Get the uploaded file object
     const orderimgFileName = `order-${uuidv4()}-${Date.now()}.jpeg`; // Generate a unique file name
 
     // Resize and save the image
     await sharp(orderimgFile.path)
-    .resize(1000, 1000)
+    .resize(600, 1080)
     .toFormat('jpeg')
     .jpeg({ quality: 95 })
        .toFile(`uploads/orders/${orderimgFileName}`);
@@ -50,7 +50,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
 
 
   // Image processing for donimgs
-  if (req.files.donimgs) {
+  if (req.files && req.files.donimgs) {
     req.body.donimgs = [];
     await Promise.all(
       req.files.donimgs.map(async (img, index) => {
@@ -382,7 +382,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   const apiFeatures = new ApiFeatures(Order.find({ 
       $and: [
       {$or: [{ ...groupFilter }, { users: loggedInUserId }],},
-      {$and :[{...acceptedOrdersFilter},{ StateWork: { $ne: 'confirmWork' } }], ...filter }
+      {$and :[{...acceptedOrdersFilter},{ StateWork: { $ne: 'confirmWork' } },{ StateWork: { $ne: 'endWork' } }], ...filter }
       ]
     }), 
     req.query
