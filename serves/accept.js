@@ -50,26 +50,26 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
       })
     );
   }
-  if (req.files && req.files.donimgs) {
-    req.body.imgDone = []; 
-    await Promise.all(
-        req.files.donimgs.map(async (img, index) => {
-            const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
+//   if (req.files && req.files.donimgs) {
+//     req.body.imgDone = []; 
+//     await Promise.all(
+//         req.files.donimgs.map(async (img, index) => {
+//             const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
 
-            await sharp(img.path)
-                .resize(1000, 1000)
-                .toFormat('jpeg')
-                .jpeg({ quality: 90 })
-                .toFile(`uploads/orders/${imageName}`, (err) => {
-                    if (err) {
-                        console.error('Error saving image:', err);
-                    } else {
-                        req.body.imgDone.push(imageName);
-                    }
-                });
-        })
-    );
-}
+//             await sharp(img.path)
+//                 .resize(1000, 1000)
+//                 .toFormat('jpeg')
+//                 .jpeg({ quality: 90 })
+//                 .toFile(`uploads/orders/${imageName}`, (err) => {
+//                     if (err) {
+//                         console.error('Error saving image:', err);
+//                     } else {
+//                         req.body.imgDone.push(imageName);
+//                     }
+//                 });
+//         })
+//     );
+// }
 try {
   const files = await fs.readdir('uploads/test');
   // Iterate through files and delete them
@@ -79,7 +79,7 @@ try {
   }));
   // console.log('Contents of "uploads/test" directory deleted successfully.');
 } catch (err) {
-  console.error('Error deleting contents of "uploads/test" directory:', err);
+  // console.error('Error deleting contents of "uploads/test" directory:', err);
 }
   next();
 });
@@ -144,6 +144,9 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
 
   if (!updatedOrder) { 
     return next(new ApiError(`No order found for this id`, 404));
+  }
+  if (updatedOrder.StateWork === 'endwork' || updatedOrder.StateDone === 'accept'  ) {
+    return next(new ApiError(`you cant do this Option `, 404));
   }
   
   if(updatedOrder.State === 'accept'){
@@ -289,10 +292,9 @@ exports.endWork = asyncHandler(async(req,res,next) => {
     await exports.confirmWork(req, res, next);
   }else {
  
-
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
-    // .populate('donimgs');
+    .populate('donimgs');
 
     updatedOrder.StateWork = 'endwork'
     updatedOrder.StateWorkReasonAccept = reason
@@ -304,6 +306,8 @@ exports.endWork = asyncHandler(async(req,res,next) => {
       reason:reason,
       imgDone: updatedOrder.donimgs
     });
+
+    
 
     if (updatedOrder.users.group) {
       updatedOrder.usersGroup = updatedOrder.users.group._id;

@@ -58,7 +58,7 @@ const orderSchema = new mongoose.Schema(
 
     StateWork: {
       type :String,
-      enum: ['acceptwork','startwork','endwork','confirmWork','rejectConfirmWork','reject','onprase'],
+      enum: ['acceptwork','startwork','endwork','confirmWork','reject','onprase'],
       default: 'onprase',
 
     },

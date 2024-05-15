@@ -229,7 +229,9 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
     if (!rejectWork) {
       return next(new ApiError(`No order found for this id`, 404));
     }
-
+    if (rejectWork.State !== 'accept' ) {
+      return next(new ApiError(`you should be access your work first `, 404));
+    }
     rejectWork.StateWork = 'reject';
     rejectWork.StateWorkReasonReject = reason;
 
@@ -288,15 +290,17 @@ exports.rejectConfirmWork = asyncHandler(async (req,res , next) => {
     return next(new ApiError('Unauthorized to reject orders' ,403));
   }
 
-  const rejectConfirmWork = await Order.findByIdAndUpdate(
-    orderId
-    );
+  const rejectConfirmWork = await Order.findByIdAndUpdate(orderId);
 
   if (!rejectConfirmWork) {
     return next(new ApiError(`No order found for this id`, 404));
   }
+  if (rejectConfirmWork.StateWork !== 'endwork' ) {
+  return next(new ApiError(`you should be end the work first `, 404));
+  }
 
-  rejectConfirmWork.StateWork = 'rejectConfirmWork';
+  rejectConfirmWork.donimgs = []
+  rejectConfirmWork.StateWork = 'reject';
   rejectConfirmWork.StateWorkReasonReject = reason;
 
   rejectConfirmWork.users = rejectConfirmWork.usersOnprase[rejectConfirmWork.usersOnprase.length -1]
@@ -352,6 +356,9 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
 
     if (!rejectConfirm) {
       return next(new ApiError(`No order found for this id`, 404));
+    }
+    if (rejectConfirm.StateWork !== 'confirmWork' ) {
+      return next(new ApiError(`you should be confirm your work`, 404));
     }
     rejectConfirm.StateWork = 'onprase';
     rejectConfirm.StateDone = 'reject';

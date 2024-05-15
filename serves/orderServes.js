@@ -76,7 +76,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
     }));
     // console.log('Contents of "uploads/test" directory deleted successfully.');
   } catch (err) {
-    console.error('Error deleting contents of "uploads/test" directory:', err);
+    // console.error('Error deleting contents of "uploads/test" directory:', err);
   }
   next();
 });
