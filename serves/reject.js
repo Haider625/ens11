@@ -107,7 +107,7 @@ exports.getAllRejected = asyncHandler(async (req, res) => {
     const loggedInUserIdString = loggedInUserId.toString();
     const acceptedOrdersFilter = {
       $or: [
-        { createdBy: loggedInUserId },
+        { createdBy: { $ne :loggedInUserId }},
         {
           $and: [
             { State: 'reject' },

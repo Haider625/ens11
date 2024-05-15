@@ -341,7 +341,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
 
   const acceptedOrdersFilter = {
     $or: [
-      { createdBy: { $ne: loggedInUserIdString }},
+      { createdBy: loggedInUserIdString },
       {
         $and: [
           { State: { $ne: 'reject' } },
@@ -366,7 +366,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   };
   const acceptedOrdersFilters = {
     $or: [
-      { createdBy: loggedInUserIdString },
+      { createdBy: { $ne: loggedInUserIdString } },
       {
         $and: [
           { State: 'reject' },
@@ -382,7 +382,9 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   const apiFeatures = new ApiFeatures(Order.find({ 
       $and: [
       {$or: [{ ...groupFilter }, { users: loggedInUserId }],},
-      {$and :[{...acceptedOrdersFilter},{ StateWork: { $ne: 'confirmWork' } },{ StateWork: { $ne: 'endwork' } }], ...filter }
+      {$and :[{...acceptedOrdersFilter},
+        { StateWork: { $ne: 'confirmWork' } },
+        { StateWork: { $ne: 'endwork' } },], ...filter }
       ]
     }), 
     req.query
