@@ -13,6 +13,7 @@ const xss = require('xss-clean')
 const dbconnection = require('./config/database');
 const ApiError = require('./utils/apiError')
 const globalError = require('./middlewares/errmiddlware')
+const {getFormattedDate} =  require('./config/moment')
 
 const orderRout = require('./routes/orderRoute')
 const UserRout = require('./routes/userRoute')
@@ -86,6 +87,7 @@ socketHandler.initializeSocket(server);
 
 app.use(globalError) ;
 
+app.use(getFormattedDate)
 
 const PORT = process.env.PORT || 6000 ;
  server.listen(PORT , () => {

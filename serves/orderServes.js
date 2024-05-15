@@ -439,11 +439,14 @@ exports.getAllText = asyncHandler(async (req, res, next) => {
 exports.putOrder = asyncHandler(async (req, res, next) => {
   const loggedInUserId = req.user._id;
   const orderId = req.params.orderId;
-  const userDoc = await user.findOne({ _id: loggedInUserId });
 
+  
   if (!req.user.Permission.canCreatOrder) {
     return next(new ApiError('You do not have permission to update this order', 403));
   }
+
+  const userDoc = await user.findOne({ _id: loggedInUserId });
+
 
   // ابحث عن الطلب الحالي باستخدام findById
   const currentOrder = await Order
@@ -455,7 +458,7 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   }
 
   if (!userDoc) {
-    return res.status(404).json({ success: false, error: 'User not found' });
+    return next(new ApiError('User not found', 404));
   }
 
   const loggedInUserIdString = loggedInUserId.toString();

@@ -17,9 +17,9 @@ console.log(getFormattedDate()); // Outputs the current date and time in the Ira
 Date.now = function() {
   return new Date().getTime() + (3 * 60 * 60 * 1000); // إضافة 3 ساعات بالميلي ثانية
 };
-// const timestamp = Date.now();
-// const date = new Date(timestamp);
-// console.log(date);
+const timestamp = Date.now();
+const date = new Date(timestamp);
+console.log(date);
 ; 
 // Export the function
 module.exports = {
