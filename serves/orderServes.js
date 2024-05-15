@@ -448,7 +448,7 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   // ابحث عن الطلب الحالي باستخدام findById
   const currentOrder = await Order
   .findByIdAndUpdate(orderId, { ...req.body}, { new: true })
-  .populate('donimgs');
+  .populate('createdBy');
 
   if (!currentOrder) {
     return next(new ApiError('Order not found', 404));
@@ -477,11 +477,11 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
   const groupss = [userDoc.group._id];
 
   currentOrder.set({
-    // ...req.body,
-    // orderimg : req.body.orderimg,
+    ...req.body,
+     orderimg : req.body.orderimg,
     group: lowerLevelGroup,
     groups: groupss,
-    createdBy: req.user._id,
+    // createdBy: req.user._id,
   });
 
   currentOrder.history.push({

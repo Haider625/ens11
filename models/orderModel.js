@@ -103,6 +103,7 @@ const orderSchema = new mongoose.Schema(
     group : {
       type: mongoose.Schema.ObjectId,
       ref: 'group',
+      select : this.off
       
     },
 
@@ -182,7 +183,7 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'group',
         select: {
-        '_id' : 1,
+        'id' : 1,
         'name':1,
         'level':1,
         'inlevel':1,
@@ -196,7 +197,7 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'groups',
         select: {
-        '_id' : 1,
+        'id' : 1,
         'name':1,
         'level':1,
         'inlevel':1,
@@ -210,14 +211,13 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'createdBy',
         select: {
-          'Permission' :0,
-          '_id' :1,
+          'id' :0,
           'name' :1,
           'userId' :1,
           'jobTitle' :1,
           'school' :1,
           'GroupscanViw' :0,
-          'active' :1,
+          'active' :0,
           'image' : 1,
       },
       options: { depth: 1 }
@@ -225,7 +225,7 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'users',
         select: {
-          '_id' :0,
+          'id' :0,
           'name':1,
           'userId':1,
           'group':1,
