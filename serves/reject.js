@@ -124,7 +124,7 @@ exports.getAllRejected = asyncHandler(async (req, res) => {
       .filter()
       .search(Order)
       .limitFields()
-      .sort();
+      // .sort();
 
     // Execute query
     const { mongooseQuery, paginationResult } = apiFeatures;

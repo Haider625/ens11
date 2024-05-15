@@ -295,7 +295,7 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
     .paginate(documentsCounts)
     .search('Order')
     .limitFields()
-    .sort();
+    // .sort();
 
 
   const { mongooseQuery, paginationResult } = await apiFeatures;
@@ -392,7 +392,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     .paginate(documentsCounts)
     .search('Order')
     .limitFields()
-    .sort();
+    // .sort();
   
   const { mongooseQuery, paginationResult } =  apiFeatures;
 
