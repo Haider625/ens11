@@ -244,7 +244,7 @@ orderSchema.pre(/^find/, function (next) {
     {
       path : 'history.editedBy',
         select :{
-          '_id' :0,
+          'id' :1,
           'name' :1,
           'userId' :1,
           'jobTitle' :1,
