@@ -5,17 +5,24 @@ const {
     getOrder,
     deleteOrder,
     updateOrder,
-    getOrders,
-    createOrderSend,
-    getAllText,
-    getOnpraseOrders,
+    // getOrders,
+    createOrderSend, 
+    // getOnpraseOrders,
     uploadOrderImage,
     resizeImage,
     putOrder,
-    deleteAll,
-    getAllOrder,
     
 } = require('../serves/orderServes');
+
+// const {
+//     deleteAll,
+//     getAllOrder,
+//     getAllText,
+//     filterCreat,
+//     getOrders,
+//     getOnpraseOrders,
+// }= require('../serves/allOrder')
+
 
 const {
     createOrderValidator,
@@ -33,20 +40,22 @@ router.use(auth.protect);
 
 
 router.route('/')
-.get(getOrders)
+// .get(getOrders)
 .post(uploadOrderImage,resizeImage,createOrderValidator,createOrderSend);
 
 
 
-router.get('/getAllText',getAllText)
+// router.get('/getAllText',getAllText)
 
-router.get('/getOnpraseOrders',getOnpraseOrders)
+// router.get('/getOnpraseOrders',getOnpraseOrders)
 
 router.put('/put/:orderId',uploadOrderImage,resizeImage,putOrder)
 
-router.delete('/deleteAll',deleteAll)
+// router.delete('/deleteAll',deleteAll)
 
-router.get('/getAll',getAllOrder)
+// router.get('/getAll',getAllOrder)
+
+// router.get('/filterCreat',filterCreat)
 
 router.route('/:id')
 .get(getOrderValidator,getOrder)

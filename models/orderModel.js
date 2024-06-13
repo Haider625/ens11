@@ -1,6 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
+const { off } = require('./groupUser');
 
 const orderSchema = new mongoose.Schema(
   {
@@ -34,27 +35,37 @@ const orderSchema = new mongoose.Schema(
 
     donimgs : [String],
 
+    // rejectimgs : [String],
+    
+  FastOrder :{ 
+    type : Boolean ,
+    default : false
+  },
+
     State: {
       type: String,
-      enum: ['accept','reject','onprase'],
+      enum: ['accept','forword','reject','onprase'],
       default: 'onprase',
 
     },
 
-    StateReasonAccept: {
-      type : String,
-      default : "تم قبول الطلب"
-    },
+  //   StateReasonAccept: {
+  //     type : String,
+  //     default : "تم قبول الطلب",
+  //     select : '',
+  //   },
 
-    StateReasonReject: {
-      type : String,
-      default : "تم رفظ الطلب"
-    },
+  //   StateReasonReject: {
+  //     type : String,
+  //     default : "تم رفظ الطلب",
+  // select : '',
+  //   },
 
-    StateReasonOnprase: {
-      type : String,
-      default : "تم تحويل الطلب"
-    },
+  //   StateReasonOnprase: {
+  //     type : String,
+  //     default : "تم تحويل الطلب",
+  // select : '',
+  //   },
 
     StateWork: {
       type :String,
@@ -63,25 +74,29 @@ const orderSchema = new mongoose.Schema(
 
     },
 
-    StateWorkReasonAccept: {
-      type : String,
-      default : "تم قبول الطلب"
-    },
+  //   StateWorkReasonAccept: {
+  //     type : String,
+  //     default : "تم قبول الطلب",
+  // select : '',
+  //   },
 
-    StateWorkReasonConfirmManger: {
-      type : String,
-      default : "تم اتمام الطلب"
-    },
+  //   StateWorkReasonConfirmManger: {
+  //     type : String,
+  //     default : "تم اتمام الطلب",
+  // select : '',
+  //   },
 
-    StateWorkReasonEndwork: {
-      type : String,
-      default : "تم اتمام الطلب"
-    },
+  //   StateWorkReasonEndwork: {
+  //     type : String,
+  //     default : "تم اتمام الطلب",
+  // select : '',
+  //   },
 
-    StateWorkReasonReject: {
-      type : String,
-      default : "تم رفظ الطلب"
-    },
+  //   StateWorkReasonReject: {
+  //     type : String,
+  //     default : "تم رفظ الطلب",
+  // select : '',
+  //   },
 
     StateDone : {
       type : String ,
@@ -90,27 +105,29 @@ const orderSchema = new mongoose.Schema(
 
     },
 
-    StateDoneReasonAccept: {
-      type : String,
-      default : "تم قبول الطلب"
-    },
+  //   StateDoneReasonAccept: {
+  //     type : String,
+  //     default : "تم قبول الطلب",
+  // select : '',
+  //   },
 
-    StateDoneReasonReject: {
-      type : String,
-      default : "تم رفظ الطلب"
-    },
+  //   StateDoneReasonReject: {
+  //     type : String,
+  //     default : "تم رفظ الطلب",
+  // select : '',
+  //   },
 
     group : {
       type: mongoose.Schema.ObjectId,
       ref: 'group',
-      select : this.off
+      // select : ''
       
     },
 
     groups: [{
       type: mongoose.Schema.ObjectId,
       ref: 'group',
-     
+      // select : ''
     }],
 
     users : {
@@ -125,26 +142,40 @@ const orderSchema = new mongoose.Schema(
     usersGroup : {
       type : String,
       default: null,
-      select : false
+      // select : ''
     },
-      
 
     usersOnprase : [{
       type: mongoose.Schema.ObjectId,
       ref: 'User',
+      // select : ''
     }],
 
     archive : {
       type:Boolean,
       default : false,
+      // select : '' 
     },
 
     createdBy :{
-        type: mongoose.Schema.Types.Mixed,
-        // ref : 'User',
-        required: [true, 'Order must belong to a user']
+        type: mongoose.Schema.ObjectId,
+        ref : 'User',
+        // required: [true, 'Order must belong to a user']
      },
-
+    
+    createrGroupId : {
+      type :String ,
+      // default : 'null'
+    },
+    senderOrderId :{
+      type :String ,
+      // default : 'null'
+    },
+    senderOrder :{
+      type :String ,
+      // default : 'null'
+    },
+    
      history: [{
       editedAt: { 
         type: Date,
@@ -182,7 +213,8 @@ orderSchema.pre(/^find/, function (next) {
   this.populate([
     { 
       path: 'group',
-        select: {
+        select: 
+        { 
         'id' : 1,
         'name':1,
         'level':1,
@@ -211,24 +243,15 @@ orderSchema.pre(/^find/, function (next) {
     { 
       path: 'createdBy',
         select: {
-          'id' :0,
+          'id' :1,
           'name' :1,
           'userId' :1,
           'jobTitle' :1,
           'school' :1,
-          'GroupscanViw' :0,
-          'active' :0,
+          'group' :1,
+          // 'GroupscanViw' :1,
+          // 'active' :1,
           'image' : 1,
-      },
-      options: { depth: 1 }
-    },
-    { 
-      path: 'users',
-        select: {
-          'id' :0,
-          'name':1,
-          'userId':1,
-          'group':1,
       },
       options: { depth: 1 }
     },
@@ -249,7 +272,7 @@ orderSchema.pre(/^find/, function (next) {
           'userId' :1,
           'jobTitle' :1,
           'school' :1,
-          'group' :0,
+          'group' :1,
           'GroupscanViw' :0,
           'active' :1,
           'image' : 1

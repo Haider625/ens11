@@ -16,6 +16,15 @@ const {
   confirmMessageHistory
 } = require('../utils/MessagesHistort')
 
+const {addToOrderHistory} = require('../middlewares/handleStandardActions')
+
+const {
+  acceptOrderMessageSocket,
+  endWorkMessageSocket,
+  confirmWorkMessageSocket,
+  confirmCompletionMessageSocket
+} = require('../utils/MessagesSocket')
+
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
 exports.uploadOrderImage = uploadMixOfImages([
@@ -135,7 +144,7 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
     orderId,
     { 
         
-        StateReasonAccept : reason,
+        // StateReasonAccept : reason,
         users : users,
         $addToSet: { usersOnprase: loggedInUserId } 
   },
@@ -149,32 +158,36 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
     return next(new ApiError(`you cant do this Option `, 404));
   }
   
-  if(updatedOrder.State === 'accept'){
-updatedOrder.history.push({
-  editedAt: Date.now(),
-  editedBy: loggedInUserId ,
-  action : acceptOrderMessageHistory,
-  reason : reason
-});  
-  }else {
-    updatedOrder.history.push({
-      editedAt: Date.now(),
-      editedBy: loggedInUserId ,
-      action : acceptOrderMessageHistory,
-      reason : reason
-    });
-  }
+  addToOrderHistory(updatedOrder,loggedInUserId,acceptOrderMessageHistory,reason)
+  // if(updatedOrder.State === 'accept'){
+// updatedOrder.history.push({
+//   editedAt: Date.now(),
+//   editedBy: loggedInUserId ,
+//   action : acceptOrderMessageHistory,
+//   reason : reason
+// });  
+  // }else {
+  //   updatedOrder.history.push({
+  //     editedAt: Date.now(),
+  //     editedBy: loggedInUserId ,
+  //     action : acceptOrderMessageHistory,
+  //     reason : reason
+  //   });
+  // }
   updatedOrder.State = 'accept' 
 
   updatedOrder.StateWork = 'onprase'
 
   const existingUserIds = new Set(updatedOrder.usersOnprase.map(user => user._id.toString()));
-  const newUser = updatedOrder.users;
+  const newUser = loggedInUserId;
   
   if (!existingUserIds.has(newUser._id.toString())) {
     updatedOrder.usersOnprase.push(newUser);
   }
-  
+ 
+
+  updatedOrder.senderOrderId = req.user.group._id
+  updatedOrder.senderOrder = req.user.group.name
 
 updatedOrder.group = null ;
 updatedOrder.usersGroup = updatedOrder.users.group._id ;
@@ -186,54 +199,24 @@ const updatOrder = await Order.findById(updatedOrder._id).populate('users');
 
 const roomUser = updatOrder.users.userId;
 
-const message = {
-  type: "order_update",
-  title: "طلب جديد",
-  body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
-  action: "open_page",
-  page : "home",
-  orderID: updatOrder._id,
-  time : updatOrder.updatedAt
-}
+const message = acceptOrderMessageSocket(updatOrder)
+
+console.log(message)
+
+// const message = {
+//   type: "order_update",
+//   title: "طلب جديد",
+//   body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
+//   action: "open_page",
+//   page : "home",
+//   orderID: updatOrder._id,
+//   time : updatOrder.updatedAt
+// }
+
+
 socketHandler.sendNotificationToUser(roomUser,message);
 
   res.status(200).json({accept : updatOrder });
-});
-
-exports.acceptwork = asyncHandler(async(req,res,next) => {
-  const orderId = req.params.id;
-  const loggedInUserId = req.user._id; 
-  const {reason} = req.body
-
-  const updatedOrder = await Order.findByIdAndUpdate(
-    orderId,
-    {   
-     
-      StateWork: 'acceptwork',
-      StateWorkReasonAccept : reason,
-      users : loggedInUserId,
-      $addToSet: { usersOnprase: req.body.loggedInUserId } 
-      
-    },
-    { new: true }
-  );
-
-  if (!updatedOrder) { 
-    return next(new ApiError(`No order found for this id`, 404));
-  }
-
-updatedOrder.history.push({
-  editedAt: Date.now(),
-  editedBy: loggedInUserId,
- action : `تم قبول العمل من قبل`,
- reason : reason
-});
-
-updatedOrder.usersGroup = updatedOrder.users.group._id ;
-updatedOrder.updatedAt =Date.now()
-await updatedOrder.save();
-  
-  res.status(200).json({accept : updatedOrder });
 });
 
 exports.startWork = asyncHandler(async(req,res,next) => {
@@ -260,13 +243,15 @@ exports.startWork = asyncHandler(async(req,res,next) => {
     return next(new ApiError(`you need accepted order`, 404));
   }
   updatedOrder.StateWork =  'startwork';
-  updatedOrder.StateWorkReasonAccept = reason ;
-updatedOrder.history.push({
-  editedAt: Date.now(),
-  editedBy: loggedInUserId,
-  action : startWorkMessageHistory ,
-  reason: reason
-});
+  // updatedOrder.StateWorkReasonAccept = reason ;
+  addToOrderHistory(updatedOrder,loggedInUserId,startWorkMessageHistory,reason)
+// updatedOrder.history.push({
+//   editedAt: Date.now(),
+//   editedBy: loggedInUserId,
+//   action : startWorkMessageHistory ,
+//   reason: reason
+// });
+  updatedOrder.senderOrderId = req.user.group._id
 updatedOrder.usersGroup = updatedOrder.users.group._id ;
 updatedOrder.updatedAt =Date.now()
 await updatedOrder.save();
@@ -297,37 +282,39 @@ exports.endWork = asyncHandler(async(req,res,next) => {
     .populate('donimgs');
 
     updatedOrder.StateWork = 'endwork'
-    updatedOrder.StateWorkReasonAccept = reason
+    // updatedOrder.StateWorkReasonAccept = reason
     updatedOrder.users = updatedOrder.usersOnprase.filter(usersOnprase => usersOnprase.group.level === 3)[0]._id;
-    updatedOrder.history.push({
-      editedAt: Date.now(),
-      editedBy: loggedInUserId,
-      action: endWorkMessageHistory,
-      reason:reason,
-      imgDone: updatedOrder.donimgs
-    });
-
-    
+   addToOrderHistory(updatedOrder,loggedInUserId,endWorkMessageHistory,reason,updatedOrder.donimgs)
+    // updatedOrder.history.push({
+    //   editedAt: Date.now(),
+    //   editedBy: loggedInUserId,
+    //   action: endWorkMessageHistory,
+    //   reason:reason,
+    //   imgDone: updatedOrder.donimgs
+    // });
 
     if (updatedOrder.users.group) {
       updatedOrder.usersGroup = updatedOrder.users.group._id;
     } 
-
+  updatedOrder.senderOrderId = req.user.group._id
     updatedOrder.updatedAt =Date.now()
 
     await updatedOrder.save();
-    const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
+    const updatOrder = await Order.findById(updatedOrder._id);
 
 const roomUser = updatOrder.users.userId;
-const message = {
-  type: "order_update",
-  title: "طلب جديد",
-  body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
-  action: "open_page",
-  page : "onprase",
-  orderID: updatOrder._id,
-  time : updatOrder.updatedAt
-}
+const message = endWorkMessageSocket(updatOrder)
+
+console.log(message)
+// const message = {
+//   type: "order_update",
+//   title: "طلب جديد",
+//   body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
+//   action: "open_page",
+//   page : "onprase",
+//   orderID: updatOrder._id,
+//   time : updatOrder.updatedAt
+// }
 socketHandler.sendNotificationToUser(roomUser,message);
 
     res.status(200).json({ order: updatOrder });
@@ -353,35 +340,45 @@ exports.confirmWork  = asyncHandler(async (req, res, next) => {
     // .populate('donimgs');
 
   updatedOrder.StateWork = 'confirmWork'
-  updatedOrder.StateWorkReasonAccept = reason
+  // updatedOrder.StateWorkReasonAccept = reason
 
   updatedOrder.usersOnprase.push(updatedOrder.users);
 
-  updatedOrder.history.push({
-    editedAt: Date.now(),
-    editedBy: loggedInUserId,
-    action: confirmWorkMessageHistory,
-    reason:reason,
-    imgDone: updatedOrder.donimgs
-  });
+   addToOrderHistory(updatedOrder,loggedInUserId,confirmWorkMessageHistory,reason,updatedOrder.donimgs)
 
+  // updatedOrder.history.push({
+  //   editedAt: Date.now(),
+  //   editedBy: loggedInUserId,
+  //   action: confirmWorkMessageHistory,
+  //   reason:reason,
+  //   imgDone: updatedOrder.donimgs
+  // });
+
+
+  updatedOrder.senderOrderId = req.user.group._id
   updatedOrder.usersGroup = updatedOrder.users.group._id ;
   updatedOrder.users = updatedOrder.createdBy._id
+  updatedOrder.donimgs = []
   updatedOrder.updatedAt =Date.now()
   await updatedOrder.save();
 
   const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
 
   const roomUser = updatOrder.users.userId;
-  const message = {
-    type: "order_update",
-    title: "تاكيد الطلب",
-    body : `اكذ انهاء العمل الذي تم من قبل ${req.user.group.name}`,
-    action: "open_page",
-    page : "onprase",
-    orderID: updatOrder._id,
-    time : updatOrder.updatedAt
-}
+
+const message = confirmWorkMessageSocket(updatOrder)
+
+console.log(message)
+
+//   const message = {
+//     type: "order_update",
+//     title: "تاكيد الطلب",
+//     body : `اكذ انهاء العمل الذي تم من قبل ${req.user.group.name}`,
+//     action: "open_page",
+//     page : "onprase",
+//     orderID: updatOrder._id,
+//     time : updatOrder.updatedAt
+// }
   socketHandler.sendNotificationToUser(roomUser,message);
 
 
@@ -403,14 +400,16 @@ exports.confirmCompletion =  asyncHandler(async(req,res,next) => {
   }
 
   updatedOrder.StateDone = 'accept'
-  updatedOrder.StateDoneReasonAccept = reason
-
-updatedOrder.history.push({
-  editedAt: Date.now(),
-  editedBy: loggedInUserId,
-  action : confirmMessageHistory,
-  reason : reason
-});
+  // updatedOrder.StateDoneReasonAccept = reason
+     addToOrderHistory(updatedOrder,loggedInUserId,confirmMessageHistory,reason)
+ 
+// updatedOrder.history.push({
+//   editedAt: Date.now(),
+//   editedBy: loggedInUserId,
+//   action : confirmMessageHistory,
+//   reason : reason
+// });
+  updatedOrder.senderOrder = req.user.group.name 
 updatedOrder.archive = true ;
 updatedOrder.usersGroup = updatedOrder.users.group._id ;
 updatedOrder.updatedAt =Date.now()
@@ -418,15 +417,19 @@ await updatedOrder.save();
 
 const updatOrder = await Order.findById(updatedOrder._id).populate('usersOnprase','groups');
 
-const message = {
-  type: "order_update",
-  title: "تاكيد الطلب",
-  body : `تم تاكيد اتمام العمل من قبل ${req.user.group.name}`,
-  action: "open_page",
-  page : "archive",
-  orderID: updatOrder._id,
-  time : updatOrder.updatedAt
-}
+const message = confirmCompletionMessageSocket(updatOrder)
+
+console.log(message)
+
+// const message = {
+//   type: "order_update",
+//   title: "تاكيد الطلب",
+//   body : `تم تاكيد اتمام العمل من قبل ${req.user.group.name}`,
+//   action: "open_page",
+//   page : "archive",
+//   orderID: updatOrder._id,
+//   time : updatOrder.updatedAt
+// }
 
 const roomName = updatOrder.users.userId;
 socketHandler.sendNotificationToUser(roomName, message);
@@ -436,16 +439,51 @@ socketHandler.sendNotificationToUser(roomName, message);
 
 exports.AcceptArchive = asyncHandler(async (req, res, next) => {
  
-    try {
-      const orderId = req.params.id;
+    // try {
+    //   const orderId = req.params.id;
 
-      const AcceptArchive = await Order.findById(orderId);
-      AcceptArchive.archive = true ;
-      AcceptArchive.save();
+    //   const AcceptArchive = await Order.findById(orderId);
+    //   AcceptArchive.archive = true ;
+    //   AcceptArchive.save();
 
-      res.status(200).json({ accept : AcceptArchive});
-    } catch (error) {
-      return next(new ApiError(500, 'Internal Server Error'));
-    }
+    //   res.status(200).json({ accept : AcceptArchive});
+    // } catch (error) {
+    //   return next(new ApiError(500, 'Internal Server Error'));
+    // }
 });
   
+exports.acceptwork = asyncHandler(async(req,res,next) => {
+//   const orderId = req.params.id;
+//   const loggedInUserId = req.user._id; 
+//   const {reason} = req.body
+
+//   const updatedOrder = await Order.findByIdAndUpdate(
+//     orderId,
+//     {   
+     
+//       StateWork: 'acceptwork',
+//       StateWorkReasonAccept : reason,
+//       users : loggedInUserId,
+//       $addToSet: { usersOnprase: req.body.loggedInUserId } 
+      
+//     },
+//     { new: true }
+//   );
+
+//   if (!updatedOrder) { 
+//     return next(new ApiError(`No order found for this id`, 404));
+//   }
+
+// updatedOrder.history.push({
+//   editedAt: Date.now(),
+//   editedBy: loggedInUserId,
+//  action : `تم قبول العمل من قبل`,
+//  reason : reason
+// });
+
+// updatedOrder.usersGroup = updatedOrder.users.group._id ;
+// updatedOrder.updatedAt =Date.now()
+// await updatedOrder.save();
+  
+//   res.status(200).json({accept : updatedOrder });
+});

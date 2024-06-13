@@ -7,6 +7,7 @@ const {
     deletetypeText2,
     updatetypeText2,
     updateText2,
+    getFastTypes
 } = require('../serves/typeText2');
 
 const {
@@ -25,6 +26,8 @@ router.use(auth.protect);
 router.route('/')
 .get(getstypeText2)
 .post(createTypeText2Validator,createtypeText2);
+
+router.get('/FastType/',getFastTypes)
 
 router.put('/updateText2/:id',updateText2)
 

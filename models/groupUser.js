@@ -4,7 +4,7 @@ const groupUserSchema = new mongoose.Schema(
     {
         name: {
             type: String,
-            minlength: [3, 'Too short name'],
+            minlength: [2, 'Too short name'],
             maxlength: [32, 'Too long name'],
             required: [true, 'name required'],
             unique: true,
@@ -12,9 +12,9 @@ const groupUserSchema = new mongoose.Schema(
         },
         level : {
             type : Number,
-            // unique: true,
-            // maxlength: [6, 'Too long level'],
-            // required: [true, 'level required'],
+            unique: true,
+            maxlength: [6, 'Too long level'],
+            required: [true, 'level required'],
         },
         inlevel : {
             type : Number,
@@ -46,7 +46,8 @@ groupUserSchema.pre(/^find/, function (next) {
         { path: 'services',
             select: {
                 'name':1,
-                'typeText3':1
+                'perntId' :1,
+                'DataText3':1
             },
              options: { depth: 1 }
         },

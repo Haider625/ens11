@@ -1,6 +1,5 @@
 // const User = require('../models/userModel')
 
-
 class ApiFeatures {
     constructor(mongooseQuery, queryString) {
       this.mongooseQuery = mongooseQuery;
@@ -13,14 +12,16 @@ class ApiFeatures {
       const excludesFields = ['page', 'sort', 'limit', 'fields'];
       excludesFields.forEach((field) => delete queryStringObj[field]);
       // Apply filtration using [gte, gt, lte, lt]
-      let queryStr = JSON.stringify(queryStringObj);
+       let queryStr = JSON.stringify(queryStringObj);
       queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-  
-      const modifiedQuery = this.mongooseQuery;
 
-      // تنفيذ التصفية على المتغير المعدل
-      this.mongooseQuery = modifiedQuery.find(JSON.parse(queryStr));
-  
+    const parsedQuery = JSON.parse(queryStr);
+    if (parsedQuery['groups.name']) {
+      this.mongooseQuery = this.mongooseQuery.find({ 'groups.name': parsedQuery['groups.name'] });
+      delete parsedQuery['groups.name'];
+    }
+
+    this.mongooseQuery = this.mongooseQuery.find(parsedQuery);
       return this;
     }
 

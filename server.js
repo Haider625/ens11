@@ -29,6 +29,8 @@ const typeText1 = require('./routes/typeText1Rout')
 const typeText2 = require('./routes/typeText2Rout')
 const typeText3 = require('./routes/typeText3Rout')
 const messageSocket = require('./routes/SocketData')
+const AllOrder = require('./routes/AllOrder')
+const FilterData = require('./routes/getDataFilter')
 
 const { cronTask } = require('./serves/SocketData');
 
@@ -78,6 +80,8 @@ app.use('/api/v1/typeText1',typeText1)
 app.use('/api/v1/typeText2',typeText2)
 app.use('/api/v1/typeText3',typeText3)
 app.use('/api/v1/messageSocket',messageSocket)
+app.use('/api/v1/AllOrder',AllOrder)
+app.use('/api/v1/FilterData',FilterData)
 
 app.all('*',(req,res,next) => {
     next(new ApiError(`can t find this route : ${req.originalUrl}`, 404));

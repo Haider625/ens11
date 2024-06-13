@@ -169,6 +169,10 @@ const userSchema = new mongoose.Schema(
           type: Boolean,
           default: false,
         },
+        canViwFasttypesText2 : {
+          type : Boolean,
+          default : false
+        },
         canViwstypeText2 :  {
           type: Boolean,
           default: false,
@@ -315,7 +319,8 @@ const userSchema = new mongoose.Schema(
         'inlevel':1,
         'levelSend':1,
         'levelsReceive' :1,
-        'services' : 1
+        'forwordGroup' :0,
+        'services' : 0
       },
       options: { depth: 1 }
       },

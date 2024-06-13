@@ -12,9 +12,12 @@ const typeText2Schema = new mongoose.Schema(
             type : mongoose.Schema.ObjectId,
             ref : 'typeText1',
         },
-         DataText3 :[{
+        DataText3 :[{
             type : String,
         }],
+
+        FastOrder : Boolean ,
+
         createdAt: {
             type :Date,
             default:Date.now(),

@@ -44,6 +44,17 @@ exports.gettypeText2 =   asyncHandler(async (req, res, next) => {
     }
     res.status(200).json({ typeText2: document });
   });
+  
+exports.getFastTypes = asyncHandler(async (req,res,next) => {
+
+   if (!req.user.Permission.canViwFasttypesText2) {
+      return next(new ApiError('You do not have permission to viw this typeText2', 403));
+    }
+
+   const document = await typeText2.find({ FastOrder: true });
+
+    res.status(200).json({ typeText2: document });
+})
 
 exports.getstypeText2 = asyncHandler(async (req, res,next) => {
 

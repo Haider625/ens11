@@ -5,6 +5,10 @@ const ApiError = require('../utils/apiError');
 const socketHandler  = require('../utils/socket');
 const {forwordMessageSocket} =require('../utils/MessagesSocket')
 
+const {addToOrderHistory} = require('../middlewares/handleStandardActions')
+
+
+
 exports.forwordOrder = asyncHandler(async(req, res, next) => {
   const loggedInUserId = req.user._id;
   const loggedUser = req.user
@@ -39,9 +43,12 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
   if (!order.groups.some(group => group._id.equals(loggedUser.group._id))) {
     order.groups.push(loggedUser.group);
   }
+
+  order.senderOrder= req.user.group.name
+  order.senderOrderId = req.user.group._id
   
   order.group = groupIds;
-  order.State = 'onprase';
+  order.State = 'forword';
   order.StateReasonOnprase = reason;
   order.updatedAt =Date.now()
   await order.save();
@@ -49,16 +56,20 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
 
   const roomgroup = updatOrder.group.name;
 
-const message = {
-  type: "order_update",
-  title: "طلب جديد",
-  body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
-  action: "open_page",
-  page : "onprase",
-  orderID: updatOrder._id,
-  time : updatOrder.updatedAt
-}
-  socketHandler.sendNotificationToRoom(roomgroup,message);
+  const message = forwordMessageSocket(updatOrder)
+// const message = {
+//   type: "order_update",
+//   title: "طلب جديد",
+//   body : `تم وصول طلب جديد من قبل ${req.user.group.name}`,
+//   action: "open_page",
+//   page : "onprase",
+//   orderID: updatOrder._id,
+//   time : updatOrder.updatedAt
+// }
+
+console.log(message)
+
+socketHandler.sendNotificationToRoom(roomgroup,message);
 
   return res.status(200).json({order: updatOrder });
 })

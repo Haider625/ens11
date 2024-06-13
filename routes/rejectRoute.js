@@ -7,10 +7,12 @@ const {
     rejectConfirm,
     getRejectedOrders,
     getRejectedWorks,
-    getAllRejected,
+    // getAllRejected,
     getRejectedDone,
     getUserOrders,
     archiveReject,
+    uploadOrderImage,
+    resizeImage
 
 } = require('../serves/reject');
 
@@ -25,7 +27,7 @@ router.get('/order',getRejectedOrders)
 
 router.get('/work',getRejectedWorks)
 
-router.get('/rejected',getAllRejected)
+// router.get('/rejected',getAllRejected)
 
 router.get('/done',getRejectedDone)
 
@@ -37,7 +39,7 @@ router.put('/work/:id',rejectWork)
 
 router.put('/rejectConfirmWork/:id',rejectConfirmWork)
 
-router.put('/rejectConfirm/:id',rejectConfirm)
+router.put('/rejectConfirm/:id',uploadOrderImage,resizeImage,rejectConfirm)
 
 
 router.post('/archive/:id',archiveReject)
