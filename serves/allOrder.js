@@ -1,5 +1,5 @@
 /* eslint-disable prefer-destructuring */
-
+const moment = require('moment');
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/orderModel');
 const ApiFeatures = require('../utils/apiFeatures');
@@ -46,18 +46,41 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
       {
         $and: [
           { ...OrdersFilters },
-          // { StateWork: { $ne: 'confirmWork' } },
-          // { StateWork: { $ne: 'endwork' } }
+
         ],
         ...filter
       }
     ]
   });  
- 
+
+
+
   const apiFeatures =await createApiFeatures(orderQuery, req.query, documentsCounts);
   const { mongooseQuery, paginationResult } = apiFeatures;
 
   const documents = await mongooseQuery;
+
+    // حساب الوقت منذ آخر تحديث
+ documents.forEach(order => {
+    const lastRefreshTime = order.updatedAt; // افترض أن هذه هي قيمة الوقت السابق للطلب
+    const currentTime = moment(); // الوقت الحالي
+    const timeDiff = moment.duration(currentTime.diff(lastRefreshTime));
+
+    order.timeSinceLastRefresh = {
+      days: timeDiff.days(),
+      hours: timeDiff.hours(),
+      minutes: timeDiff.minutes(),
+      seconds: timeDiff.seconds()
+    };
+  });
+
+  // حفظ التغييرات
+  await Promise.all(documents.map(order => order.save())); 
+
+  //  documents = documents.map(order => {
+  //   const timeSinceLastUpdate = moment().diff(moment(order.updatedAt), 'minutes'); // حساب الفرق بالدقائق
+  //   return { ...order._doc, timeSinceLastUpdate }; // إضافة الوقت منذ آخر تحديث إلى نتيجة الطلب
+  // });
 
   const countOnepreasApiFeatures = new ApiFeatures(Order.find({$or: [{ ... groupOnpraseFilters  }, { usersOnprase: loggedInUserId }],$and :[{...OnpraseOrdersFilters}], ...filter}), req.query)
 
@@ -73,9 +96,9 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     .json({ 
       results: documents.length,
        paginationResult ,
-       CountOnpreas:countOnepreas .length, 
-       countReject : countReject.length,
-       orders: documents 
+       CountOnpreas:countOnepreas .length,
+       CountReject : countReject.length,
+       orders: documents, 
       });
 });
 
@@ -110,7 +133,12 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
 
   res
     .status(200)
-    .json({ results: documents.length, paginationResult, order: documents });
+    .json({ 
+      results: documents.length,
+      paginationResult,
+      CountOnpreas: 0 ,
+      CountReject : 0,
+      order: documents });
 
 });
 
@@ -134,7 +162,12 @@ exports.getAllRejected = asyncHandler(async (req, res) => {
 
     res
       .status(200)
-      .json({ results: documents.length, paginationResult, order: documents });
+      .json({ 
+        results: documents.length, 
+        paginationResult,
+        CountOnpreas: 0 ,
+        CountReject : 0,
+        order: documents });
 
   });
 
@@ -172,7 +205,12 @@ exports.getsArchive = asyncHandler(async (req, res, next) => {
 
   res
     .status(200)
-    .json({ results: documents.length, paginationResult, order: documents });
+    .json({ 
+      results: documents.length, 
+      paginationResult, 
+      CountOnpreas: 0 ,
+      CountReject : 0,
+      order: documents });
 });
 
 exports.getAllText = asyncHandler(async (req, res, next) => {

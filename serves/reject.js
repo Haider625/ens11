@@ -25,7 +25,7 @@ const {
   rejectConfirmMessageSocket,
 } = require('../utils/MessagesSocket')
 
-const {addToOrderHistory} = require('../middlewares/handleStandardActions')
+const {addToOrderHistory,calculateTimeDifference} = require('../middlewares/handleStandardActions')
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
@@ -250,9 +250,20 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
   updatedOrder.senderOrderId = req.user.group._id
     updatedOrder.State = 'reject';
     updatedOrder.StateReasonReject = reason;
+  const timeDifference =calculateTimeDifference(updatedOrder.history)
 
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    rejectOrderMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
 
-    addToOrderHistory(updatedOrder,loggedInUserId,rejectOrderMessageHistory,reason)
+    // addToOrderHistory(updatedOrder,loggedInUserId,rejectOrderMessageHistory,reason)
 
     // updatedOrder.history.push({
     //   editedAt: Date.now(),
@@ -318,8 +329,19 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
     }
     updatedOrder.StateWork = 'reject';
     updatedOrder.StateWorkReasonReject = reason;
+const timeDifference =calculateTimeDifference(updatedOrder.history)
 
-    addToOrderHistory(updatedOrder,loggedInUserId,rejectWorkMessageHistory,reason)
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    rejectWorkMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
+    // addToOrderHistory(updatedOrder,loggedInUserId,rejectWorkMessageHistory,reason)
 
 
     // updatedOrder.history.push({
@@ -392,8 +414,19 @@ exports.rejectConfirmWork = asyncHandler(async (req,res , next) => {
   updatedOrder.StateWorkReasonReject = reason;
 
   updatedOrder.users = updatedOrder.usersOnprase[updatedOrder.usersOnprase.length -1]
+const timeDifference =calculateTimeDifference(updatedOrder.history)
 
-  addToOrderHistory(updatedOrder,loggedInUserId,rejectConfirmWorkMessageHistory,reason)
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    rejectConfirmWorkMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
+  // addToOrderHistory(updatedOrder,loggedInUserId,rejectConfirmWorkMessageHistory,reason)
 
 
   // updatedOrder.history.push({
@@ -457,8 +490,19 @@ exports.rejectConfirm = asyncHandler(async (req, res, next) => {
     updatedOrder.StateWork = 'onprase';
     updatedOrder.StateDone = 'reject';
     updatedOrder.StateDoneReasonReject = reason;
+const timeDifference =calculateTimeDifference(updatedOrder.history)
 
-    addToOrderHistory(updatedOrder,loggedInUserId,rejectConfirmMessageHistory,reason)
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    rejectConfirmMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
+    // addToOrderHistory(updatedOrder,loggedInUserId,rejectConfirmMessageHistory,reason)
 
 
     // إضافة معلومات السجل

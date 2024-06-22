@@ -19,6 +19,9 @@ const groupUserSchema = new mongoose.Schema(
         inlevel : {
             type : Number,
         },
+
+        // jobTitle : String ,
+
         levelSend : {
             type : mongoose.Schema.ObjectId,
             ref:'group',

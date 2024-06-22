@@ -1,13 +1,12 @@
 const asyncHandler = require('express-async-handler');
+const moment = require('moment');
 const User = require('../models/userModel');
 const Order = require('../models/orderModel');
 const ApiError = require('../utils/apiError');
 const socketHandler  = require('../utils/socket');
 const {forwordMessageSocket} =require('../utils/MessagesSocket')
-
-const {addToOrderHistory} = require('../middlewares/handleStandardActions')
-
-
+const {forwordMessageHistory} = require('../utils/MessagesHistort')
+const {addToOrderHistory , calculateTimeDifference} = require('../middlewares/handleStandardActions')
 
 exports.forwordOrder = asyncHandler(async(req, res, next) => {
   const loggedInUserId = req.user._id;
@@ -33,12 +32,26 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
       return res.status(400).json({ message: 'الكروب موجود بالفعل في الطلب' });
   }
 
-  order.history.push({
-      editedAt: Date.now(),
-      editedBy: loggedInUserId,
-      action: `تم تحويل الطلب من قبل`,
-      reason: reason
-  });
+
+  
+const timeDifference =calculateTimeDifference(order.history)
+
+  addToOrderHistory(
+    order,
+    loggedInUserId,
+    forwordMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes
+  )
+
+  // order.history.push({
+  //     editedAt: Date.now(),
+  //     editedBy: loggedInUserId,
+  //     action: `تم تحويل الطلب من قبل`,
+  //     reason: reason
+  // });
 
   if (!order.groups.some(group => group._id.equals(loggedUser.group._id))) {
     order.groups.push(loggedUser.group);
@@ -51,6 +64,7 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
   order.State = 'forword';
   order.StateReasonOnprase = reason;
   order.updatedAt =Date.now()
+
   await order.save();
   const updatOrder = await Order.findById(order._id).populate('group');
 
@@ -67,7 +81,7 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
 //   time : updatOrder.updatedAt
 // }
 
-console.log(message)
+// console.log(message)
 
 socketHandler.sendNotificationToRoom(roomgroup,message);
 

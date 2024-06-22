@@ -16,7 +16,7 @@ const {
   confirmMessageHistory
 } = require('../utils/MessagesHistort')
 
-const {addToOrderHistory} = require('../middlewares/handleStandardActions')
+const {addToOrderHistory , calculateTimeDifference} = require('../middlewares/handleStandardActions')
 
 const {
   acceptOrderMessageSocket,
@@ -157,8 +157,20 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
   if (updatedOrder.StateWork === 'endwork' || updatedOrder.StateDone === 'accept'  ) {
     return next(new ApiError(`you cant do this Option `, 404));
   }
+const timeDifference =calculateTimeDifference(updatedOrder.history)
+
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    acceptOrderMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
   
-  addToOrderHistory(updatedOrder,loggedInUserId,acceptOrderMessageHistory,reason)
+  // addToOrderHistory(updatedOrder,loggedInUserId,acceptOrderMessageHistory,reason)
   // if(updatedOrder.State === 'accept'){
 // updatedOrder.history.push({
 //   editedAt: Date.now(),
@@ -244,7 +256,19 @@ exports.startWork = asyncHandler(async(req,res,next) => {
   }
   updatedOrder.StateWork =  'startwork';
   // updatedOrder.StateWorkReasonAccept = reason ;
-  addToOrderHistory(updatedOrder,loggedInUserId,startWorkMessageHistory,reason)
+const timeDifference =calculateTimeDifference(updatedOrder.history)
+
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    startWorkMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
+  // addToOrderHistory(updatedOrder,loggedInUserId,startWorkMessageHistory,reason)
 // updatedOrder.history.push({
 //   editedAt: Date.now(),
 //   editedBy: loggedInUserId,
@@ -284,7 +308,20 @@ exports.endWork = asyncHandler(async(req,res,next) => {
     updatedOrder.StateWork = 'endwork'
     // updatedOrder.StateWorkReasonAccept = reason
     updatedOrder.users = updatedOrder.usersOnprase.filter(usersOnprase => usersOnprase.group.level === 3)[0]._id;
-   addToOrderHistory(updatedOrder,loggedInUserId,endWorkMessageHistory,reason,updatedOrder.donimgs)
+const timeDifference =calculateTimeDifference(updatedOrder.history)
+
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    endWorkMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds,
+    updatedOrder.donimgs
+  )
+  //  addToOrderHistory(updatedOrder,loggedInUserId,endWorkMessageHistory,reason,updatedOrder.donimgs)
     // updatedOrder.history.push({
     //   editedAt: Date.now(),
     //   editedBy: loggedInUserId,
@@ -343,8 +380,20 @@ exports.confirmWork  = asyncHandler(async (req, res, next) => {
   // updatedOrder.StateWorkReasonAccept = reason
 
   updatedOrder.usersOnprase.push(updatedOrder.users);
+const timeDifference =calculateTimeDifference(updatedOrder.history)
 
-   addToOrderHistory(updatedOrder,loggedInUserId,confirmWorkMessageHistory,reason,updatedOrder.donimgs)
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    confirmWorkMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds,
+    updatedOrder.donimgs
+  )
+  //  addToOrderHistory(updatedOrder,loggedInUserId,confirmWorkMessageHistory,reason,updatedOrder.donimgs)
 
   // updatedOrder.history.push({
   //   editedAt: Date.now(),
@@ -401,7 +450,19 @@ exports.confirmCompletion =  asyncHandler(async(req,res,next) => {
 
   updatedOrder.StateDone = 'accept'
   // updatedOrder.StateDoneReasonAccept = reason
-     addToOrderHistory(updatedOrder,loggedInUserId,confirmMessageHistory,reason)
+const timeDifference =calculateTimeDifference(updatedOrder.history)
+
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    confirmMessageHistory,
+    reason,
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
+//  addToOrderHistory(updatedOrder,loggedInUserId,confirmMessageHistory,reason)
  
 // updatedOrder.history.push({
 //   editedAt: Date.now(),

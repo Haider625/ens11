@@ -5,9 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp');
 const fs = require('fs').promises;
 const Order = require('../models/orderModel');
-const groups = require('../models/groupUser');
 const user = require('../models/userModel');
-const ApiFeatures = require('../utils/apiFeatures');
 const ApiError = require('../utils/apiError');
 
 const socketHandler  = require('../utils/socket');
@@ -18,14 +16,14 @@ const {createDataSocket,updatedatasocket} = require('../utils/MessagesSocket')
 
 // const { sanitizeType1,sanitizeOrder} = require('../utils/sanaitizeData')
 
-const {addToOrderHistory } = require('../middlewares/handleStandardActions')
+const {addToOrderHistory ,calculateTimeDifference} = require('../middlewares/handleStandardActions')
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
 exports.uploadOrderImage = uploadMixOfImages([
   {
     name: 'orderimg',
-    maxCount: 1,
+    maxCount: 5,
   },
   {
     name: 'donimgs',
@@ -35,22 +33,38 @@ exports.uploadOrderImage = uploadMixOfImages([
 
 exports.resizeImage = asyncHandler(async (req, res, next) => {
   // Image processing for orderimg
+  // if (req.files && req.files.orderimg) {
+  //   const orderimgFile = req.files.orderimg[0]; // Get the uploaded file object
+  //   const orderimgFileName = `order-${uuidv4()}-${Date.now()}.jpeg`; // Generate a unique file name
+
+  //   // Resize and save the image
+  //   await sharp(orderimgFile.path)
+  //   .resize(600, 1080)
+  //   .toFormat('jpeg')
+  //   .jpeg({ quality: 95 })
+  //      .toFile(`uploads/orders/${orderimgFileName}`);
+
+  //   // Save image into our db
+  //   req.body.orderimg = orderimgFileName;
+  // }
+
   if (req.files && req.files.orderimg) {
-    const orderimgFile = req.files.orderimg[0]; // Get the uploaded file object
-    const orderimgFileName = `order-${uuidv4()}-${Date.now()}.jpeg`; // Generate a unique file name
-
-    // Resize and save the image
-    await sharp(orderimgFile.path)
-    .resize(600, 1080)
-    .toFormat('jpeg')
-    .jpeg({ quality: 95 })
-       .toFile(`uploads/orders/${orderimgFileName}`);
-
-    // Save image into our db
-    req.body.orderimg = orderimgFileName;
+    req.body.orderimg = [];
+    await Promise.all(
+      req.files.orderimg.map(async (img, index) => {
+        const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
+  
+        await sharp(img.path)
+        .resize(1000, 1000)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+          .toFile(`uploads/orders/${imageName}`)
+     
+          req.body.orderimg.push(imageName) ;  
+      
+      })
+    );
   }
-
-
   // Image processing for donimgs
   if (req.files && req.files.donimgs) {
     req.body.donimgs = [];
@@ -107,17 +121,6 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
 
   const orderData = {
    ...req.body,
-    // type1: req.body.type1,
-    // type2: req.body.type2,
-    // type3: req.body.type3,
-    // caption: req.body.caption,
-    // number : req.body.number,
-    // group: lowerLevelGroup ,
-    // groups: groupss ,
-    //  createdBy: req.user._id,
-    // user : req.body.user,
-    // orderimg : req.body.orderimg,
-    // donimgs :req.body.donimgs,
   };
 
 const newOrder = await Order.create(orderData);
@@ -126,7 +129,7 @@ const newOrder = await Order.create(orderData);
 //   select: 'name _id' // استخدم الحقول المطلوبة هنا
 // });
 
-
+// newOrder.orderimg = newOrder.donimgs
  newOrder.createdBy = loggedInUserId
   newOrder.group = lowerLevelGroup
   newOrder.groups = groupss
@@ -146,7 +149,20 @@ const newOrder = await Order.create(orderData);
   newOrder.createdAt =Date.now()
   newOrder.updatedAt =Date.now()
 
-  addToOrderHistory(newOrder,loggedInUserId,createMessageHistory)
+// const timeDifference =calculateTimeDifference(newOrder.history)
+
+  addToOrderHistory(
+    newOrder,
+    loggedInUserId,
+    createMessageHistory,
+    '',
+    0,
+    0,
+    0,
+    0
+  )
+
+  // addToOrderHistory(newOrder,loggedInUserId,createMessageHistory)
   //   newOrder.history.push({
   //   editedAt: Date.now(),
   //   editedBy: loggedInUserId,
@@ -169,7 +185,7 @@ console.log(message)
 
   socketHandler.sendNotificationToRoom(roomgroup,message);
 
-res.status(201).json({ message: 'Order created successfully' ,newOrder});
+res.status(201).json({ message: 'Order created successfully' });
 
 });
 
@@ -429,7 +445,20 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
     groups: groupss,
   
   });
-  addToOrderHistory(updatedOrder,loggedInUserId,updateMessageHistory)
+const timeDifference =calculateTimeDifference(updatedOrder.history)
+
+  addToOrderHistory(
+    updatedOrder,
+    loggedInUserId,
+    updateMessageHistory,
+    '',
+    timeDifference.days,
+    timeDifference.hours,
+    timeDifference.minutes,
+    timeDifference.seconds
+  )
+
+  // addToOrderHistory(updatedOrder,loggedInUserId,updateMessageHistory)
 
   // updatedOrder.history.push({
   //   editedAt: Date.now(),

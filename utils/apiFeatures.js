@@ -21,7 +21,7 @@ class ApiFeatures {
       delete parsedQuery['groups.name'];
     }
 
-    this.mongooseQuery = this.mongooseQuery.find(parsedQuery);
+     this.mongooseQuery = this.mongooseQuery.find(parsedQuery);
       return this;
     }
 

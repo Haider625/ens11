@@ -31,7 +31,7 @@ const orderSchema = new mongoose.Schema(
       maxlength: [310, 'Too long caption'],
     },
 
-    orderimg : String,
+    orderimg : [String],
 
     donimgs : [String],
 
@@ -175,7 +175,20 @@ const orderSchema = new mongoose.Schema(
       type :String ,
       // default : 'null'
     },
-    
+    timeSinceLastRefresh : {
+      days: {
+         type: Number
+        },
+      hours: {
+         type: Number
+        },
+      minutes: {
+         type: Number
+        },
+      seconds: {
+         type: Number
+        }
+     },
      history: [{
       editedAt: { 
         type: Date,
@@ -191,6 +204,21 @@ const orderSchema = new mongoose.Schema(
       reason :{ 
         type:String
       },
+      operationTime : {
+         days: {
+         type: Number
+         },
+         hours: {
+         type: Number
+         },
+         minutes: {
+         type: Number
+         },
+         seconds: {
+         type: Number
+         }
+   } ,
+      
       imgDone : [String],
   }],
 
@@ -315,9 +343,13 @@ orderSchema.pre(/^find/, function (next) {
 
 
 const setImageURL = (doc) => {
-  if (doc.orderimg && !doc.orderimg.startsWith(process.env.BASE_URL)) {
-    const imageUrl = `${process.env.BASE_URL}/orders/${doc.orderimg}`;
-    doc.orderimg = imageUrl;
+  // if (doc.orderimg && !doc.orderimg.startsWith(process.env.BASE_URL)) {
+  //   const imageUrl = `${process.env.BASE_URL}/orders/${doc.orderimg}`;
+  //   doc.orderimg = imageUrl;
+  // }
+  if (doc.orderimg && doc.orderimg.length > 0) {
+    const imagesList = doc.orderimg.map((image) => image.startsWith(process.env.BASE_URL) ? image : `${process.env.BASE_URL}/orders/${image}`);
+    doc.orderimg = imagesList;
   }
   if (doc.donimgs && doc.donimgs.length > 0) {
     const imagesList = doc.donimgs.map((image) => image.startsWith(process.env.BASE_URL) ? image : `${process.env.BASE_URL}/orders/${image}`);
