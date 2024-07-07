@@ -122,9 +122,7 @@ exports.updateUser =  asyncHandler(async (req, res, next) => {
     return next(new ApiError('You do not have permission to edit this User', 403));
   }
 
-  const document = await User.findByIdAndUpdate(req.params.id, req.body, {
-    new: true,
-  });
+  const document = await User.findByIdAndUpdate( ...req.body);
 
   if (!document) {
     return next(
