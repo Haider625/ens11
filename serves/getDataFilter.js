@@ -1,8 +1,6 @@
 /* eslint-disable prefer-destructuring */
-
 const asyncHandler = require('express-async-handler');
 const Order = require('../models/orderModel');
-
 const ApiError = require('../utils/apiError');
 
 const {
@@ -12,9 +10,8 @@ const {
     OnpraseOrdersFilter,
     rejectsOrderFilter,
     ArchiveOrderFilter,
-
+    orderFilter
     } =  require('../middlewares/filtergetOrders')
-
 
 exports.dataFilterOrderCreater = asyncHandler(async (req, res, next) => {
     try {
@@ -23,39 +20,39 @@ exports.dataFilterOrderCreater = asyncHandler(async (req, res, next) => {
         const groupFilters = await groupFilter(loggedInUserId);
         
         const acceptedOrdersFilter = await OrdersFilter(loggedInUserId);
-
-
+        const filter = await orderFilter(loggedInUserId)
         const orders = await Order.find({
             $and: [
                 { $or: [{ ...groupFilters }, { users: loggedInUserId }] },
                 {
                     $and: [
                         { ...acceptedOrdersFilter },
-                        // { StateWork: { $ne: 'confirmWork' } },
-                        // { StateWork: { $ne: 'endwork' } },
                     ],
-                    ...req.filter
+                    // ...req.filter
                 }
             ]
         });
+        console.log()
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.createdBy.name;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
-
+orders.forEach(order => {
+    const type1Value = order.createrGroupName;
+    const type1Id = order.createrGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});
         const result = {};
         countMap.forEach((value, key) => {
             result[key] = value;
         });
 
         res.status(200).json(result);
+
     } catch (error) {
         next(new ApiError(`Error filtering orders: ${error.message}`, 500));
     }
@@ -82,14 +79,17 @@ exports.dataFilterOnpraseCreater = asyncHandler(async (req,res,next) => {
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.createdBy.name;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
+
+orders.forEach(order => {
+    const type1Value = order.createrGroupName;
+    const type1Id = order.createrGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});
 
         const result = {};
         countMap.forEach((value, key) => {
@@ -119,14 +119,19 @@ try {
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.createdBy.name;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
+
+orders.forEach(order => {
+    const type1Value = order.createrGroupName;
+    const type1Id = order.createrGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});
+
+
 
         const result = {};
         countMap.forEach((value, key) => {
@@ -159,14 +164,16 @@ try {
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.createdBy.name;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
+orders.forEach(order => {
+    const type1Value = order.createrGroupName;
+    const type1Id = order.createrGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});
 
         const result = {};
         countMap.forEach((value, key) => {
@@ -196,25 +203,26 @@ exports.dataFilterOrderSender = asyncHandler(async (req, res, next) => {
                 {
                     $and: [
                         { ...acceptedOrdersFilter },
-                        { StateWork: { $ne: 'confirmWork' } },
-                        { StateWork: { $ne: 'endwork' } },
+                        // { StateWork: { $ne: 'confirmWork' } },
+                        // { StateWork: { $ne: 'endwork' } },
                     ],
-                    ...req.filter
+                    // ...req.filter
                 }
             ]
         });
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.senderOrder;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
-
+orders.forEach(order => {
+    const type1Value = order.senderGroupName;
+    const type1Id = order.senderGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});
         const result = {};
         countMap.forEach((value, key) => {
             result[key] = value;
@@ -247,14 +255,16 @@ exports.dataFilterOnpraseSender = asyncHandler(async (req,res,next) => {
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.senderOrder;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
+orders.forEach(order => {
+    const type1Value = order.senderGroupName;
+    const type1Id = order.senderGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});
 
         const result = {};
         countMap.forEach((value, key) => {
@@ -284,14 +294,16 @@ try {
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.senderOrder;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
+orders.forEach(order => {
+    const type1Value = order.senderGroupName;
+    const type1Id = order.senderGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});
 
         const result = {};
         countMap.forEach((value, key) => {
@@ -324,14 +336,16 @@ try {
 
         const countMap = new Map();
 
-        orders.forEach(order => {
-            const type1Value = order.senderOrder;
-            if (countMap.has(type1Value)) {
-                countMap.set(type1Value, countMap.get(type1Value) + 1);
-            } else {
-                countMap.set(type1Value, 1);
-            }
-        });
+orders.forEach(order => {
+    const type1Value = order.senderGroupName;
+    const type1Id = order.senderGroupId; // افترض أن id هو _id
+    if (countMap.has(type1Value)) {
+        const currentData = countMap.get(type1Value);
+        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+    } else {
+        countMap.set(type1Value, { count: 1, id: type1Id });
+    }
+});;
 
         const result = {};
         countMap.forEach((value, key) => {
@@ -345,4 +359,3 @@ try {
         next(new ApiError(`Error filtering orders: ${error.message}`, 500));
     }
 })
-

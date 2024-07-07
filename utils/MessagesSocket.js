@@ -1,10 +1,8 @@
-    
-    
-    
+
     exports.createDataSocket = (newOrder) => ({
         type: "new_order",
         title: "طلب جديد",
-        body : `تم وصول طلب جديد من قبل ${newOrder.senderOrder}`,
+        body : `تم وصول طلب جديد من قبل ${newOrder.senderGroupName}`,
         action: "open_page",
         page : "home",
         orderID: newOrder._id,
@@ -14,7 +12,7 @@
        exports.updatedatasocket = (updatOrder) => ({
        type: "order_update",
        title: "طلب جديد",
-       body :`تم تعديل طلب من قبل ${updatOrder.senderOrder}`,
+       body :`تم تعديل طلب من قبل ${updatOrder.senderGroupName}`,
        action: "open_page",
     page : "home",
     orderID: updatOrder._id,
@@ -24,7 +22,7 @@
     exports.forwordMessageSocket = (updatOrder) => ({
   type: "order_update",
   title: "طلب جديد",
-  body : `تم وصول طلب جديد من قبل ${updatOrder.senderOrder}`,
+  body : `تم وصول طلب جديد من قبل ${updatOrder.senderGroupName}`,
   action: "open_page",
   page : "onprase",
   orderID: updatOrder._id,
@@ -34,7 +32,7 @@
        exports.acceptOrderMessageSocket = (updatOrder) => ({
   type: "order_update",
   title: "طلب جديد",
-  body : `تم وصول طلب جديد من قبل ${updatOrder.senderOrder}`,
+  body : `تم وصول طلب جديد من قبل ${updatOrder.senderGroupName}`,
   action: "open_page",
   page : "home",
   orderID: updatOrder._id,
@@ -46,7 +44,7 @@
        exports.endWorkMessageSocket = (updatOrder) => ({
   type: "order_update",
   title: "طلب جديد",
-  body : `تم وصول طلب جديد من قبل ${updatOrder.senderOrder}`,
+  body : `تم وصول طلب جديد من قبل ${updatOrder.senderGroupName}`,
   action: "open_page",
   page : "onprase",
   orderID: updatOrder._id,
@@ -57,7 +55,7 @@
     exports.confirmWorkMessageSocket = (updatOrder) => ({
     type: "order_update",
     title: "تاكيد الطلب",
-    body : `اكذ انهاء العمل الذي تم من قبل ${updatOrder.senderOrder}`,
+    body : `اكذ انهاء العمل الذي تم من قبل ${updatOrder.senderGroupName}`,
     action: "open_page",
     page : "onprase",
     orderID: updatOrder._id,
@@ -67,7 +65,7 @@
        exports.confirmCompletionMessageSocket  = (updatOrder) => ({
   type: "order_update",
   title: "تاكيد الطلب",
-  body : `تم تاكيد اتمام العمل من قبل ${updatOrder.senderOrder}`,
+  body : `تم تاكيد اتمام العمل من قبل ${updatOrder.senderGroupName}`,
   action: "open_page",
   page : "archive",
   orderID: updatOrder._id,
@@ -77,7 +75,7 @@
     exports.rejectOrderMessageSocket = (updatOrder,page) => ({
     type: "order_update",
     title: "رفض الطلب",
-    body : `تم رفض الطلب من قبل ${updatOrder.senderOrder}`,
+    body : `تم رفض الطلب من قبل ${updatOrder.senderGroupName}`,
     action: "open_page",
     page : page,
     orderID: updatOrder._id,
@@ -87,7 +85,7 @@
        exports.rejectWorkMessageSocket = (updatOrder,page) => ({
   type: "order_update",
   title: "رفض الطلب",
-  body : `تم رفض الطلب من قبل ${updatOrder.senderOrder}`,
+  body : `تم رفض الطلب من قبل ${updatOrder.senderGroupName}`,
   action: "open_page",
   page : page,
   orderID: updatOrder._id,
@@ -98,7 +96,7 @@
     exports.rejectConfirmWorkMessageSocket =(updatOrder,page) => ({
   type: "order_update",
   title: "تاكيد الطلب",
-  body : `تم رفض التاكيد على الطلب من قبل ${updatOrder.senderOrder}`,
+  body : `تم رفض التاكيد على الطلب من قبل ${updatOrder.senderGroupName}`,
   action: "open_page",
   page : page,
   orderID: updatOrder._id,
@@ -108,7 +106,7 @@
        exports.rejectConfirmMessageSocket = (updatOrder,page) => ({
     type: "order_update",
     title: "تاكيد الطلب",
-    body : `تم رفض التاكيد على الطلب من قبل ${updatOrder.senderOrder}`,
+    body : `تم رفض التاكيد على الطلب من قبل ${updatOrder.senderGroupName}`,
     action: "open_page",
     page : page,
     orderID: updatOrder._id,

@@ -16,7 +16,7 @@ const {createDataSocket,updatedatasocket} = require('../utils/MessagesSocket')
 
 // const { sanitizeType1,sanitizeOrder} = require('../utils/sanaitizeData')
 
-const {addToOrderHistory ,calculateTimeDifference} = require('../middlewares/handleStandardActions')
+const {addToOrderHistory ,calculateTimeDifference , setOrderDetails} = require('../middlewares/handleStandardActions')
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
@@ -61,7 +61,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
           .toFile(`uploads/orders/${imageName}`)
      
           req.body.orderimg.push(imageName) ;  
-      
+      // console.log(orderimg)
       })
     );
   }
@@ -105,10 +105,9 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
   if (!req.user.Permission.canCreatOrder) {
     return next(new ApiError('You do not have permission to create this order', 403));
   }
-  
 
   if (!users) {
-    return res.status(404).json({ success: false, error: 'User not found' });
+    return next(new ApiError( 'User not found' ,403 ));
   }
 
   const lowerLevelGroup = users.group.levelSend;
@@ -119,55 +118,31 @@ exports.createOrderSend = asyncHandler(async (req, res) => {
 
   const groupss = [users.group._id];
 
-  const orderData = {
-   ...req.body,
-  };
+const newOrder = await Order.create(req.body);
 
-const newOrder = await Order.create(orderData);
-//  await newOrder.populate({
-//   path: 'createdBy',
-//   select: 'name _id' // استخدم الحقول المطلوبة هنا
-// });
-
-// newOrder.orderimg = newOrder.donimgs
  newOrder.createdBy = loggedInUserId
   newOrder.group = lowerLevelGroup
   newOrder.groups = groupss
-//   newOrder.createdBy = {
-//     id : req.user._id,
-//     name: req.user.name, 
-//     userId :req.user.userId,
-//     group: req.user.group.id,
-//     jobTitle :req.user.jobTitle,
-//     school : req.user.school,
-//     image : req.user.image,
-// }; 
-  newOrder.createrGroupId = req.user.group._id
-  newOrder.senderOrderId = req.user.group._id
-  newOrder.senderOrder = req.user.group.name
-
+  newOrder.createrGroupId = req.user.group.id
+  newOrder.createrGroupName = req.user.group.name
+  setOrderDetails(newOrder,req.user)
   newOrder.createdAt =Date.now()
-  newOrder.updatedAt =Date.now()
 
+
+  newOrder.TimeReceive = Date.now();
 // const timeDifference =calculateTimeDifference(newOrder.history)
 
   addToOrderHistory(
     newOrder,
     loggedInUserId,
     createMessageHistory,
-    '',
-    0,
-    0,
-    0,
-    0
+    // '',
+    // 0,
+    // 0,
+    // 0,
+    // 0
   )
 
-  // addToOrderHistory(newOrder,loggedInUserId,createMessageHistory)
-  //   newOrder.history.push({
-  //   editedAt: Date.now(),
-  //   editedBy: loggedInUserId,
-  //   action: createMessageHistory
-  // });
   newOrder.save()
   const roomgroup = newOrder.group.name;
 
@@ -185,7 +160,7 @@ console.log(message)
 
   socketHandler.sendNotificationToRoom(roomgroup,message);
 
-res.status(201).json({ message: 'Order created successfully' });
+res.status(201).json({ message: 'Order created successfully' ,newOrder});
 
 });
 
@@ -465,7 +440,7 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
   //   editedBy: loggedInUserId,
   //   action: updateMessageHistory
   // });
-
+  
   updatedOrder.senderOrderId = req.user.group.id 
   updatedOrder.senderOrder = req.user.group.name
   updatedOrder.State = 'onprase';
@@ -474,6 +449,7 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   updatedOrder.updatedAt =Date.now()
 
+  newOrder.TimeReceive = Date.now();
   await updatedOrder.save();
 
   const updatOrder = await Order.findById(currentOrder._id).populate('group');

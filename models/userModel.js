@@ -144,6 +144,27 @@ const userSchema = new mongoose.Schema(
           default: false,
         },
 
+        canViwOneJobTitle :{
+          type: Boolean,
+          default: false,
+        },
+        canViwsJobTitle :  {
+          type: Boolean,
+          default: false,
+        },
+        canCreatJobTitle : {
+          type: Boolean,
+          default: false,
+        },
+        canDeletJobTitle : {
+          type: Boolean,
+          default: false,
+        },
+        canEditJobTitle :  {
+          type: Boolean,
+          default: false,
+        },
+ 
         canViwOnetypeText1 :{
           type: Boolean,
           default: false,
@@ -319,8 +340,9 @@ const userSchema = new mongoose.Schema(
         'inlevel':1,
         'levelSend':1,
         'levelsReceive' :1,
-        'forwordGroup' :0,
-        'services' : 0
+        'forwordGroup' :1,
+        'services' : 0,
+        'jobTitle' : 1
       },
       options: { depth: 1 }
       },
@@ -333,7 +355,9 @@ const userSchema = new mongoose.Schema(
         'inlevel':1,
         'levelSend':1,
         'levelsReceive' :1,
-      
+         'forwordGroup' :1,
+        'services' : 0,
+        'jobTitle' : 1
       },
       options: { depth: 1 }
       },
@@ -356,6 +380,8 @@ const userSchema = new mongoose.Schema(
   userSchema.post('save', (doc) => {
     setImageURL(doc);
   });
+
+
 
   const User = mongoose.model('User', userSchema);
   

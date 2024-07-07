@@ -20,12 +20,11 @@ const moment = require('moment');
 
 exports.calculateTimeDifference =(historys)=> {
     if (historys.length >= 0) {
-        // نحسب الفارق بين آخر عمليتين في المجال
+
         const latestEditedAt = moment();
         const previousEditedAt = moment(historys[historys.length - 1].editedAt);
         const duration = moment.duration(latestEditedAt.diff(previousEditedAt));
 
-        // نعيد كل وحدة زمنية بشكل منفصل
         const days = duration.days();
         const hours = duration.hours();
         const minutes = duration.minutes();
@@ -33,22 +32,14 @@ exports.calculateTimeDifference =(historys)=> {
 
         return { days, hours, minutes, seconds };
     } 
-        return null; // أو أي قيمة تعبر عن عدم وجود تاريخ
+        return null;
     
 }
 
+exports.setOrderDetails= (order,user) =>{
+  order. senderGroupId = user.group._id;
+  order. senderGroupName  = user.group.name;
+  order.updatedAt =Date.now()
+}
 
-// exports.messageNotification = (type,title,body,action,page,orderID,time) => {
-//   const message = {
-//     type :   type,
-//     title : title,
-//     body : body,
-//     action: action,
-//     page : page,
-//     orderID: orderID,
-//     time : time
-//   }
-
-//   return message
-// }
 

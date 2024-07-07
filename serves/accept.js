@@ -16,7 +16,7 @@ const {
   confirmMessageHistory
 } = require('../utils/MessagesHistort')
 
-const {addToOrderHistory , calculateTimeDifference} = require('../middlewares/handleStandardActions')
+const {addToOrderHistory , calculateTimeDifference ,setOrderDetails} = require('../middlewares/handleStandardActions')
 
 const {
   acceptOrderMessageSocket,
@@ -143,8 +143,7 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
   const updatedOrder = await Order.findByIdAndUpdate(
     orderId,
     { 
-        
-        // StateReasonAccept : reason,
+
         users : users,
         $addToSet: { usersOnprase: loggedInUserId } 
   },
@@ -157,7 +156,7 @@ exports.acceptOrder = asyncHandler(async (req, res, next) => {
   if (updatedOrder.StateWork === 'endwork' || updatedOrder.StateDone === 'accept'  ) {
     return next(new ApiError(`you cant do this Option `, 404));
   }
-const timeDifference =calculateTimeDifference(updatedOrder.history)
+  const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   addToOrderHistory(
     updatedOrder,
@@ -169,23 +168,7 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
     timeDifference.minutes,
     timeDifference.seconds
   )
-  
-  // addToOrderHistory(updatedOrder,loggedInUserId,acceptOrderMessageHistory,reason)
-  // if(updatedOrder.State === 'accept'){
-// updatedOrder.history.push({
-//   editedAt: Date.now(),
-//   editedBy: loggedInUserId ,
-//   action : acceptOrderMessageHistory,
-//   reason : reason
-// });  
-  // }else {
-  //   updatedOrder.history.push({
-  //     editedAt: Date.now(),
-  //     editedBy: loggedInUserId ,
-  //     action : acceptOrderMessageHistory,
-  //     reason : reason
-  //   });
-  // }
+
   updatedOrder.State = 'accept' 
 
   updatedOrder.StateWork = 'onprase'
@@ -196,15 +179,12 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
   if (!existingUserIds.has(newUser._id.toString())) {
     updatedOrder.usersOnprase.push(newUser);
   }
- 
+ setOrderDetails(updatedOrder,req.user)
 
-  updatedOrder.senderOrderId = req.user.group._id
-  updatedOrder.senderOrder = req.user.group.name
+  updatedOrder.group = null ;
+  updatedOrder.usersGroup = updatedOrder.users.group._id ;
 
-updatedOrder.group = null ;
-updatedOrder.usersGroup = updatedOrder.users.group._id ;
-updatedOrder.updatedAt =Date.now()
-
+  updatedOrder.TimeReceive = Date.now();
 await updatedOrder.save();
 
 const updatOrder = await Order.findById(updatedOrder._id).populate('users');
@@ -275,9 +255,9 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
 //   action : startWorkMessageHistory ,
 //   reason: reason
 // });
-  updatedOrder.senderOrderId = req.user.group._id
-updatedOrder.usersGroup = updatedOrder.users.group._id ;
-updatedOrder.updatedAt =Date.now()
+
+setOrderDetails(updatedOrder,req.user)
+
 await updatedOrder.save();
 
 
@@ -306,7 +286,6 @@ exports.endWork = asyncHandler(async(req,res,next) => {
     .populate('donimgs');
 
     updatedOrder.StateWork = 'endwork'
-    // updatedOrder.StateWorkReasonAccept = reason
     updatedOrder.users = updatedOrder.usersOnprase.filter(usersOnprase => usersOnprase.group.level === 3)[0]._id;
 const timeDifference =calculateTimeDifference(updatedOrder.history)
 
@@ -321,23 +300,17 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
     timeDifference.seconds,
     updatedOrder.donimgs
   )
-  //  addToOrderHistory(updatedOrder,loggedInUserId,endWorkMessageHistory,reason,updatedOrder.donimgs)
-    // updatedOrder.history.push({
-    //   editedAt: Date.now(),
-    //   editedBy: loggedInUserId,
-    //   action: endWorkMessageHistory,
-    //   reason:reason,
-    //   imgDone: updatedOrder.donimgs
-    // });
+
 
     if (updatedOrder.users.group) {
       updatedOrder.usersGroup = updatedOrder.users.group._id;
     } 
-  updatedOrder.senderOrderId = req.user.group._id
-    updatedOrder.updatedAt =Date.now()
 
+    setOrderDetails(updatedOrder,req.user)
+  updatedOrder.TimeReceive = Date.now();
     await updatedOrder.save();
-    const updatOrder = await Order.findById(updatedOrder._id);
+
+const updatOrder = await Order.findById(updatedOrder._id);
 
 const roomUser = updatOrder.users.userId;
 const message = endWorkMessageSocket(updatOrder)
@@ -368,16 +341,11 @@ exports.confirmWork  = asyncHandler(async (req, res, next) => {
   if (!currentOrder) {
     return next(new ApiError('Order not found', 404));
   }
-  // if (currentOrder.StateWork !== 'endwork' ) { 
-  //   return next(new ApiError(`you need end the Work in order`, 404));
-  // }
 
   const updatedOrder = await Order
     .findByIdAndUpdate(req.params.id, { ...req.body}, { new: true })
-    // .populate('donimgs');
 
   updatedOrder.StateWork = 'confirmWork'
-  // updatedOrder.StateWorkReasonAccept = reason
 
   updatedOrder.usersOnprase.push(updatedOrder.users);
 const timeDifference =calculateTimeDifference(updatedOrder.history)
@@ -393,22 +361,13 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
     timeDifference.seconds,
     updatedOrder.donimgs
   )
-  //  addToOrderHistory(updatedOrder,loggedInUserId,confirmWorkMessageHistory,reason,updatedOrder.donimgs)
 
-  // updatedOrder.history.push({
-  //   editedAt: Date.now(),
-  //   editedBy: loggedInUserId,
-  //   action: confirmWorkMessageHistory,
-  //   reason:reason,
-  //   imgDone: updatedOrder.donimgs
-  // });
+setOrderDetails(updatedOrder,req.user)
 
-
-  updatedOrder.senderOrderId = req.user.group._id
   updatedOrder.usersGroup = updatedOrder.users.group._id ;
   updatedOrder.users = updatedOrder.createdBy._id
   updatedOrder.donimgs = []
-  updatedOrder.updatedAt =Date.now()
+  updatedOrder.TimeReceive = Date.now();
   await updatedOrder.save();
 
   const updatOrder = await Order.findById(updatedOrder._id).populate('createdBy');
@@ -470,10 +429,10 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
 //   action : confirmMessageHistory,
 //   reason : reason
 // });
-  updatedOrder.senderOrder = req.user.group.name 
+setOrderDetails(updatedOrder,req.user)
 updatedOrder.archive = true ;
 updatedOrder.usersGroup = updatedOrder.users.group._id ;
-updatedOrder.updatedAt =Date.now()
+  updatedOrder.TimeReceive = Date.now();
 await updatedOrder.save();
 
 const updatOrder = await Order.findById(updatedOrder._id).populate('usersOnprase','groups');

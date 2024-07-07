@@ -1,12 +1,11 @@
 const asyncHandler = require('express-async-handler');
-const moment = require('moment');
 const User = require('../models/userModel');
 const Order = require('../models/orderModel');
 const ApiError = require('../utils/apiError');
 const socketHandler  = require('../utils/socket');
 const {forwordMessageSocket} =require('../utils/MessagesSocket')
 const {forwordMessageHistory} = require('../utils/MessagesHistort')
-const {addToOrderHistory , calculateTimeDifference} = require('../middlewares/handleStandardActions')
+const {addToOrderHistory , calculateTimeDifference , setOrderDetails} = require('../middlewares/handleStandardActions')
 
 exports.forwordOrder = asyncHandler(async(req, res, next) => {
   const loggedInUserId = req.user._id;
@@ -26,14 +25,11 @@ exports.forwordOrder = asyncHandler(async(req, res, next) => {
       return res.status(404).json({ message: 'الطلب غير موجود' });
   }
 
-
   const isGroupExistsInOrder = order.group.groupIds
   if (isGroupExistsInOrder) {
       return res.status(400).json({ message: 'الكروب موجود بالفعل في الطلب' });
   }
 
-
-  
 const timeDifference =calculateTimeDifference(order.history)
 
   addToOrderHistory(
@@ -43,28 +39,20 @@ const timeDifference =calculateTimeDifference(order.history)
     reason,
     timeDifference.days,
     timeDifference.hours,
-    timeDifference.minutes
+    timeDifference.minutes,
+    timeDifference.seconds
+    
   )
-
-  // order.history.push({
-  //     editedAt: Date.now(),
-  //     editedBy: loggedInUserId,
-  //     action: `تم تحويل الطلب من قبل`,
-  //     reason: reason
-  // });
 
   if (!order.groups.some(group => group._id.equals(loggedUser.group._id))) {
     order.groups.push(loggedUser.group);
   }
-
-  order.senderOrder= req.user.group.name
-  order.senderOrderId = req.user.group._id
+   setOrderDetails(order,req.user)
   
   order.group = groupIds;
   order.State = 'forword';
-  order.StateReasonOnprase = reason;
-  order.updatedAt =Date.now()
 
+  order.TimeReceive = Date.now();
   await order.save();
   const updatOrder = await Order.findById(order._id).populate('group');
 

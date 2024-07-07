@@ -39,10 +39,10 @@ exports.uploadSingleImage = (fieldName) => {
   // استخدم Multer داخل وسيط رفع الصور
   return (req, res, next) => {
     upload(req, res, (err) => {
-      // if (err) {
-      //   console.error('Multer Error:', err);
-      //   return res(new ApiError('Only Images allowed', 400), false);
-      // }
+      if (err) {
+        console.error('Multer Error:', err);
+        return res(new ApiError('Only Images allowed', 400), false);
+      }
       next();
     });
   };

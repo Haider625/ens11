@@ -26,6 +26,7 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(express.json());
+
 app.use(express.static(path.join(__dirname,'uploads')));
 
 dotenv.config({path: 'config.env'})

@@ -14,6 +14,7 @@ const typeText3 = require('./typeText3Rout')
 const messageSocket = require('./SocketData')
 const AllOrder = require('./AllOrder')
 const FilterData = require('./getDataFilter')
+const JobTitle = require('./JobTitle')
 
 const mountRoutes = (app) => {
 
@@ -33,7 +34,7 @@ app.use('/api/v1/typeText3',typeText3)
 app.use('/api/v1/messageSocket',messageSocket)
 app.use('/api/v1/AllOrder',AllOrder)
 app.use('/api/v1/FilterData',FilterData)
-
+app.use('/api/v1/JobTitle',JobTitle)
 
 }
 

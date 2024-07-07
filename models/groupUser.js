@@ -20,7 +20,10 @@ const groupUserSchema = new mongoose.Schema(
             type : Number,
         },
 
-        // jobTitle : String ,
+        JobTitle : {
+            type : mongoose.Schema.ObjectId,
+            ref : 'JobTitle'
+        } ,
 
         levelSend : {
             type : mongoose.Schema.ObjectId,
@@ -90,6 +93,14 @@ groupUserSchema.pre(/^find/, function (next) {
         },
         options: { depth: 1 } 
     },
+    {
+        path: 'JobTitle',
+        select :{
+            '_id' : 1,
+            'name' : 1,
+        },
+        options: { depth: 1 } 
+    }
     ]);
     next();
 });

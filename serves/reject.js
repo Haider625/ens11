@@ -5,11 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const sharp = require('sharp')
 const Order = require('../models/orderModel')
 const ApiError = require('../utils/apiError');
-const ApiFeatures = require('../utils/apiFeatures');
-const groups = require('../models/groupUser')
-const user = require('../models/userModel')
 const socketHandler  = require('../utils/socket');
-
 
 const {
   rejectOrderMessageHistory,
@@ -25,7 +21,7 @@ const {
   rejectConfirmMessageSocket,
 } = require('../utils/MessagesSocket')
 
-const {addToOrderHistory,calculateTimeDifference} = require('../middlewares/handleStandardActions')
+const {addToOrderHistory,calculateTimeDifference, setOrderDetails} = require('../middlewares/handleStandardActions')
 
 const { uploadMixOfImages } = require('../middlewares/uploadImage');
 
@@ -50,7 +46,7 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
         const imageName = `order-${uuidv4()}-${Date.now()}-${index + 1}.jpeg`;
   
         await sharp(img.path)
-          .resize(1000, 1000)
+          // .resize(1000, 1000)
           .toFormat('jpeg')
           .jpeg({ quality: 90 })
           .toFile(`uploads/orders/${imageName}`)
@@ -158,63 +154,6 @@ exports.getRejectedDone = asyncHandler(async (req, res) => {
     //   .json({ results: documents.length, paginationResult, data: documents });
   });
 
-// exports.getAllRejected = asyncHandler(async (req, res) => {
-//   const loggedInUserId = req.user._id;
-
-//   // let filter = {};
-//   // if (req.filter) {
-    
-//   //   filter = req.filter;
-//   // }
-
-//   const userGroup = await user.findOne({ _id: loggedInUserId });
-//   const userGroupLevel = userGroup.group.level;
-//   const userGroupInLevel = userGroup.group.inlevel;
-  
-//   const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
-
-
-//   const groupIds = similarGroups.map(group => group._id);
-
-//   const groupFilter = {
-//     groups: {
-//       $in: groupIds ,
-//     }
-//   };
-//   const filter = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], group: req.user.group };
-
-//     const documentsCounts = await Order.countDocuments();
-//     const loggedInUserIdString = loggedInUserId.toString();
-//     const acceptedOrdersFilter = {
-//       $or: [
-//         { createdBy: { $ne :loggedInUserId }},
-//         {
-//           $and: [
-//             { State: 'reject' },
-//             { StateWork: 'reject' },
-//             { StateDone: 'reject' }
-//           ]
-//         }
-//       ],
-//       archive: { $ne: true }
-//     }
-
-//     const apiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
-//       .paginate(documentsCounts)
-//       .filter()
-//       .search(Order)
-//       .limitFields()
-//       // .sort();
-
-//     // Execute query
-//     const { mongooseQuery, paginationResult } = apiFeatures;
-//     const documents = await mongooseQuery;
-
-//     res
-//       .status(200)
-//       .json({ results: documents.length, paginationResult, order: documents });
-//   });
-
 exports.getUserOrders = asyncHandler(async (req, res, next) => {
   try {
     // استخدام معرّف المستخدم من req.user
@@ -235,7 +174,6 @@ exports.getUserOrders = asyncHandler(async (req, res, next) => {
 exports.rejectOrder = asyncHandler(async (req, res, next) => {
   const orderId = req.params.id;
   const loggedInUserId = req.user._id;
-
   const { reason } = req.body;
 
   if (!req.user.Permission.canRejectOrder) {
@@ -247,9 +185,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     if (!updatedOrder) {
       return next(new ApiError(`No order found for this id`, 404));
     }
-  updatedOrder.senderOrderId = req.user.group._id
     updatedOrder.State = 'reject';
-    updatedOrder.StateReasonReject = reason;
   const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   addToOrderHistory(
@@ -263,14 +199,8 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     timeDifference.seconds
   )
 
-    // addToOrderHistory(updatedOrder,loggedInUserId,rejectOrderMessageHistory,reason)
+  setOrderDetails(updatedOrder,req.user)
 
-    // updatedOrder.history.push({
-    //   editedAt: Date.now(),
-    //   editedBy: loggedInUserId,
-    //   action: rejectOrderMessageHistory,
-    //   reason: reason
-    // });
     if (updatedOrder.State === 'reject'){
       const lastGroup = updatedOrder.groups[updatedOrder.groups.length - 1]
       updatedOrder.group = lastGroup ;
@@ -279,8 +209,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
       const lastGroup = updatedOrder.groups[updatedOrder.groups.length -1]
       updatedOrder.group = lastGroup ;
     }
-    // updatedOrder.usersGroup = updatedOrder.users.group._id ;
-    updatedOrder.updatedAt =Date.now()
+  updatedOrder.TimeReceive = Date.now();
     await updatedOrder.save();
 
     const updatOrder = await Order.findById(updatedOrder._id);
@@ -328,7 +257,6 @@ exports.rejectWork = asyncHandler(async (req, res, next) => {
       return next(new ApiError(`you should be access your work first `, 404));
     }
     updatedOrder.StateWork = 'reject';
-    updatedOrder.StateWorkReasonReject = reason;
 const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   addToOrderHistory(
@@ -341,25 +269,15 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
     timeDifference.minutes,
     timeDifference.seconds
   )
-    // addToOrderHistory(updatedOrder,loggedInUserId,rejectWorkMessageHistory,reason)
-
-
-    // updatedOrder.history.push({
-    //   editedAt: Date.now(),
-    //   editedBy: loggedInUserId,
-    //   action: rejectWorkMessageHistory,
-    //   reason: reason
-    // });
-    
+setOrderDetails(updatedOrder,req.user)
       updatedOrder.usersOnprase.pop();
       const lastGroup = updatedOrder.usersOnprase[updatedOrder.usersOnprase.length - 1]
       updatedOrder.users = lastGroup ;
       if (!updatedOrder.users){
         return next(new ApiError(`No order found for this id`, 404));
       }
- updatedOrder.senderOrderId = req.user.group._id
       updatedOrder.usersGroup = updatedOrder.users.group._id ;
-    updatedOrder.updatedAt =Date.now()
+        updatedOrder.TimeReceive = Date.now();
     await updatedOrder.save();
 
   const updatOrder = await Order.findById(updatedOrder._id).populate('users');
@@ -408,13 +326,14 @@ exports.rejectConfirmWork = asyncHandler(async (req,res , next) => {
   if (updatedOrder.StateWork !== 'endwork' ) {
   return next(new ApiError(`you should be end the work first `, 404));
   }
- updatedOrder.senderOrderId = req.user.group._id
+
+  setOrderDetails(updatedOrder,req.user)
+
   updatedOrder.donimgs = []
   updatedOrder.StateWork = 'reject';
-  updatedOrder.StateWorkReasonReject = reason;
 
   updatedOrder.users = updatedOrder.usersOnprase[updatedOrder.usersOnprase.length -1]
-const timeDifference =calculateTimeDifference(updatedOrder.history)
+  const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   addToOrderHistory(
     updatedOrder,
@@ -426,18 +345,9 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
     timeDifference.minutes,
     timeDifference.seconds
   )
-  // addToOrderHistory(updatedOrder,loggedInUserId,rejectConfirmWorkMessageHistory,reason)
-
-
-  // updatedOrder.history.push({
-  //   editedAt: Date.now(),
-  //   editedBy: loggedInUserId,
-  //   action: rejectConfirmWorkMessageHistory,
-  //   reason: reason
-  // });
 
   updatedOrder.usersGroup = updatedOrder.users.group._id ;
-  updatedOrder.updatedAt =Date.now()
+  updatedOrder.TimeReceive = Date.now();
   await updatedOrder.save();
 
   const updatOrder = await Order.findById(updatedOrder._id).populate('users');
@@ -502,21 +412,13 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
     timeDifference.minutes,
     timeDifference.seconds
   )
-    // addToOrderHistory(updatedOrder,loggedInUserId,rejectConfirmMessageHistory,reason)
 
+    setOrderDetails(updatedOrder,req.user)
 
-    // إضافة معلومات السجل
-    // updatedOrder.history.push({
-    //   editedAt: Date.now(),
-    //   editedBy: loggedInUserId,
-    //   action: rejectConfirmMessageHistory,
-    //   reason: reason
-    // });
- updatedOrder.senderOrderId = req.user.group._id
     const lastGroup = updatedOrder.usersOnprase[updatedOrder.usersOnprase.length -3]
     updatedOrder.users = lastGroup;
     updatedOrder.usersGroup = updatedOrder.users.group._id ;
-    updatedOrder.updatedAt =Date.now()
+  updatedOrder.TimeReceive = Date.now();
     await updatedOrder.save();
 
     const updatOrder = await Order.findById(updatedOrder._id).populate('users','createdBy');
@@ -558,7 +460,65 @@ exports.archiveReject = asyncHandler(async (req, res, next) => {
     }
     updatedOrder.archive = true;
     updatedOrder.updatedAt =Date.now()
+      updatedOrder.TimeReceive = Date.now();
     updatedOrder.save()
     
     res.status(200).json({ order : updatedOrder });
 });
+
+// exports.getAllRejected = asyncHandler(async (req, res) => {
+//   const loggedInUserId = req.user._id;
+
+//   // let filter = {};
+//   // if (req.filter) {
+    
+//   //   filter = req.filter;
+//   // }
+
+//   const userGroup = await user.findOne({ _id: loggedInUserId });
+//   const userGroupLevel = userGroup.group.level;
+//   const userGroupInLevel = userGroup.group.inlevel;
+  
+//   const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
+
+
+//   const groupIds = similarGroups.map(group => group._id);
+
+//   const groupFilter = {
+//     groups: {
+//       $in: groupIds ,
+//     }
+//   };
+//   const filter = { $or: [{ StateDone: 'reject' }, { State: 'reject' }, { StateWork: 'reject' }], group: req.user.group };
+
+//     const documentsCounts = await Order.countDocuments();
+//     const loggedInUserIdString = loggedInUserId.toString();
+//     const acceptedOrdersFilter = {
+//       $or: [
+//         { createdBy: { $ne :loggedInUserId }},
+//         {
+//           $and: [
+//             { State: 'reject' },
+//             { StateWork: 'reject' },
+//             { StateDone: 'reject' }
+//           ]
+//         }
+//       ],
+//       archive: { $ne: true }
+//     }
+
+//     const apiFeatures = new ApiFeatures(Order.find({$or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }],$and :[{...acceptedOrdersFilter}], ...filter}), req.query)
+//       .paginate(documentsCounts)
+//       .filter()
+//       .search(Order)
+//       .limitFields()
+//       // .sort();
+
+//     // Execute query
+//     const { mongooseQuery, paginationResult } = apiFeatures;
+//     const documents = await mongooseQuery;
+
+//     res
+//       .status(200)
+//       .json({ results: documents.length, paginationResult, order: documents });
+//   });

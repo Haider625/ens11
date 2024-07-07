@@ -49,23 +49,6 @@ const orderSchema = new mongoose.Schema(
 
     },
 
-  //   StateReasonAccept: {
-  //     type : String,
-  //     default : "تم قبول الطلب",
-  //     select : '',
-  //   },
-
-  //   StateReasonReject: {
-  //     type : String,
-  //     default : "تم رفظ الطلب",
-  // select : '',
-  //   },
-
-  //   StateReasonOnprase: {
-  //     type : String,
-  //     default : "تم تحويل الطلب",
-  // select : '',
-  //   },
 
     StateWork: {
       type :String,
@@ -74,29 +57,6 @@ const orderSchema = new mongoose.Schema(
 
     },
 
-  //   StateWorkReasonAccept: {
-  //     type : String,
-  //     default : "تم قبول الطلب",
-  // select : '',
-  //   },
-
-  //   StateWorkReasonConfirmManger: {
-  //     type : String,
-  //     default : "تم اتمام الطلب",
-  // select : '',
-  //   },
-
-  //   StateWorkReasonEndwork: {
-  //     type : String,
-  //     default : "تم اتمام الطلب",
-  // select : '',
-  //   },
-
-  //   StateWorkReasonReject: {
-  //     type : String,
-  //     default : "تم رفظ الطلب",
-  // select : '',
-  //   },
 
     StateDone : {
       type : String ,
@@ -104,18 +64,6 @@ const orderSchema = new mongoose.Schema(
       default: 'onprase',
 
     },
-
-  //   StateDoneReasonAccept: {
-  //     type : String,
-  //     default : "تم قبول الطلب",
-  // select : '',
-  //   },
-
-  //   StateDoneReasonReject: {
-  //     type : String,
-  //     default : "تم رفظ الطلب",
-  // select : '',
-  //   },
 
     group : {
       type: mongoose.Schema.ObjectId,
@@ -133,10 +81,10 @@ const orderSchema = new mongoose.Schema(
     users : {
       type: mongoose.Schema.ObjectId,
       ref: 'User',
-      default: null,
-      set: function (userId) {
-        return userId || this.user || null;
-      },
+      // default: null,
+      // set: function (userId) {
+      //   return userId || this.user || null;
+      // },
     },
 
     usersGroup : {
@@ -167,11 +115,14 @@ const orderSchema = new mongoose.Schema(
       type :String ,
       // default : 'null'
     },
-    senderOrderId :{
+createrGroupName :{
+  type :String
+},
+    senderGroupId :{
       type :String ,
       // default : 'null'
     },
-    senderOrder :{
+    senderGroupName :{
       type :String ,
       // default : 'null'
     },
@@ -189,6 +140,7 @@ const orderSchema = new mongoose.Schema(
          type: Number
         }
      },
+     
      history: [{
       editedAt: { 
         type: Date,
@@ -232,6 +184,11 @@ const orderSchema = new mongoose.Schema(
     default:Date.now()
   },
 
+  TimeReceive : {
+    type : Date ,
+    default : Date.now() 
+  }
+
   },
   {toJSON: { virtuals: true } }
 );
@@ -250,7 +207,8 @@ orderSchema.pre(/^find/, function (next) {
         'levelSend':0,
         'levelsReceive' : 0,
         'services' : 0,
-        'forwordGroup':0
+        'forwordGroup':0,
+        'jobTitle' : 1
       },
       options: { depth: 1 }
     },
@@ -264,7 +222,8 @@ orderSchema.pre(/^find/, function (next) {
         'levelSend':0,
         'levelsReceive' : 0,
         'services' : 0,
-        'forwordGroup':0
+        'forwordGroup':0,
+        'jobTitle' : 1
       },
       options: { depth: 1 }
     },
@@ -300,7 +259,7 @@ orderSchema.pre(/^find/, function (next) {
           'userId' :1,
           'jobTitle' :1,
           'school' :1,
-          'group' :1,
+          'group' :0,
           'GroupscanViw' :0,
           'active' :1,
           'image' : 1
@@ -340,6 +299,144 @@ orderSchema.pre(/^find/, function (next) {
   ])
   next();
 });
+orderSchema.pre('aggregate',function (next) {
+    const pipeline = this.pipeline();
+  
+  pipeline.push(
+ 
+    { $unwind: '$history' },
+    {
+    $lookup:{
+    from: 'users',
+    let: { editedById: '$history.editedBy' },
+    pipeline: [
+      { $match: { $expr: { $eq: ['$_id', '$$editedById'] } } },
+      { $project: {
+          id: 1,
+          name: 1,
+          userId: 1,
+          jobTitle: 1,
+          school: 1,
+          image: 1,
+          // اضف الحقول التي ترغب في استرجاعها فقط من history.editedBy
+        }
+      }
+    ],
+    as: 'history.editedBy',
+    }
+    },
+
+ {
+    $addFields: {
+      'history.editedAt': '$history.editedAt',
+      'history.action': '$history.action',
+      'history.reason': '$history.reason',
+      'history.operationTime': '$history.operationTime',
+      'history.imgDone': '$history.imgDone',
+    }
+  },
+    { $unwind: '$createdBy' },
+    {
+    $lookup:{
+    from: 'users',
+    let: { editedById: '$createdBy' },
+    pipeline: [
+      { $match: { $expr: { $eq: ['$_id', '$$editedById'] } } },
+      { $project: {
+          id: 1,
+          name: 1,
+          userId: 1,
+          jobTitle: 1,
+          school: 1,
+          image: 1,
+          // اضف الحقول التي ترغب في استرجاعها فقط من history.editedBy
+        }
+      }
+    ],
+    as: 'createdBy',
+    }
+    },
+{
+  $addFields: {
+    'createdBy': {
+      $map: {
+        input: '$createdBy',
+        as: 'creator',
+        in: {
+          $mergeObjects: [
+            '$$creator',
+            {
+              image: {
+                $cond: {
+                  if: { $ne: [{ $type: '$$creator.image' }, 'missing'] },
+                  then: { $concat: [process.env.BASE_URL, '/users/', '$$creator.image'] },
+                  else: '$$creator.image'
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+},
+{
+  $addFields: {
+    'history.editedBy': {
+      $map: {
+        input: '$history.editedBy',
+        as: 'editor',
+        in: {
+          $mergeObjects: [
+            '$$editor',
+            {
+              image: { $concat: [process.env.BASE_URL, '/users/', '$$editor.image'] }
+            }
+          ]
+        }
+      }
+    }
+  }
+},
+    // Group back to reconstruct the document
+    {
+      $group: {
+        _id: '$_id',
+        timeSinceLastRefresh: { $first: '$timeSinceLastRefresh' },
+        type1: { $first: '$type1' }, 
+        type2: { $first: '$type2' }, 
+        type3: { $first: '$type3' },
+        number: { $first: '$number' },
+        caption: { $first: '$caption' },
+        orderimg: { $first: '$orderimg' },
+        donimgs: { $first: '$donimgs' }, 
+        State: { $first: '$State' }, 
+        StateWork: { $first: '$StateWork' },
+        StateDone: { $first: '$StateDone' },
+        group: { $first: '$group' },
+        users: { $first: '$users' },
+        groups: { $first: '$groups' }, 
+        usersOnprase: { $first: '$usersOnprase' }, 
+        archive: { $first: '$archive' },
+        FastOrder: { $first: '$FastOrder' },
+        // Collect all history details back into an array
+        history: { $push: '$history' },
+        createdBy: { $first: '$createdBy' },
+        createrGroupId: { $first: '$createrGroupId' },
+        createrGroupName: { $first: '$createrGroupName' },      
+        senderGroupId: { $first: '$senderGroupId' },
+        senderGroupName: { $first: '$senderGroupName' },
+        createdAt: { $first: '$createdAt' },
+        updatedAt: { $first: '$updatedAt' },
+        TimeReceive: { $first: '$TimeReceive' },
+
+        
+      }
+    }
+  );
+
+  next();
+})
 
 
 const setImageURL = (doc) => {
@@ -388,3 +485,277 @@ orderSchema.pre('save', function (next) {
 
 const Order = mongoose.model('Order', orderSchema);
 module.exports = Order; 
+
+
+
+// orderSchema.pre('aggregate', function (next) {
+//   this.lookup({
+//     from: 'groups',
+//     let: { groupId: '$group' },
+//     pipeline: [
+//       { $match: { $expr: { $eq: ['$_id', '$$groupId'] } } },
+//       { $project: {
+//           id: 1,
+//           name: 1,
+//           level: 1,
+//           inlevel: 1,
+//           jobTitle: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من group
+//         }
+//       }
+//     ],
+//     as: 'group',
+//   }).lookup({
+//     from: 'groups',
+//     let: { groupsId: '$groups' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', '$$groupsId'] } } },
+//       { $project: {
+//           id: 1,
+//           name: 1,
+//           level: 1,
+//           inlevel: 1,
+//           jobTitle: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من groups
+//         }
+//       }
+//     ],
+//     as: 'groups',
+//   }).lookup({
+//     from: 'users',
+//     let: { createdByUserId: '$createdBy' },
+//     pipeline: [
+//       { $match: { $expr: { $eq: ['$_id', '$$createdByUserId'] } } },
+//       { $project: {
+//           id: 1,
+//           name: 1,
+//           userId: 1,
+//           jobTitle: 1,
+//           school: 1,
+//           group: 1,
+//           image: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من createdBy
+//         }
+//       }
+//     ],
+//     as: 'createdBy',
+//   }).lookup({
+//     from: 'users',
+//     let: { usersId: '$users' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', '$$usersId'] } } },
+//       { $project: {
+//           _id: 1,
+//           name: 1,
+//           userId: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من users
+//         }
+//       }
+//     ],
+//     as: 'users',
+//   }).lookup({
+//     from: 'users',
+//     let: { editedById: '$history.editedBy' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', '$$editedById'] } } },
+//       { $project: {
+//           id: 1,
+//           name: 1,
+//           userId: 1,
+//           jobTitle: 1,
+//           school: 1,
+//           active: 1,
+//           image: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من history.editedBy
+//         }
+//       }
+//     ],
+//     as: 'history.editedBy',
+//   }).lookup({
+//     from: 'users',
+//     let: { actionEditedById: '$history.action.editedBy' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', '$$actionEditedById'] } } },
+//       { $project: {
+//           name: 1,
+//           userId: 1,
+//           jobTitle: 1,
+//           school: 1,
+//           active: 1,
+//           image: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من history.action.editedBy
+//         }
+//       }
+//     ],
+//     as: 'history.action.editedBy',
+//   }).lookup({
+//     from: 'users',
+//     let: { usersOnpraseId: '$usersOnprase' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', '$$usersOnpraseId'] } } },
+//       { $project: {
+//           _id: 1,
+//           name: 1,
+//           userId: 1,
+//           group: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من usersOnprase
+//         }
+//       }
+//     ],
+//     as: 'usersOnprase',
+//   })
+//   // .lookup({
+//   //   from: 'users',
+//   //   let: { usersGroupId: '$usersGroup' },
+//   //   pipeline: [
+//   //     { $match: { $expr: { $in: ['$_id', '$$usersGroupId'] } } },
+//   //     { $project: {
+        
+//   //       }
+//   //     }
+//   //   ],
+//   //   as: 'usersGroup',
+//   // });
+
+//   next();
+// });
+
+// orderSchema.pre('aggregate', function (next) {
+//   // this.lookup({
+//   //   from: 'groups',
+//   //   let: { groupId: '$group' },
+//   //   pipeline: [
+//   //     { $match: { $expr: { $eq: ['$_id', '$$groupId'] } } },
+//   //     { $project: {
+//   //         id: 1,
+//   //         name: 1,
+//   //         level: 1,
+//   //         inlevel: 1,
+//   //         jobTitle: 1,
+//   //         // اضف الحقول التي ترغب في استرجاعها فقط من group
+//   //       }
+//   //     }
+//   //   ],
+//   //   as: 'group',
+//   // })
+//   this.lookup({
+//     from: 'users',
+//     let: { createdByUserId: '$createdBy' },
+//     pipeline: [
+//       { $match: { $expr: { $eq: ['$_id', '$$createdByUserId'] } } },
+//       { $project: {
+//           id: 1,
+//           name: 1,
+//           userId: 1,
+//           jobTitle: 1,
+//           school: 1,
+//           group: 1,
+//           image: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من createdBy
+//         }
+//       }
+//     ],
+//     as: 'createdBy',
+//   })
+//   // .lookup({
+//   //   from: 'users',
+//   //   let: { usersId: '$users' },
+//   //   pipeline: [
+//   //     { $match: { $expr: { $in: ['$_id', { $ifNull: ['$$usersId', []] }] } } },
+//   //     { $project: {
+//   //         _id: 1,
+//   //         name: 1,
+//   //         userId: 1,
+//   //         // اضف الحقول التي ترغب في استرجاعها فقط من users
+//   //       }
+//   //     }
+//   //   ],
+//   //   as: 'users',
+//   // })
+//   .lookup({
+//     from: 'users',
+//     let: { editedById: '$history.editedBy' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', { $ifNull: ['$$editedById', []] }] } } },
+//       { $project: {
+//           id: 1,
+//           name: 1,
+//           userId: 1,
+//           jobTitle: 1,
+//           school: 1,
+//           active: 1,
+//           image: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من history.editedBy
+//         }
+//       }
+//     ],
+//     as: 'history.editedBy',
+//   }).lookup({
+//     from: 'users',
+//     let: { actionEditedById: '$history.action.editedBy' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', { $ifNull: ['$$actionEditedById', []] }] } } },
+//       { $project: {
+//           name: 1,
+//           userId: 1,
+//           jobTitle: 1,
+//           school: 1,
+//           active: 1,
+//           image: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من history.action.editedBy
+//         }
+//       }
+//     ],
+//     as: 'history.action.editedBy',
+//   })
+//   // .lookup({
+//   //   from: 'order',
+//   //   let: { actionEditedById: '$history' },
+//   //   pipeline: [
+//   //     { $match: { $expr: { $in: ['$_id', { $ifNull: ['$$actionEditedById', []] }] } } },
+//   //     { $project: {
+//   //       editedAt:1,
+//   //       editedBy:1,
+
+//   //         // اضف الحقول التي ترغب في استرجاعها فقط من history.action.editedBy
+//   //       }
+//   //     }
+//   //   ],
+//   //   as: 'history',
+//   // })
+  
+  
+  
+  
+//   .lookup({
+//     from: 'users',
+//     let: { usersOnpraseId: '$usersOnprase' },
+//     pipeline: [
+//       { $match: { $expr: { $in: ['$_id', { $ifNull: ['$$usersOnpraseId', []] }] } } },
+//       { $project: {
+//           _id: 1,
+//           name: 1,
+//           userId: 1,
+//           group: 1,
+//           // اضف الحقول التي ترغب في استرجاعها فقط من usersOnprase
+//         }
+//       }
+//     ],
+//     as: 'usersOnprase',
+//   })
+//   // .lookup({
+//   //   from: 'users',
+//   //   let: { usersGroupId: '$usersGroup' },
+//   //   pipeline: [
+//   //     { $match: { $expr: { $in: ['$_id', { $ifNull: ['$$usersGroupId', []] }] } } },
+//   //     { $project: {
+//   //         // اضف الحقول التي ترغب في استرجاعها فقط من usersGroup
+//   //       }
+//   //     }
+//   //   ],
+//   //   as: 'usersGroup',
+//   // });
+
+//   next()
+// });
+
