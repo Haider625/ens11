@@ -81,16 +81,24 @@ exports.resizeImage = asyncHandler(async (req, res, next) => {
 // }
 try {
   const files = await fs.readdir('uploads/test');
-  // Iterate through files and delete them
-  await Promise.all(files.map(async (file) => {
-    await fs.unlink(`uploads/test/${file}`);
-    // console.log(`File ${file} deleted successfully.`);
-  }));
-  // console.log('Contents of "uploads/test" directory deleted successfully.');
+  // تحقق من أن هناك على الأقل ملف واحد في المجلد
+  if (files.length > 1) {
+    // استبعاد أول ملف من الحذف
+    const filesToDelete = files.slice(1);
+
+    // حذف الملفات المتبقية
+    await Promise.all(filesToDelete.map(async (file) => {
+      await fs.unlink(`uploads/test/${file}`);
+    }));
+
+    console.log('تم حذف جميع الملفات ما عدا أول ملف بنجاح.');
+  } else {
+    console.log('يوجد ملف واحد أو أقل في المجلد.');
+  }
 } catch (err) {
-  // console.error('Error deleting contents of "uploads/test" directory:', err);
+  console.error('حدث خطأ أثناء حذف محتويات مجلد "uploads/test":', err);
 }
-  next();
+next();
 });
 
 exports.getUsersInGroup = asyncHandler(async (req, res, next) => {
