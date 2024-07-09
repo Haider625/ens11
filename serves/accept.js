@@ -91,7 +91,7 @@ try {
       await fs.unlink(`uploads/test/${file}`);
     }));
 
-    console.log('تم حذف جميع الملفات ما عدا أول ملف بنجاح.');
+    // console.log('تم حذف جميع الملفات ما عدا أول ملف بنجاح.');
   } else {
     console.log('يوجد ملف واحد أو أقل في المجلد.');
   }
