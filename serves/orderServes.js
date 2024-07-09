@@ -395,15 +395,15 @@ exports.putOrder = asyncHandler(async (req, res, next) => {
     return next(new ApiError('Order not found', 404));
   }
 
-  const loggedInUserIdString = loggedInUserId.toString();
+  // const loggedInUserIdString = loggedInUserId.toString();
 
-  if (
-    updatedOrder.createdBy &&
-    updatedOrder.createdBy._id &&
-    loggedInUserIdString !== updatedOrder.createdBy._id.toString()
-  ) {
-    return next(new ApiError('You cannot update this order', 403));
-  }
+  // if (
+  //   updatedOrder.createdBy &&
+  //   updatedOrder.createdBy._id &&
+  //   loggedInUserIdString !== updatedOrder.createdBy._id.toString()
+  // ) {
+  //   return next(new ApiError('You cannot update this order', 403));
+  // }
 
   const lowerLevelGroup = userDoc.group.levelSend;
   
@@ -449,10 +449,10 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   updatedOrder.updatedAt =Date.now()
 
-  newOrder.TimeReceive = Date.now();
+  updatedOrder.TimeReceive = Date.now();
   await updatedOrder.save();
 
-  const updatOrder = await Order.findById(currentOrder._id).populate('group');
+  const updatOrder = await Order.findById(updatedOrder).populate('group');
 
   const roomgroup = updatOrder.group.name;
   
@@ -471,7 +471,7 @@ console.log(message)
 
   socketHandler.sendNotificationToRoom(roomgroup,message);
 
-  res.status(200).json({ order: currentOrder });
+  res.status(200).json({ order: updatedOrder });
 });
 
 exports.updateOrder = asyncHandler(async (req, res, next) => {

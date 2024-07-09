@@ -136,7 +136,6 @@ exports.updateUser =  asyncHandler(async (req, res, next) => {
 });
 
 exports.updateLoggedUserPassword = asyncHandler(async (req, res, next) => {
-
   
   if (!req.user.Permission.updateLoggedUserPassword) {
     return next(new ApiError('You do not have permission to delete this order', 403));

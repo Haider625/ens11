@@ -15,8 +15,6 @@ const {
   ArchiveFilters
 } = require('../middlewares/filtergetOrders')
 
-
-
 exports.getOrders = asyncHandler(async (req, res, next) => {
 
   if (!req.user.Permission.canViwsOrder) {
@@ -176,7 +174,7 @@ const paginationResult = aggregateOps.paginate(documentsCounts);
         paginationResult,
         order: documents });
 
-  });
+});
 
 exports.getsArchive = asyncHandler(async (req, res, next) => {
 
