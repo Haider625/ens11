@@ -47,7 +47,7 @@ exports.groupsFilter = async (loggedInUserId) => {
 };
 
 exports.OrdersFilter = (loggedInUserId) => {
-    // const loggedInUserIdString = loggedInUserId.toString();
+     const loggedInUserIdString = loggedInUserId.toString();
     const acceptedOrdersFilter = {
         $or: [
             { createdBy: loggedInUserId },
@@ -353,7 +353,9 @@ exports.orderFilter = async (loggedInUserId) => {
     $match: {
       $and: [
         { $or: [{ ...groupOrderFilters }, { users: loggedInUserId }] },
-        { ...OrdersFilters }
+          {$and :[{...OrdersFilters},
+        { StateWork: { $ne: 'confirmWork' } },
+        { StateWork: { $ne: 'endwork' } },]}
       ],
     }
   },
