@@ -47,7 +47,7 @@ exports.groupsFilter = async (loggedInUserId) => {
 };
 
 exports.OrdersFilter = (loggedInUserId) => {
-     const loggedInUserIdString = loggedInUserId.toString();
+    //  const loggedInUserIdString = loggedInUserId.toString();
     const acceptedOrdersFilter = {
         $or: [
             { createdBy: loggedInUserId },
@@ -55,8 +55,6 @@ exports.OrdersFilter = (loggedInUserId) => {
                 $and: [
                     { State: { $ne: 'reject' } },
                     { StateWork: { $ne: 'reject' } },
-                    { StateWork: { $ne: 'confirmWork' } },
-                    { StateWork: { $ne: 'endwork' } },
                 ]
             }
         ],
@@ -107,7 +105,7 @@ exports.rejectsOrderFilter = (loggedInUserIdString, req) => {
         archive: { $ne: true }
     };
 
-    return { ...acceptedOrdersFilters, ...filters };
+    return { ...acceptedOrdersFilters};
 };
 
 exports.ArchiveOrderFilter = (loggedInUserId) => {
@@ -355,7 +353,10 @@ exports.orderFilter = async (loggedInUserId) => {
         { $or: [{ ...groupOrderFilters }, { users: loggedInUserId }] },
           {$and :[{...OrdersFilters},
         { StateWork: { $ne: 'confirmWork' } },
-        { StateWork: { $ne: 'endwork' } },]}
+        { StateWork: { $ne: 'endwork' } },
+        { State: { $ne: 'reject' } },
+        { StateWork: { $ne: 'reject' } },
+      ]}
       ],
     }
   },
@@ -395,7 +396,9 @@ exports.rejectFilter = async (loggedInUserId,req) => {
 const aggregatePipeline = [
   {
     $match: {
-      $or: [{ ...groupFilters }, { usersOnprase: loggedInUserId }],
+      $or: [{ ...groupFilters }, { usersOnprase: loggedInUserId },
+            { State: 'reject' },{ StateWork: 'reject' },{ StateDone: 'reject' }
+                ],
       $and :[{...acceptedOrdersFilters}]
     }
   },
