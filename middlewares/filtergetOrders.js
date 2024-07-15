@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-restricted-syntax */
 const asyncHandler = require('express-async-handler');
@@ -67,13 +68,13 @@ exports.OnpraseOrdersFilter = (loggedInUserId) => {
 
   const loggedInUserIdString = loggedInUserId.toString();
   const acceptedOrdersFilter = {
-    $or: [
+    $and: [
       { createdBy: { $ne: loggedInUserIdString }},
       {
-        // $and: [
-        //   { State: { $ne: 'reject' } },
-        //   { StateWork: { $ne: 'reject' } },
-        // ]
+        $or: [
+          { State: { $ne: 'reject' } },
+          { StateWork: { $ne: 'reject' } },
+        ]
        }
     ],
   archive: { $ne: true }
@@ -364,29 +365,48 @@ exports.orderFilter = async (loggedInUserId) => {
   return aggregatePipeline
 }
 
-exports.onpraseFilter = async (loggedInUserId) => {
+exports.onpraseFilter = async (loggedInUserId, req) => {
+  try {
     const groupOrderFilters = await this.groupsFilter(loggedInUserId);
-  
-  const OrdersFilters = await this.OnpraseOrdersFilter(loggedInUserId);
+    const loggedInUserIdString = loggedInUserId.toString();
 
-const aggregatePipeline = [
-  {
-    $match: {
+    const acceptedOrdersFilter = {
       $and: [
-        { $or: [{ ...groupOrderFilters }, { usersOnprase: loggedInUserId }] },
-        { ...OrdersFilters }
-      ]
-    }
-  },
-  // {
-  //   $group: {
-  //     _id: null,
-  //     count: { $sum: 1 }
-  //   }
-  // }
-];
-return aggregatePipeline ;
-}
+        { createdBy: { $ne: loggedInUserIdString }, },
+        {
+          $or: [
+            { State: { $ne: 'reject' } },
+            { StateWork: { $ne: 'reject' } },
+          ]
+        }
+      ],
+      archive: { $ne: true }
+    };
+
+    const aggregatePipeline = [
+      {
+        $match: {
+          $and: [
+            { 
+              $or: [
+                groupOrderFilters, 
+                { usersOnprase: loggedInUserId }
+              ] 
+            },
+            acceptedOrdersFilter,
+          ]
+        }
+      }
+    ];
+
+    return aggregatePipeline;
+    
+  } catch (error) {
+    throw new Error(`Error creating aggregate pipeline: ${error.message}`);
+  }
+};
+
+
 
 exports.rejectFilter = async (loggedInUserId,req) => {
   const groupFilters = await this.groupsFilter(loggedInUserId);

@@ -7,12 +7,16 @@ const ApiError = require('../utils/apiError');
 const TypeText1 = require('../models/typeText1');
 const TypeText2 = require('../models/typeText2');
 const typeText3 = require('../models/typeText3')
+const user = require('../models/userModel');
+const groups = require('../models/groupUser');
 
 const {
   onpraseFilter,
   rejectFilter,
   orderFilter,
-  ArchiveFilters
+  ArchiveFilters,
+  groupsFilter,
+OnpraseOrdersFilter
 } = require('../middlewares/filtergetOrders')
 
 exports.getOrders = asyncHandler(async (req, res, next) => {
@@ -70,9 +74,9 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
     filter = req.filter;
   }
 
-  // const groupFilters = await groupsFilter(loggedInUserId);
+   const groupFilter = await groupsFilter(loggedInUserId);
 
-  // const acceptedOrdersFilters = await OnpraseOrdersFilter(loggedInUserId)
+  const acceptedOrdersFilter = await OnpraseOrdersFilter(loggedInUserId)
 
 
   // const aggregatePipeline = [
@@ -105,7 +109,7 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
   // // const orderQuery =  Order.find({})
 
   // const documents = await orderQuery;
-const aggregatePipeline = await onpraseFilter(loggedInUserId)
+const aggregatePipeline = await onpraseFilter(loggedInUserId,req)
 
 const documentsCounts = await Order.countDocuments();
 
@@ -118,7 +122,8 @@ aggregateOps.sort();
 aggregateOps.limitFields();
 aggregateOps.countOrdersGroup()
 
-const documents = await Order.aggregate(aggregatePipeline);
+const documents = await Order.aggregate(aggregatePipeline).exec();
+console.log(documents)
 
 const paginationResult = aggregateOps.paginate(documentsCounts);
 
@@ -129,11 +134,54 @@ const paginationResult = aggregateOps.paginate(documentsCounts);
       paginationResult,
       order: documents
      });
+  // const userGroup = await user.findOne({ _id: loggedInUserId });
+  // const userGroupLevel = userGroup.group.level;
+  // const userGroupInLevel = userGroup.group.inlevel;
+  
+  // const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
+
+
+  // const groupIds = similarGroups.map(group => group._id);
+
+  // const groupFilter = {
+  //   groups: {
+  //     $in: groupIds ,
+  //   }
+  // };
+
+  // const documentsCounts = await Order.countDocuments();
+
+  // const loggedInUserIdString = loggedInUserId.toString();
+  // const acceptedOrdersFilter = {
+  //   $or: [
+  //     { createdBy: { $ne: loggedInUserIdString }},
+  //     {
+  //       $and: [
+  //         { State: { $ne: 'reject' } },
+  //         { StateWork: { $ne: 'reject' } },
+  //       ]
+  //      }
+  //   ],
+  //   archive: { $ne: true }
+  // };
+
+  // const apiFeatures = await Order.find({
+  //   $and: [
+  //     { $or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }] },
+  //     { $and: [{ ...acceptedOrdersFilter }, { ...filter }] }
+  //   ]
+  // })
+
+  // const document = await apiFeatures;
+
+  // res
+  //   .status(200)
+  //   .json({ results: document.length, order: document });
 
 });
 
 exports.getAllRejected = asyncHandler(async (req, res) => {
-  const loggedInUserId = req.user._id;
+ const loggedInUserId = req.user._id;
 
   // const groupFilters = await groupsFilter(loggedInUserId);
   // const acceptedOrdersFilters = await rejectsOrderFilter(loggedInUserId,req)
@@ -166,6 +214,9 @@ aggregateOps.countOrdersGroup()
 const documents = await Order.aggregate(aggregatePipeline);
 
 const paginationResult = aggregateOps.paginate(documentsCounts);
+
+
+
 
     res
       .status(200)

@@ -194,7 +194,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
     if (!updatedOrder) {
       return next(new ApiError(`No order found for this id`, 404));
     }
-    updatedOrder.State = 'reject';
+  
   const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   addToOrderHistory(
@@ -211,14 +211,20 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
   setOrderDetails(updatedOrder,req.user)
 
     if (updatedOrder.State === 'reject'){
-      const lastGroup = updatedOrder.groups[updatedOrder.groups.length - 1]
+      const lastGroup = updatedOrder.groups[updatedOrder.groups.length -2]
+      console.log(lastGroup)
       updatedOrder.group = lastGroup ;
       updatedOrder.groups.pop();
     }else{
       const lastGroup = updatedOrder.groups[updatedOrder.groups.length -1]
       updatedOrder.group = lastGroup ;
     }
+console.log(updatedOrder.group)
+
   updatedOrder.TimeReceive = Date.now();
+
+  updatedOrder.State = 'reject';
+
     await updatedOrder.save();
 
     const updatOrder = await Order.findById(updatedOrder._id);
@@ -232,7 +238,7 @@ exports.rejectOrder = asyncHandler(async (req, res, next) => {
         page = 'onprase';
     }
     const message = rejectOrderMessageSocket(updatOrder,page)
-    console.log (message)
+    // console.log (message)
   //   const message = {
   //   type: "order_update",
   //   title: "رفض الطلب",
