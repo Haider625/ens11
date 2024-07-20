@@ -16,7 +16,7 @@ const {
   ordersData,
   ArchiveFilters,
   groupsFilter,
-OnpraseOrdersFilter
+  OnpraseOrdersFilter
 } = require('../middlewares/filtergetOrders')
 
 exports.getOrders = asyncHandler(async (req, res, next) => {
@@ -123,7 +123,6 @@ aggregateOps.limitFields();
 aggregateOps.countOrdersGroup()
 
 const documents = await Order.aggregate(aggregatePipeline).exec();
-console.log(documents)
 
 const paginationResult = aggregateOps.paginate(documentsCounts);
 

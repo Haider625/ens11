@@ -285,9 +285,10 @@ const timeDifference =calculateTimeDifference(updatedOrder.history)
     timeDifference.seconds
   )
 setOrderDetails(updatedOrder,req.user)
-      updatedOrder.usersOnprase.pop();
-      const lastGroup = updatedOrder.usersOnprase[updatedOrder.usersOnprase.length - 1]
+     
+      const lastGroup = updatedOrder.usersOnprase[updatedOrder.usersOnprase.length -1]
       updatedOrder.users = lastGroup ;
+ updatedOrder.usersOnprase.pop();
       if (!updatedOrder.users){
         return next(new ApiError(`No order found for this id`, 404));
       }

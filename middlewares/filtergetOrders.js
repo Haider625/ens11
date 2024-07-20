@@ -351,7 +351,6 @@ exports.ordersData = async (loggedInUserId) => {
           {$and :[{...OrdersFilters},
         { StateWork: { $ne: 'confirmWork' } },
         { StateWork: { $ne: 'endwork' } },
-        { StateWork: { $ne: 'reject' } },
       ]}
       ],
     }
