@@ -48,19 +48,22 @@ exports.groupsFilter = async (loggedInUserId) => {
 };
 
 exports.OrdersFilter = (loggedInUserId) => {
-    //  const loggedInUserIdString = loggedInUserId.toString();
+    const loggedInUserIdString = loggedInUserId.toString();
     const acceptedOrdersFilter = {
-        $or: [
-            { createdBy: loggedInUserId },
-            {
-                $and: [
-                    { State: { $ne: 'reject' } },
-                    { StateWork: { $ne: 'reject' } },
-                ]
-            }
-        ],
-        archive: { $ne: true }
-    };
+    $or: [
+      {
+        $and: [
+          { createdBy: loggedInUserIdString },
+          { State: { $ne: 'reject' } },
+          { StateWork: { $ne: 'reject' } }
+        ]
+      },
+      {
+        createdBy: { $ne: loggedInUserIdString }
+      }
+    ],
+    archive: { $ne: true }
+  }
     return acceptedOrdersFilter;
 };
 
@@ -68,7 +71,7 @@ exports.OnpraseOrdersFilter = (loggedInUserId) => {
 
   const loggedInUserIdString = loggedInUserId.toString();
   const acceptedOrdersFilter = {
-    $and: [
+    $or: [
       { createdBy: { $ne: loggedInUserIdString }},
       {
         $or: [
@@ -82,28 +85,21 @@ exports.OnpraseOrdersFilter = (loggedInUserId) => {
   return acceptedOrdersFilter
 };
 
-exports.rejectsOrderFilter = (loggedInUserIdString, req) => {
-    const filters = {
-        $or: [
-            { StateDone: 'reject' },
-            { State: 'reject' },
-            { StateWork: 'reject' }
-        ],
-        group: req.user.group
-    };
+exports.rejectsOrderFilter = (loggedInUserId, req) => {
 
     const acceptedOrdersFilters = {
-        $and: [
-            { createdBy: loggedInUserIdString },
-            {
-                $or: [
-                    { State: 'reject' },
-                    { StateWork: 'reject' },
-                    { StateDone: 'reject' }
-                ]
-            }
-        ],
-        archive: { $ne: true }
+      $and: [
+        { createdBy: loggedInUserId },
+        {
+          $or: [
+            { State: 'reject' },
+            { StateWork: 'reject' },
+            { StateDone: 'reject' }
+          ]
+        }
+      ],
+      archive: { $ne: true }
+   
     };
 
     return { ...acceptedOrdersFilters};
@@ -342,10 +338,10 @@ exports.createApiFeatures = (query, reqQuery, documentsCounts,req) => new ApiFea
     .paginate(documentsCounts)
     .limitFields()
 
-exports.orderFilter = async (loggedInUserId) => {
+exports.ordersData = async (loggedInUserId) => {
   const groupOrderFilters = await this.groupFilter(loggedInUserId);
-  
-  const OrdersFilters = await this.OrdersFilter(loggedInUserId);
+   const loggedInUserIdString = loggedInUserId.toString();
+  const OrdersFilters = await this.OrdersFilter(loggedInUserId)
 
   const aggregatePipeline = [
   {
@@ -355,7 +351,6 @@ exports.orderFilter = async (loggedInUserId) => {
           {$and :[{...OrdersFilters},
         { StateWork: { $ne: 'confirmWork' } },
         { StateWork: { $ne: 'endwork' } },
-        { State: { $ne: 'reject' } },
         { StateWork: { $ne: 'reject' } },
       ]}
       ],
@@ -365,23 +360,12 @@ exports.orderFilter = async (loggedInUserId) => {
   return aggregatePipeline
 }
 
-exports.onpraseFilter = async (loggedInUserId, req) => {
+exports.onpraseData = async (loggedInUserId, req) => {
   try {
     const groupOrderFilters = await this.groupsFilter(loggedInUserId);
     const loggedInUserIdString = loggedInUserId.toString();
 
-    const acceptedOrdersFilter = {
-      $and: [
-        { createdBy: { $ne: loggedInUserIdString }, },
-        {
-          $or: [
-            { State: { $ne: 'reject' } },
-            { StateWork: { $ne: 'reject' } },
-          ]
-        }
-      ],
-      archive: { $ne: true }
-    };
+    const acceptedOrdersFilter = await this.OnpraseOrdersFilter(loggedInUserId)
 
     const aggregatePipeline = [
       {
@@ -409,18 +393,41 @@ exports.onpraseFilter = async (loggedInUserId, req) => {
 
 
 exports.rejectFilter = async (loggedInUserId,req) => {
-  const groupFilters = await this.groupsFilter(loggedInUserId);
+  const groupFilters = await this.groupFilter(loggedInUserId);
   
   const acceptedOrdersFilters = await this.rejectsOrderFilter(loggedInUserId,req);
+
+  // const filter =  { 
+  //   $or: [{ StateDone: 'reject' },
+  //      { State: 'reject' },
+  //       { StateWork: 'reject' }
+  //     ],
+  //      group: req.user.group
+  //      };
+
+
+    // const acceptedOrdersFilters = {
+    //   $or: [
+    //     { createdBy: { $ne :loggedInUserId }},
+    //     {
+    //       $and: [
+    //         { State: 'reject' },
+    //         { StateWork: 'reject' },
+    //         { StateDone: 'reject' }
+    //       ]
+    //     }
+    //   ],
+    //   archive: { $ne: true }
+    // }
 
 const aggregatePipeline = [
   {
     $match: {
-      $or: [{ ...groupFilters }, { usersOnprase: loggedInUserId },
-            { State: 'reject' },{ StateWork: 'reject' },{ StateDone: 'reject' }
-                ],
-      $and :[{...acceptedOrdersFilters}]
-    }
+      
+       $or: [{ ...groupFilters }, { usersOnprase: loggedInUserId }],
+       $and :[{...acceptedOrdersFilters}] 
+  
+  }
   },
 ];
 

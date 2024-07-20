@@ -11,9 +11,9 @@ const user = require('../models/userModel');
 const groups = require('../models/groupUser');
 
 const {
-  onpraseFilter,
+  onpraseData,
   rejectFilter,
-  orderFilter,
+  ordersData,
   ArchiveFilters,
   groupsFilter,
 OnpraseOrdersFilter
@@ -28,7 +28,7 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
   let filter = {};
   if (req.filter) {filter = req.filter;}
 
-const aggregatePipeline = await orderFilter(loggedInUserId)
+const aggregatePipeline = await ordersData(loggedInUserId)
 
 const documentsCounts = await Order.countDocuments();
 
@@ -44,7 +44,7 @@ aggregateOps.addTimeSinceLastRefresh()
 
 const Orders = await Order.aggregate(aggregatePipeline);
 
-const onpraseFilters =  await onpraseFilter(loggedInUserId)
+const onpraseFilters =  await onpraseData(loggedInUserId)
 const rejectFilters = await rejectFilter(loggedInUserId,req)
 const onprase = await Order.aggregate([onpraseFilters])
 const reject = await Order.aggregate([rejectFilters])
@@ -109,7 +109,7 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
   // // const orderQuery =  Order.find({})
 
   // const documents = await orderQuery;
-const aggregatePipeline = await onpraseFilter(loggedInUserId,req)
+const aggregatePipeline = await onpraseData(loggedInUserId,req)
 
 const documentsCounts = await Order.countDocuments();
 
@@ -132,7 +132,7 @@ const paginationResult = aggregateOps.paginate(documentsCounts);
     .json({ 
       results: documents.length,
       paginationResult,
-      order: documents
+      orders: documents
      });
   // const userGroup = await user.findOne({ _id: loggedInUserId });
   // const userGroupLevel = userGroup.group.level;

@@ -349,6 +349,7 @@ orderSchema.pre('aggregate',function (next) {
           jobTitle: 1,
           school: 1,
           image: 1,
+          group: 1 ,
           // اضف الحقول التي ترغب في استرجاعها فقط من history.editedBy
         }
       }
