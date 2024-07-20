@@ -50,10 +50,28 @@ exports.getFastTypes = asyncHandler(async (req,res,next) => {
    if (!req.user.Permission.canViwFasttypesText2) {
       return next(new ApiError('You do not have permission to viw this typeText2', 403));
     }
+    let filter = {};
+    if (req.filterObj) {
+      filter = req.filterObj;
+    }
+    // Build query
+    const documentsCounts = await typeText2.countDocuments();
+    const apiFeatures = new ApiFeatures(typeText2.find({FastOrder : true},filter), req.query)
+      .paginate(documentsCounts)
+      .filter()
+      .search(typeText2)
+      .limitFields()
+      .sort();
 
-   const document = await typeText2.find({ FastOrder: true });
-
-    res.status(200).json({ typeText2: document });
+    // Execute query
+    const { mongooseQuery, paginationResult } = apiFeatures;
+    const documents = await mongooseQuery;
+    if (!documents) {
+        return next(new ApiError('You do not have permission to viws this typeText2', 403));
+      }
+    res
+      .status(200)
+      .json({ results: documents.length, paginationResult, typeText2: documents });
 })
 
 exports.getstypeText2 = asyncHandler(async (req, res,next) => {

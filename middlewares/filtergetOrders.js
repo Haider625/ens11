@@ -362,7 +362,6 @@ exports.ordersData = async (loggedInUserId) => {
 exports.onpraseData = async (loggedInUserId, req) => {
   try {
     const groupOrderFilters = await this.groupsFilter(loggedInUserId);
-    const loggedInUserIdString = loggedInUserId.toString();
 
     const acceptedOrdersFilter = await this.OnpraseOrdersFilter(loggedInUserId)
 
