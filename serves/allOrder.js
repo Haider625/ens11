@@ -132,7 +132,7 @@ const paginationResult = aggregateOps.paginate(documentsCounts);
     .json({ 
       results: documents.length,
       paginationResult,
-      orders: documents
+      Orders: documents
      });
   // const userGroup = await user.findOne({ _id: loggedInUserId });
   // const userGroupLevel = userGroup.group.level;
