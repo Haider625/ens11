@@ -214,9 +214,6 @@ const documents = await Order.aggregate(aggregatePipeline);
 
 const paginationResult = aggregateOps.paginate(documentsCounts);
 
-
-
-
     res
       .status(200)
       .json({ 
@@ -282,7 +279,8 @@ const paginationResult = aggregateOps.paginate(documentsCounts);
     .json({ 
       results: documents.length, 
       paginationResult, 
-      order: documents });
+      Orders: documents
+     });
 });
 
 exports.getAllText = asyncHandler(async (req, res, next) => {
