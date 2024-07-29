@@ -49,22 +49,20 @@ exports.groupsFilter = async (loggedInUserId) => {
 
 exports.OrdersFilter = (loggedInUserId) => {
     const loggedInUserIdString = loggedInUserId.toString();
-    const acceptedOrdersFilter = {
-    $or: [
-      {
+    const OrdersFilters = {
         $and: [
-          { createdBy: loggedInUserIdString },
-          { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' } }
-        ]
-      },
-      {
-        createdBy: { $ne: loggedInUserIdString }
-      }
-    ],
-    archive: { $ne: true }
-  }
-    return acceptedOrdersFilter;
+            { createdBy: loggedInUserIdString },
+            {
+                $or: [
+                
+                    { State: { $ne: 'reject' } },
+                    { StateWork: { $ne: 'reject' } }
+                ]
+            },
+        ],
+        archive: { $ne: true }
+    };
+    return OrdersFilters;
 };
 
 exports.OnpraseOrdersFilter = (loggedInUserId) => {
@@ -340,7 +338,6 @@ exports.createApiFeatures = (query, reqQuery, documentsCounts,req) => new ApiFea
 
 exports.ordersData = async (loggedInUserId) => {
   const groupOrderFilters = await this.groupFilter(loggedInUserId);
-  //  const loggedInUserIdString = loggedInUserId.toString();
   const OrdersFilters = await this.OrdersFilter(loggedInUserId)
 
   const aggregatePipeline = [

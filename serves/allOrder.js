@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-globals */
+/* eslint-disable no-plusplus */
 /* eslint-disable guard-for-in */
 /* eslint-disable no-restricted-syntax */
 /* eslint-disable new-cap */
@@ -67,9 +69,7 @@ const filterOrders = (req, orders) => {
                 if (filterValue.$gt !== undefined && orderValue <= filterValue.$gt) return false;
                 if (filterValue.$lte !== undefined && orderValue > filterValue.$lte) return false;
                 if (filterValue.$lt !== undefined && orderValue >= filterValue.$lt) return false;
-            } else {
-                if (orderValue !== filterValue) return false;
-            }
+            } else if (orderValue !== filterValue) return false;
         }
         return true;
     });
@@ -83,14 +83,14 @@ const limitFields = (req, orders) => {
         }, {});
         return orders.map(order => {
             const limitedOrder = {};
-            for (let key in fields) {
+            for (const key in fields) {
                 limitedOrder[key] = order[key];
             }
             return limitedOrder;
         });
-    } else {
+    } 
         return orders.map(({ __v, ...order }) => order);
-    }
+    
 };
 
 const countOrdersGroup = (req, orders) => {
