@@ -20,7 +20,7 @@ exports.dataFilterOrderCreater = asyncHandler(async (req, res, next) => {
         const groupFilters = await groupFilter(loggedInUserId);
         
         const acceptedOrdersFilter = await OrdersFilter(loggedInUserId);
-        const filter = await orderFilter(loggedInUserId)
+      
         const orders = await Order.find({
             $and: [
                 { $or: [{ ...groupFilters }, { users: loggedInUserId }] },
