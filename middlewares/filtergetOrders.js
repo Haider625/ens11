@@ -340,7 +340,7 @@ exports.createApiFeatures = (query, reqQuery, documentsCounts,req) => new ApiFea
 
 exports.ordersData = async (loggedInUserId) => {
   const groupOrderFilters = await this.groupFilter(loggedInUserId);
-   const loggedInUserIdString = loggedInUserId.toString();
+  //  const loggedInUserIdString = loggedInUserId.toString();
   const OrdersFilters = await this.OrdersFilter(loggedInUserId)
 
   const aggregatePipeline = [

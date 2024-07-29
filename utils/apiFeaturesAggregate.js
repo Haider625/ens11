@@ -3,42 +3,31 @@
 const moment = require('moment-timezone');
 
 class AggregateOperations {
-    constructor(req, aggregatePipeline) {
+    constructor(req) {
         this.req = req;
-        this.aggregatePipeline = aggregatePipeline;
+        this.aggregatePipeline = [] ;
     }
 
-    paginate(documentsCounts) {
-    const page = parseInt(this.req.query.page, 10) || 1;
-    const limit = parseInt(this.req.query.limit, 10) || 15;
-    const skip = (page - 1) * limit;
-    const endIndex = page * limit;
+    sort() {
+       if (this.req.query.sort) {
+        console.log(this.req.query.sort)
+            const sortBy = this.req.query.sort.split(',').reduce((acc, field) => {
+            const key = field.startsWith('-') ? field.substring(1) : field;
+            const order = field.startsWith('-') ? -1 : 1;
+            acc[key] = order;
+            return acc;
+        }, {});
 
-    // Push pagination steps into the aggregation pipeline
-    this.aggregatePipeline.push(
-        { $skip: skip },
-        { $limit: limit }
-    );
+            console.log(sortBy)
 
-    // Define pagination object
-    const pagination = {
-        currentPage: page,
-        limit: limit,
-        numberOfPages: Math.ceil(documentsCounts / limit)
-    };
-
-    // Set next page if applicable
-    if (endIndex < documentsCounts) {
-        pagination.next = page + 1;
-    }
-
-    // Set previous page if applicable
-    if (skip > 0) {
-        pagination.prev = page - 1;
-    }
-
-    return pagination
-
+            this.aggregatePipeline.push({ $sort: sortBy });
+   
+        } else {
+            this.aggregatePipeline.push({ $sort: { createdAt: 1 } });
+            console.log(this.req.query.sort)
+        }
+            console.log('Final aggregate pipeline:', JSON.stringify(this.aggregatePipeline, null, 2));
+        return this 
     }
 
     search(modelName) {
@@ -91,23 +80,7 @@ class AggregateOperations {
         
     }
 
-    sort() {
-       if (this.req.query.sort) {
-        console.log(this.req.query.sort)
-            const sortBy = this.req.query.sort.split(',').reduce((acc, field) => {
-            const key = field.startsWith('-') ? field.substring(1) : field;
-            const order = field.startsWith('-') ? -1 : 1;
-            acc[key] = order;
-            return acc;
-        }, {});
 
-            this.aggregatePipeline.push({ $sort: sortBy });
-   
-        } else {
-            this.aggregatePipeline.push({ $sort: { createdAt: 1 } });
-
-        }
-    }
 
     limitFields() {
         if (this.req.fields) {
@@ -167,6 +140,47 @@ class AggregateOperations {
 
     this.aggregatePipeline.push(timeSinceLastRefreshStage);
   }
+
+    paginate(documentsCounts) {
+    const page = parseInt(this.req.query.page, 10) || 1;
+    const limit = parseInt(this.req.query.limit, 10) || 15;
+    const skip = (page - 1) * limit;
+    const endIndex = page * limit;
+
+    // Push pagination steps into the aggregation pipeline
+    this.aggregatePipeline.push(
+        { $skip: skip },
+        { $limit: limit }
+    );
+
+    // Define pagination object
+    const pagination = {
+        currentPage: page,
+        limit: limit,
+        numberOfPages: Math.ceil(documentsCounts / limit)
+    };
+
+    // Set next page if applicable
+    if (endIndex < documentsCounts) {
+        pagination.next = page + 1;
+    }
+
+    // Set previous page if applicable
+    if (skip > 0) {
+        pagination.prev = page - 1;
+    }
+
+    return pagination
+
+    }
+
+
+
+
+
+
+
+
 }
 
 module.exports = AggregateOperations

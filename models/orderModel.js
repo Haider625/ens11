@@ -435,10 +435,128 @@ orderSchema.pre('aggregate',function (next) {
       }
     }
   );
-
+  pipeline.push({ $sort: { createdAt: -1 } });
   next();
 })
+// orderSchema.pre('aggregate', function(next) {
+//     const pipeline = this.pipeline();
 
+//     pipeline.push(
+//         { $unwind: '$history' },
+//         {
+//             $lookup: {
+//                 from: 'users',
+//                 let: { editedById: '$history.editedBy' },
+//                 pipeline: [
+//                     { $match: { $expr: { $eq: ['$_id', '$$editedById'] } } },
+//                     { $project: {
+//                         id: 1,
+//                         name: 1,
+//                         userId: 1,
+//                         jobTitle: 1,
+//                         school: 1,
+//                         image: 1,
+//                     }}
+//                 ],
+//                 as: 'history.editedBy',
+//             }
+//         },
+//         {
+//             $addFields: {
+//                 'history.editedAt': '$history.editedAt',
+//                 'history.action': '$history.action',
+//                 'history.reason': '$history.reason',
+//                 'history.operationTime': '$history.operationTime',
+//                 'history.imgDone': '$history.imgDone',
+//             }
+//         },
+//         { $unwind: '$createdBy' },
+//         {
+//             $lookup: {
+//                 from: 'users',
+//                 let: { editedById: '$createdBy' },
+//                 pipeline: [
+//                     { $match: { $expr: { $eq: ['$_id', '$$editedById'] } } },
+//                     { $project: {
+//                         id: 1,
+//                         name: 1,
+//                         userId: 1,
+//                         jobTitle: 1,
+//                         school: 1,
+//                         image: 1,
+//                         group: 1,
+//                     }}
+//                 ],
+//                 as: 'createdBy',
+//             }
+//         },
+//         {
+//             $addFields: {
+//                 'createdBy': {
+//                     $map: {
+//                         input: '$createdBy',
+//                         as: 'creator',
+//                         in: {
+//                             $mergeObjects: [
+//                                 '$$creator',
+//                                 {
+//                                     image: {
+//                                         $cond: {
+//                                             if: { $ne: [{ $type: '$$creator.image' }, 'missing'] },
+//                                             then: { $concat: [process.env.BASE_URL, '/users/', '$$creator.image'] },
+//                                             else: '$$creator.image'
+//                                         }
+//                                     }
+//                                 }
+//                             ]
+//                         }
+//                     }
+//                 }
+//             }
+//         },
+//         {
+//             $addFields: {
+//                 'history.editedBy': {
+//                     $map: {
+//                         input: '$history.editedBy',
+//                         as: 'editor',
+//                         in: {
+//                             $mergeObjects: [
+//                                 '$$editor',
+//                                 {
+//                                     image: { $concat: [process.env.BASE_URL, '/users/', '$$editor.image'] }
+//                                 }
+//                             ]
+//                         }
+//                     }
+//                 }
+//             }
+//         },
+//         {
+//             $group: {
+//                 _id: '$_id',
+//                 originalDoc: { $first: '$$ROOT' },
+//                 history: { $push: '$history' },
+//                 createdBy: { $first: '$createdBy' },
+//             }
+//         },
+//         {
+//             $replaceRoot: {
+//                 newRoot: {
+//                     $mergeObjects: [
+//                         '$originalDoc',
+//                         {
+//                             history: '$history',
+//                             createdBy: '$createdBy'
+//                         }
+//                     ]
+//                 }
+//             }
+//         }
+//     );
+
+//     next();
+// });
 
 const setImageURL = (doc) => {
   // if (doc.orderimg && !doc.orderimg.startsWith(process.env.BASE_URL)) {
