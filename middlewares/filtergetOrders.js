@@ -49,20 +49,23 @@ exports.groupsFilter = async (loggedInUserId) => {
 
 exports.OrdersFilter = (loggedInUserId) => {
     const loggedInUserIdString = loggedInUserId.toString();
-    const OrdersFilters = {
+    const acceptedOrdersFilter = {
+    $and: [
+  { createdBy: loggedInUserIdString },
+      {
         $and: [
-            { createdBy: loggedInUserIdString },
-            {
-                $or: [
-                
-                    { State: { $ne: 'reject' } },
-                    { StateWork: { $ne: 'reject' } }
-                ]
-            },
-        ],
-        archive: { $ne: true }
-    };
-    return OrdersFilters;
+      
+          { State: { $ne: 'reject' } },
+          { StateWork: { $ne: 'reject' } }
+        ]
+      },
+      {
+        createdBy: { $ne: loggedInUserIdString }
+      }
+    ],
+    archive: { $ne: true }
+  }
+    return acceptedOrdersFilter;
 };
 
 exports.OnpraseOrdersFilter = (loggedInUserId) => {
@@ -345,7 +348,7 @@ exports.ordersData = async (loggedInUserId) => {
     $match: {
       $and: [
         { $or: [{ ...groupOrderFilters }, { users: loggedInUserId }] },
-          {$and :[{...OrdersFilters},
+          {$or:[{...OrdersFilters},
         { StateWork: { $ne: 'confirmWork' } },
         { StateWork: { $ne: 'endwork' } },
       ]}
