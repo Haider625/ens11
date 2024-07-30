@@ -36,22 +36,25 @@ exports.dataFilterOrderCreater = asyncHandler(async (req, res, next) => {
 
         const countMap = new Map();
 
-orders.forEach(order => {
-    const type1Value = order.createrGroupName;
-    const type1Id = order.createrGroupId; // افترض أن id هو _id
-    if (countMap.has(type1Value)) {
-        const currentData = countMap.get(type1Value);
-        countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
-    } else {
-        countMap.set(type1Value, { count: 1, id: type1Id });
-    }
-});
-        const result = {};
-        countMap.forEach((value, key) => {
-            result[key] = value;
+
+        orders.forEach(order => {
+            const type1Value = order.createrGroupName;
+            const type1Id = order.createrGroupId;
+            if (countMap.has(type1Value)) {
+                const currentData = countMap.get(type1Value);
+                countMap.set(type1Value, {count: currentData.count + 1, id: type1Id });
+            } else {
+                countMap.set(type1Value, { count: 1, id: type1Id });
+            }
         });
 
-        res.status(200).json(result);
+        // تحويل countMap إلى قائمة من الكائنات
+        const result = [];
+        countMap.forEach((value, key) => {
+            result.push({ groupName: key, ...value });
+        });
+
+        res.status(200).json({result});
 
     } catch (error) {
         next(new ApiError(`Error filtering orders: ${error.message}`, 500));
@@ -91,12 +94,12 @@ orders.forEach(order => {
     }
 });
 
-        const result = {};
+        const result = [];
         countMap.forEach((value, key) => {
-            result[key] = value;
+            result.push({ groupName: key, ...value });
         });
 
-        res.status(200).json(result);
+        res.status(200).json({result});
     } catch (error) {
         next(new ApiError(`Error filtering orders: ${error.message}`, 500));
     }
@@ -131,14 +134,12 @@ orders.forEach(order => {
     }
 });
 
-
-
-        const result = {};
+        const result = [];
         countMap.forEach((value, key) => {
-            result[key] = value;
+            result.push({ groupName: key, ...value });
         });
 
-        res.status(200).json(result);
+        res.status(200).json({result});
     } 
     catch (error)
     {
@@ -175,12 +176,12 @@ orders.forEach(order => {
     }
 });
 
-        const result = {};
+        const result = [];
         countMap.forEach((value, key) => {
-            result[key] = value;
+            result.push({ groupName: key, ...value });
         });
 
-        res.status(200).json(result);
+        res.status(200).json({result});
     } 
     catch (error)
     {
@@ -223,12 +224,12 @@ orders.forEach(order => {
         countMap.set(type1Value, { count: 1, id: type1Id });
     }
 });
-        const result = {};
+        const result = [];
         countMap.forEach((value, key) => {
-            result[key] = value;
+            result.push({ groupName: key, ...value });
         });
 
-        res.status(200).json(result);
+        res.status(200).json({result});
     } catch (error) {
         next(new ApiError(`Error filtering orders: ${error.message}`, 500));
     }
@@ -266,12 +267,12 @@ orders.forEach(order => {
     }
 });
 
-        const result = {};
+        const result = [];
         countMap.forEach((value, key) => {
-            result[key] = value;
+            result.push({ groupName: key, ...value });
         });
 
-        res.status(200).json(result);
+        res.status(200).json({result});
     } catch (error) {
         next(new ApiError(`Error filtering orders: ${error.message}`, 500));
     }
@@ -305,12 +306,12 @@ orders.forEach(order => {
     }
 });
 
-        const result = {};
+        const result = [];
         countMap.forEach((value, key) => {
-            result[key] = value;
+            result.push({ groupName: key, ...value });
         });
 
-        res.status(200).json(result);
+        res.status(200).json({result});
     } 
     catch (error)
     {
@@ -347,12 +348,12 @@ orders.forEach(order => {
     }
 });;
 
-        const result = {};
+        const result = [];
         countMap.forEach((value, key) => {
-            result[key] = value;
+            result.push({ groupName: key, ...value });
         });
 
-        res.status(200).json(result);
+        res.status(200).json({result});
     } 
     catch (error)
     {
