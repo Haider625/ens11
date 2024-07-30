@@ -50,17 +50,15 @@ exports.groupsFilter = async (loggedInUserId) => {
 exports.OrdersFilter = (loggedInUserId) => {
     const loggedInUserIdString = loggedInUserId.toString();
     const acceptedOrdersFilter = {
-    $and: [
-  { createdBy: loggedInUserIdString },
+
+      $or: [
+      { createdBy: loggedInUserIdString },
       {
         $and: [
-      
           { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' } }
+          { StateWork: { $ne: 'reject' }  },
+
         ]
-      },
-      {
-        createdBy: { $ne: loggedInUserIdString }
       }
     ],
     archive: { $ne: true }
@@ -347,12 +345,11 @@ exports.ordersData = async (loggedInUserId) => {
   {
     $match: {
       $and: [
-        { $or: [{ ...groupOrderFilters }, { users: loggedInUserId }] },
-          {$or:[{...OrdersFilters},
+      {$or: [{ ...groupOrderFilters }, { users: loggedInUserId }],},
+      {$and :[{...OrdersFilters},
         { StateWork: { $ne: 'confirmWork' } },
-        { StateWork: { $ne: 'endwork' } },
-      ]}
-      ],
+        { StateWork: { $ne: 'endwork' } },]}
+      ]
     }
   },
   ];
@@ -387,8 +384,6 @@ exports.onpraseData = async (loggedInUserId, req) => {
     throw new Error(`Error creating aggregate pipeline: ${error.message}`);
   }
 };
-
-
 
 exports.rejectFilter = async (loggedInUserId,req) => {
   const groupFilters = await this.groupFilter(loggedInUserId);
