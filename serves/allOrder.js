@@ -202,10 +202,16 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     // إضافة التصفحة (الـ paginate)
     const { paginatedOrders, pagination } = paginate(req, Orders, Orders.length);
 
+    const onpraseFilters =  await onpraseData(loggedInUserId)
+const rejectFilters = await rejectFilter(loggedInUserId,req)
+const onprase = await Order.aggregate([onpraseFilters])
+const reject = await Order.aggregate([rejectFilters])
     res.status(200).json({
-         results: paginatedOrders.length,
-        paginationResult: pagination,
-        Orders: paginatedOrders,
+      results: paginatedOrders.length,
+      paginationResult: pagination,
+      CountOnpreas:onprase.length,
+      CountReject :reject.length,
+      Orders: paginatedOrders,
            
     });
 });
