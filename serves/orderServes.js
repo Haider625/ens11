@@ -166,7 +166,7 @@ const newOrder = await Order.create(req.body);
 // }
 console.log(message)
 
-  socketHandler.sendNotificationToRoom(roomgroup,message);
+socketHandler.sendNotificationToRoom(roomgroup,message);
 
 res.status(201).json({ message: 'Order created successfully' ,newOrder});
 
