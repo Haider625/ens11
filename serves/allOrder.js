@@ -160,6 +160,7 @@ const sortOrders = (orders, sortQuery) => {
             const key = field.startsWith('-') ? field.substring(1) : field;
             const order = field.startsWith('-') ? -1 : 1;
             acc[key] = order;
+            
             return acc;
         }, {});
         return orders.sort((a, b) => {
@@ -192,7 +193,6 @@ exports.getOrders = asyncHandler(async (req, res, next) => {
     let Orders = await Order.aggregate(aggregatePipeline);
 
     Orders = sortOrders(Orders, req.query.sort);
-    // تطبيق عمليات البحث والتصفية والفرز والحدود والتجميع والوقت منذ آخر تحديث
     Orders = search(req, Orders);
     Orders = filterOrders(req, Orders);
     Orders = limitFields(req, Orders);
@@ -230,109 +230,27 @@ exports.getOnpraseOrders = asyncHandler(async (req, res, next) => {
     filter = req.filter;
   }
 
-   const groupFilter = await groupsFilter(loggedInUserId);
-
-  const acceptedOrdersFilter = await OnpraseOrdersFilter(loggedInUserId)
-
-
-  // const aggregatePipeline = [
-  //   {
-  //   $match:{
-  //   $and: [
-  //     { $or: [{ ...groupFilters }, { usersOnprase: loggedInUserId }] },
-  //     { $and: [{ ...acceptedOrdersFilters },{ ...filter }] }
-  //   ]
-  // }
-  // }
-  // ]
-
-  // const documentsCounts = await Order.countDocuments();
-
-  // const paginate = await paginateAggregate(req,documentsCounts,aggregatePipeline)
-
-
-  // const orderQuery = Order.find({
-  //   $and: [
-  //     { $or: [{ ...groupFilters }, { usersOnprase: loggedInUserId }] },
-  //     { $and: [{ ...acceptedOrdersFilters },{ ...filter }] }
-  //   ]
-  // });
-
-  // const apiFeatures =await createApiFeatures(orderQuery, req.query, documentsCounts);
- 
-  // const { mongooseQuery, paginationResult } = await apiFeatures;
-
-  // // const orderQuery =  Order.find({})
-
-  // const documents = await orderQuery;
 const aggregatePipeline = await onpraseData(loggedInUserId,req)
 
-const documentsCounts = await Order.countDocuments();
+    let Orders = await Order.aggregate(aggregatePipeline);
 
-const aggregateOps = new apiFeaturesAggregate(req, aggregatePipeline)
-
-aggregateOps.paginate(documentsCounts);
-aggregateOps.search('Order'); 
-aggregateOps.filter();
-aggregateOps.sort();
-aggregateOps.limitFields();
-aggregateOps.countOrdersGroup()
-
-const documents = await Order.aggregate(aggregatePipeline).exec();
-
-const paginationResult = aggregateOps.paginate(documentsCounts);
+    Orders = sortOrders(Orders, req.query.sort);
+    Orders = search(req, Orders);
+    Orders = filterOrders(req, Orders);
+    Orders = limitFields(req, Orders);
+    Orders = countOrdersGroup(req, Orders);
+    Orders = addTimeSinceLastRefresh(req, Orders);
+    
+    // إضافة التصفحة (الـ paginate)
+    const { paginatedOrders, pagination } = paginate(req, Orders, Orders.length);
 
   res
     .status(200)
     .json({ 
-      results: documents.length,
-      paginationResult,
-      Orders: documents
+      results: paginatedOrders.length,
+      paginationResult: pagination,
+      Orders: paginatedOrders,
      });
-  // const userGroup = await user.findOne({ _id: loggedInUserId });
-  // const userGroupLevel = userGroup.group.level;
-  // const userGroupInLevel = userGroup.group.inlevel;
-  
-  // const similarGroups = await groups.find({ level: userGroupLevel, inlevel: userGroupInLevel });
-
-
-  // const groupIds = similarGroups.map(group => group._id);
-
-  // const groupFilter = {
-  //   groups: {
-  //     $in: groupIds ,
-  //   }
-  // };
-
-  // const documentsCounts = await Order.countDocuments();
-
-  // const loggedInUserIdString = loggedInUserId.toString();
-  // const acceptedOrdersFilter = {
-  //   $or: [
-  //     { createdBy: { $ne: loggedInUserIdString }},
-  //     {
-  //       $and: [
-  //         { State: { $ne: 'reject' } },
-  //         { StateWork: { $ne: 'reject' } },
-  //       ]
-  //      }
-  //   ],
-  //   archive: { $ne: true }
-  // };
-
-  // const apiFeatures = await Order.find({
-  //   $and: [
-  //     { $or: [{ ...groupFilter }, { usersOnprase: loggedInUserId }] },
-  //     { $and: [{ ...acceptedOrdersFilter }, { ...filter }] }
-  //   ]
-  // })
-
-  // const document = await apiFeatures;
-
-  // res
-  //   .status(200)
-  //   .json({ results: document.length, order: document });
-
 });
 
 exports.getAllRejected = asyncHandler(async (req, res) => {
