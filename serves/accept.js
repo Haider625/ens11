@@ -478,7 +478,7 @@ exports.AcceptArchive = asyncHandler(async (req, res, next) => {
       updatedOrder.TimeReceive = Date.now();
     updatedOrder.save()
     
-    res.status(200).json({ order : updatedOrder });
+    res.status(200).json({ Orders : updatedOrder });
 });
   
 exports.acceptwork = asyncHandler(async(req,res,next) => {
