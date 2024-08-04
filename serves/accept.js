@@ -283,7 +283,7 @@ exports.endWork = asyncHandler(async(req,res,next) => {
   if (currentOrder.StateWork !== 'startwork' ) { 
     return next(new ApiError(`you need start the Work in order`, 404));
   }
-  if (currentOrder.users.group.level === 3){
+  if (currentOrder.users.group.level === 3 || currentOrder.users.group.level === 2 || currentOrder.users.group.level === 1){
     console.log(currentOrder.users.group.level)
     await exports.confirmWork(req, res, next);
   }else {
@@ -294,7 +294,7 @@ exports.endWork = asyncHandler(async(req,res,next) => {
 
     updatedOrder.StateWork = 'endwork'
     updatedOrder.users = updatedOrder.usersOnprase.filter(usersOnprase => usersOnprase.group.level === 3)[0]._id;
-const timeDifference =calculateTimeDifference(updatedOrder.history)
+    const timeDifference =calculateTimeDifference(updatedOrder.history)
 
   addToOrderHistory(
     updatedOrder,
