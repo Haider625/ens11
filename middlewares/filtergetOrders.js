@@ -76,6 +76,7 @@ exports.OnpraseOrdersFilter = (loggedInUserId) => {
         $or: [
           { State: { $ne: 'reject' } },
           { StateWork: { $ne: 'reject' } },
+          { StateWork : {}}
         ]
        }
     ],

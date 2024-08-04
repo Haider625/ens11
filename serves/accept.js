@@ -308,7 +308,6 @@ exports.endWork = asyncHandler(async(req,res,next) => {
     updatedOrder.donimgs
   )
 
-
     if (updatedOrder.users.group) {
       updatedOrder.usersGroup = updatedOrder.users.group._id;
     } 
@@ -466,17 +465,20 @@ socketHandler.sendNotificationToUser(roomName, message);
 
 exports.AcceptArchive = asyncHandler(async (req, res, next) => {
  
-    // try {
-    //   const orderId = req.params.id;
+    const orderId = req.params.id;
 
-    //   const AcceptArchive = await Order.findById(orderId);
-    //   AcceptArchive.archive = true ;
-    //   AcceptArchive.save();
 
-    //   res.status(200).json({ accept : AcceptArchive});
-    // } catch (error) {
-    //   return next(new ApiError(500, 'Internal Server Error'));
-    // }
+    const updatedOrder = await Order.findById(orderId);
+
+    if (!updatedOrder) {
+      return next(new ApiError(404, 'Order not found'));
+    }
+    updatedOrder.archive = true;
+    updatedOrder.updatedAt =Date.now()
+      updatedOrder.TimeReceive = Date.now();
+    updatedOrder.save()
+    
+    res.status(200).json({ order : updatedOrder });
 });
   
 exports.acceptwork = asyncHandler(async(req,res,next) => {
