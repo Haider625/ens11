@@ -42,6 +42,6 @@ router.put('/rejectConfirmWork/:id',rejectConfirmWork)
 router.put('/rejectConfirm/:id',uploadOrderImage,resizeImage,rejectConfirm)
 
 
-router.post('/archive/:id',archiveReject)
+router.put('/archive/:id',archiveReject)
 
 module.exports = router;
