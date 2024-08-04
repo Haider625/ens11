@@ -255,46 +255,28 @@ const aggregatePipeline = await onpraseData(loggedInUserId,req)
 
 exports.getAllRejected = asyncHandler(async (req, res) => {
  const loggedInUserId = req.user._id;
-
-  // const groupFilters = await groupsFilter(loggedInUserId);
-  // const acceptedOrdersFilters = await rejectsOrderFilter(loggedInUserId,req)
-
-  //   const documentsCounts = await Order.countDocuments();
-
-  //   const orderQuery = Order.find({
-  //     $or: [{ ...groupFilters }, { usersOnprase: loggedInUserId }],
-  //     $and :[{...acceptedOrdersFilters}],})
-
-  //    const apiFeatures =await createApiFeatures(orderQuery, req.query, documentsCounts);
- 
-  //   const { mongooseQuery, paginationResult } = apiFeatures;
-  //   const documents = await mongooseQuery;
   
 const aggregatePipeline = await rejectFilter(loggedInUserId,req)
 
-const documentsCounts = await Order.countDocuments();
+    // Execute aggregate pipeline without sorting
+    let Orders = await Order.aggregate(aggregatePipeline);
 
-const aggregateOps = new apiFeaturesAggregate(req, aggregatePipeline)
+    Orders = sortOrders(Orders, req.query.sort);
+    Orders = search(req, Orders);
+    Orders = filterOrders(req, Orders);
+    Orders = limitFields(req, Orders);
+    Orders = countOrdersGroup(req, Orders);
+    Orders = addTimeSinceLastRefresh(req, Orders);
+    
+    // إضافة التصفحة (الـ paginate)
+    const { paginatedOrders, pagination } = paginate(req, Orders, Orders.length);
 
-aggregateOps.paginate(documentsCounts);
-aggregateOps.search('Order'); 
-aggregateOps.filter();
-aggregateOps.sort();
-aggregateOps.limitFields();
-aggregateOps.countOrdersGroup()
-
-
-const documents = await Order.aggregate(aggregatePipeline);
-
-const paginationResult = aggregateOps.paginate(documentsCounts);
-
-    res
-      .status(200)
-      .json({ 
-        results: documents.length, 
-        paginationResult,
-        Orders: documents, 
-      });
+    res.status(200).json({
+      results: paginatedOrders.length,
+      paginationResult: pagination,
+      Orders: paginatedOrders,
+           
+    });
 
 });
 
@@ -310,52 +292,26 @@ exports.getsArchive = asyncHandler(async (req, res, next) => {
     filter = req.filter;
   }
 
-  // const groupOrderFilters = await groupFilter(loggedInUserId);
-
-  // const groupOnpraseFilters = await groupsFilter(loggedInUserId);
-
-  // const archiveFilter = await ArchiveOrderFilter(loggedInUserId)
-
-  // const documentsCounts = await Order.countDocuments();
-  //  const orderQuery = Order.find({
-  //   $and: [
-  //     { $or: [{ ...groupOrderFilters },{ ...groupOnpraseFilters }, { usersOnprase: loggedInUserId },{ users: loggedInUserId }] },
-  //     { $and: [{ ...archiveFilter }, { ...filter }] }
-  //   ]
-  // })
-  
-  // const apiFeatures = await createApiFeatures(orderQuery, req.query, documentsCounts);
-
-  // const { mongooseQuery, paginationResult } = await apiFeatures;
-
-  // const documents = await mongooseQuery;
-
 const aggregatePipeline = await ArchiveFilters(loggedInUserId)
 
-const documentsCounts = await Order.countDocuments();
+    let Orders = await Order.aggregate(aggregatePipeline);
 
-const aggregateOps = new apiFeaturesAggregate(req, aggregatePipeline)
-
-
-aggregateOps.search('Order'); 
-aggregateOps.filter();
-aggregateOps.sort();
-aggregateOps.limitFields();
-aggregateOps.countOrdersGroup()
-aggregateOps.paginate(documentsCounts);
-
-  console.log('Final aggregate pipeline:', JSON.stringify(aggregatePipeline, null, 2));
-
-const documents = await Order.aggregate(aggregatePipeline);
-
-const paginationResult = aggregateOps.paginate(documentsCounts);
+    Orders = sortOrders(Orders, req.query.sort);
+    Orders = search(req, Orders);
+    Orders = filterOrders(req, Orders);
+    Orders = limitFields(req, Orders);
+    Orders = countOrdersGroup(req, Orders);
+    Orders = addTimeSinceLastRefresh(req, Orders);
+    
+    // إضافة التصفحة (الـ paginate)
+    const { paginatedOrders, pagination } = paginate(req, Orders, Orders.length);
 
   res
     .status(200)
     .json({ 
-      results: documents.length, 
-      paginationResult, 
-      Orders: documents
+      results: paginatedOrders.length,
+      paginationResult: pagination,
+      Orders: paginatedOrders,
      });
 });
 
