@@ -56,7 +56,7 @@ exports.OrdersFilter = (loggedInUserId) => {
       {
         $and: [
           { State: { $ne: 'reject' } },
-          { StateWork: { $ne: 'reject' }  },
+          // { StateWork: { $ne: 'reject' }  },
 
         ]
       }
