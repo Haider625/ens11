@@ -232,7 +232,7 @@ console.log(updatedOrder.group)
     const roomgroup = updatOrder.group.name;
 
     let page;
-    if (updatOrder.createdBy.group.toString() === updatOrder.group._id.toString()) {
+    if (updatOrder.createdBy.group._id.toString() === updatOrder.group._id.toString()) {
         page = 'reject';
     } else {
         page = 'onprase';

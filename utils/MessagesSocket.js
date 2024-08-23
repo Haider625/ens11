@@ -24,7 +24,7 @@
   title: "طلب جديد",
   body : `تم وصول طلب جديد من قبل ${updatOrder.senderGroupName}`,
   action: "open_page",
-  page : "onprase",
+  page : "home",
   orderID: updatOrder._id,
   time : updatOrder.updatedAt
         })
